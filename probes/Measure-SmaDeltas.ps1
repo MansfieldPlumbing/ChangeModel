@@ -9,11 +9,22 @@ $probe = "$PSScriptRoot\Observe-SmaLowering.ps1"
 $resA = & $probe -Source $SourceA -PassThru
 $resB = & $probe -Source $SourceB -PassThru
 
-function Get-AstDelta ($astA, $astB) {
-    # Simple delta: string representation comparison
-    $strA = $astA.ToString()
-    $strB = $astB.ToString()
-    return $strA -ne $strB
+function Get-AstStructureString ($ast) {
+    $sb = [System.Text.StringBuilder]::new()
+    $nodes = $ast.FindAll({ $true }, $true)
+    foreach ($node in $nodes) {
+        $nodeType = $node.GetType().Name
+        $details = switch ($nodeType) {
+            'VariableExpressionAst' { $node.VariablePath.UserPath }
+            'BinaryExpressionAst' { $node.Operator.ToString() }
+            'ConstantExpressionAst' { [string]$node.Value }
+            'TypeExpressionAst' { $node.TypeName.FullName }
+            'ParameterAst' { $node.Name.VariablePath.UserPath }
+            Default { '' }
+        }
+        [void]$sb.Append("$($nodeType):$($details);")
+    }
+    return $sb.ToString()
 }
 
 function Get-TokensDelta ($srcA, $srcB) {
@@ -34,16 +45,33 @@ function Get-ExpressionDelta ($resA, $resB) {
     return $strA -ne $strB
 }
 
-function Get-BehaviorDelta ($resA, $resB) {
-    # We can invoke them to see if behavior is same.
-    # For simplicity, if they both don't throw and return same results for a few inputs.
-    # Since these are void returns, they just execute.
-    return $false # Stub for now
+function Get-BehaviorDelta ($resA, $resB, [array]$TestInputs = @(@(2, 3), @(-1, 5), @(0, 0))) {
+    foreach ($inputs in $TestInputs) {
+        $outA = $null; $errA = $null
+        $outB = $null; $errB = $null
+
+        try {
+            $outA = & $resA.ScriptBlock @inputs
+        } catch {
+            $errA = $_.Exception.Message
+        }
+
+        try {
+            $outB = & $resB.ScriptBlock @inputs
+        } catch {
+            $errB = $_.Exception.Message
+        }
+
+        if ($errA -ne $errB) { return $true }
+        if ([string]$outA -ne [string]$outB) { return $true }
+    }
+    return $false
 }
 
 $deltaSource = $SourceA -ne $SourceB
 $deltaTokens = Get-TokensDelta $SourceA $SourceB
-$deltaAst = Get-AstDelta $resA.Ast $resB.Ast
+$deltaAstExtent = $resA.Ast.ToString() -ne $resB.Ast.ToString()
+$deltaAstStructure = (Get-AstStructureString $resA.Ast) -ne (Get-AstStructureString $resB.Ast)
 $deltaExpression = Get-ExpressionDelta $resA $resB
 $deltaBehavior = Get-BehaviorDelta $resA $resB
 
@@ -52,7 +80,9 @@ $deltaBehavior = Get-BehaviorDelta $resA $resB
     SourceB = $SourceB
     DeltaSource = $deltaSource
     DeltaTokens = $deltaTokens
-    DeltaAst = $deltaAst
+    DeltaAstExtent = $deltaAstExtent
+    DeltaAstStructure = $deltaAstStructure
     DeltaExpression = $deltaExpression
     DeltaBehavior = $deltaBehavior
+    IsSemanticsPreserving = ($deltaSource -and -not $deltaBehavior)
 }

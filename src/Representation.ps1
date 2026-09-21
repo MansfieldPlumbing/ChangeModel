@@ -8,8 +8,18 @@ class Representation {
     [hashtable] GetRepresentedState([object]$state) {
         $rep = @{}
         foreach ($f in $this.Features) {
-            $rep[$f] = $state.$f
+            if ($f -match '\+') {
+                $sub = $f -split '\+'
+                $val = ($sub | ForEach-Object { $state.$_ }) -join ':'
+                $rep[$f] = $val
+            } else {
+                $rep[$f] = $state.$f
+            }
         }
         return $rep
+    }
+
+    [string] ToString() {
+        return "{" + ($this.Features -join ', ') + "}"
     }
 }

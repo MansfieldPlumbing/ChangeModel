@@ -50,19 +50,26 @@ function Measure-Experience {
 
         if (-not $keyToDeltas.ContainsKey($key)) {
             $keyToDeltas[$key] = [System.Collections.Generic.HashSet[int]]::new()
+        } elseif (-not $keyToDeltas[$key].Contains($actualDelta) -or $keyToDeltas[$key].Count -gt 1) {
+            $contradictions += 1
         }
         $null = $keyToDeltas[$key].Add($actualDelta)
     }
 
+    $contradictoryKeys = [System.Collections.Generic.List[string]]::new()
+    $contradictionDetails = @{}
     foreach ($k in $keyToDeltas.Keys) {
         if ($keyToDeltas[$k].Count -gt 1) {
-            $contradictions += 1
+            $contradictoryKeys.Add($k)
+            $contradictionDetails[$k] = @($keyToDeltas[$k])
         }
     }
 
     return [pscustomobject]@{
         PredictionError = $totalError
         Contradictions = $contradictions
+        ContradictoryKeys = $contradictoryKeys.ToArray()
+        ContradictionDetails = $contradictionDetails
         RepresentationComplexity = $Rep.Features.Count
         ReplayHistory = $replayHistory
     }

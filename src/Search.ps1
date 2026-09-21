@@ -34,7 +34,7 @@ function Invoke-RepresentationSearch {
                 elseif ($trialMeasure.Contradictions -eq $best.Measure.Contradictions) {
                     if ($trialMeasure.PredictionError -lt $best.Measure.PredictionError) { $isBetter = $true }
                     elseif ($trialMeasure.PredictionError -eq $best.Measure.PredictionError) {
-                        if ($trialMeasure.RepresentationComplexity -lt $best.Measure.RepresentationComplexity) { $isBetter = $true }
+                        if ($trialMeasure.Contradictions -eq 0 -and $trialMeasure.RepresentationComplexity -lt $best.Measure.RepresentationComplexity) { $isBetter = $true }
                     }
                 }
             }
@@ -55,7 +55,7 @@ function Invoke-RepresentationSearch {
             elseif ($best.Measure.Contradictions -eq $currentMeasure.Contradictions) {
                 if ($best.Measure.PredictionError -lt $currentMeasure.PredictionError) { $improvesCurrent = $true }
                 elseif ($best.Measure.PredictionError -eq $currentMeasure.PredictionError) {
-                    if ($best.Measure.RepresentationComplexity -lt $currentMeasure.RepresentationComplexity) { $improvesCurrent = $true }
+                    if ($best.Measure.Contradictions -eq 0 -and $best.Measure.RepresentationComplexity -lt $currentMeasure.RepresentationComplexity) { $improvesCurrent = $true }
                 }
             }
         }
@@ -93,7 +93,7 @@ function Invoke-RepresentationSearch {
             elseif ($measure.Contradictions -eq $oracleBest.Contradictions) {
                 if ($measure.PredictionError -lt $oracleBest.PredictionError) { $isBetter = $true }
                 elseif ($measure.PredictionError -eq $oracleBest.PredictionError) {
-                    if ($measure.RepresentationComplexity -lt $oracleBest.RepresentationComplexity) { $isBetter = $true }
+                    if ($measure.Contradictions -eq 0 -and $measure.RepresentationComplexity -lt $oracleBest.RepresentationComplexity) { $isBetter = $true }
                 }
             }
         }
