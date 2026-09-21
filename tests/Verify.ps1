@@ -4,3 +4,4 @@ Write-Host "Running Verification..."
 & $PSScriptRoot\Gate3-ModelProposal.ps1
 & $PSScriptRoot\Gate4-SmaNotEvenWrong.ps1
 & $PSScriptRoot\Gate5-ContentfulDelta.ps1
+& $PSScriptRoot\Gate6-RuntimeConceptInvention.ps1

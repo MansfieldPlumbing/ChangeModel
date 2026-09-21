@@ -9,18 +9,23 @@
 | SMA Experience Dataset Generator | `C:\Dev\ChangeModel\src\SmaDataset.ps1` | In-tree synthesis | Couples SMA AST/token parser, compiler lowering reflection, and live delegate invocation into measured transformation dimensions. |
 | Authentic SMA Expression Feature Extractor | `C:\Dev\ChangeModel\src\ExpressionFeatures.ps1` | In-tree synthesis | Deep inspection of authentic SMA LINQ expression tree nodes: binders, operations, constants, operand ordering, and node types. |
 | Contentful SMA Dataset Generator | `C:\Dev\ChangeModel\src\SmaContentfulDataset.ps1` | In-tree synthesis | Multi-quadrant adversarial corpus generator preserving canonical fingerprints and derived delta features. |
+| Runtime Concept Invention & ETS Synthesis | `C:\Dev\ChangeModel\src\ConceptSynthesis.ps1` | In-tree synthesis | Synthesizes novel derived predicates over atomic features, scores against evidence, and materializes concepts into live PowerShell TypeData without source rewriting. |
 
 ## PowerShell Source Oracle
 
 Authoritative source tree: C:\Dev\.vendor\PowerShell
 Commit: 1481b98f0079f979f658e49a7281024cc754049b
 
-### Private SMA Members Accessed
+### Private SMA Members & Subsystems Accessed
 
 | Source File | Declaring Type | Member | Reason ChangeModel needs it |
 | :--- | :--- | :--- | :--- |
-| src\System.Management.Automation\engine\lang\scriptblock.cs | System.Management.Automation.ScriptBlock | _scriptBlockData (Field) | Access to the underlying AST and compiler state for a compiled script block. |
-| src\System.Management.Automation\engine\parser\Compiler.cs | System.Management.Automation.Language.Compiler | Compile (Method) | Triggers internal lowering of the AST into LINQ expressions. |
-| src\System.Management.Automation\engine\parser\Compiler.cs | System.Management.Automation.Language.Compiler | CompileTree (Method) | Compiles the resulting LINQ lambda into a delegate, bypassing normal caching. |
-| src\System.Management.Automation\engine\parser\Compiler.cs | System.Management.Automation.Language.Compiler | _endBlockLambda (Field) | Captures the authentic SMA expression tree root emitted during Compile. |
-| src\System.Management.Automation\engine\parser\Compiler.cs (implicit) | System.Management.Automation.Language.PowerShellLoopExpression | _exprs (Field) | Allows observing child expressions of SMA's custom loop expression nodes without modifying them. |
+| `src\System.Management.Automation\engine\lang\scriptblock.cs` | `System.Management.Automation.ScriptBlock` | `_scriptBlockData` (Field) | Access to the underlying AST and compiler state for a compiled script block. |
+| `src\System.Management.Automation\engine\parser\Compiler.cs` | `System.Management.Automation.Language.Compiler` | `Compile` (Method) | Triggers internal lowering of the AST into LINQ expressions. |
+| `src\System.Management.Automation\engine\parser\Compiler.cs` | `System.Management.Automation.Language.Compiler` | `CompileTree` (Method) | Compiles the resulting LINQ lambda into a delegate, bypassing normal caching. |
+| `src\System.Management.Automation\engine\parser\Compiler.cs` | `System.Management.Automation.Language.Compiler` | `_endBlockLambda` (Field) | Captures the authentic SMA expression tree root emitted during Compile. |
+| `src\System.Management.Automation\engine\parser\Compiler.cs` (implicit) | `System.Management.Automation.Language.PowerShellLoopExpression` | `_exprs` (Field) | Allows observing child expressions of SMA's custom loop expression nodes without modifying them. |
+| `src\System.Management.Automation\engine\runtime\Binding\Binders.cs` | `System.Management.Automation.Language.PSGetMemberBinder` | Dynamic callsite rule binding (Lines 5839-5845) | Governs live dynamic member dispatch via `BindingRestrictions.GetInstanceRestriction(typeTable)`. Explains how pre-compiled `ScriptBlock` instances resolve newly installed ETS `ScriptProperty` members upon `Update-TypeData` without recompilation or AST rewriting. |
+| `src\System.Management.Automation\engine\TypeTable.cs` | `System.Management.Automation.TypeTable` | TypeTable member dictionary | Active runspace ETS member catalog keyed by `PSTypeNames` string hierarchy. |
+| `src\Microsoft.PowerShell.Commands.Utility\commands\utility\Update-TypeData.cs` | `Microsoft.PowerShell.Commands.UpdateTypeDataCommand` | ETS dynamic registration | Installs synthesized runtime concepts into the live runspace `TypeTable` and invalidates previous callsite rules. |
+
