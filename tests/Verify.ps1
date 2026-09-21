@@ -1,0 +1,3 @@
+Write-Host "Running Verification..."
+& $PSScriptRoot\Gate1-Wrong.ps1
+& $PSScriptRoot\Gate2-NotEvenWrong.ps1
