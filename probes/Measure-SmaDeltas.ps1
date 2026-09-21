@@ -39,9 +39,46 @@ function Get-TokensDelta ($srcA, $srcB) {
     return $false
 }
 
+function Get-ExpressionStructureString ($res) {
+    $flags = [Reflection.BindingFlags]'Instance,NonPublic,Public'
+    $pending = [Collections.Generic.Stack[object]]::new()
+    $visited = [Collections.Generic.HashSet[object]]::new([Collections.Generic.ReferenceEqualityComparer]::Instance)
+    $pending.Push($res.Lambda)
+    $tokens = [Collections.Generic.List[string]]::new()
+
+    while ($pending.Count) {
+        $node = $pending.Pop()
+        if (-not $visited.Add($node)) { continue }
+
+        if ($node -is [Linq.Expressions.ConstantExpression]) {
+            [void]$tokens.Add("Const:$($node.Value)")
+        } elseif ($node -is [Linq.Expressions.DynamicExpression]) {
+            $b = $node.Binder
+            $bStr = "Dyn:$($b.GetType().Name)"
+            $opProp = $b.GetType().GetProperty('Operation', $flags)
+            if ($opProp) { $bStr += ":$($opProp.GetValue($b))" }
+            [void]$tokens.Add($bStr)
+        } elseif ($node -is [Linq.Expressions.BinaryExpression]) {
+            [void]$tokens.Add("Bin:$($node.NodeType)")
+        } elseif ($node -is [Linq.Expressions.MethodCallExpression]) {
+            [void]$tokens.Add("Call:$($node.Method.Name)")
+        }
+
+        foreach ($property in $node.GetType().GetProperties([Reflection.BindingFlags]'Public,Instance')) {
+            if ($property.GetIndexParameters().Count -or $property.Name -in 'Type','NodeType','CanReduce') { continue }
+            $val = $property.GetValue($node)
+            if ($val -is [Linq.Expressions.Expression]) { $pending.Push($val) }
+            elseif ($val -is [Collections.IEnumerable] -and $val -isnot [string]) {
+                foreach ($item in $val) { if ($item -is [Linq.Expressions.Expression]) { $pending.Push($item) } }
+            }
+        }
+    }
+    return $tokens -join ';'
+}
+
 function Get-ExpressionDelta ($resA, $resB) {
-    $strA = $resA.Lambda.ToString()
-    $strB = $resB.Lambda.ToString()
+    $strA = Get-ExpressionStructureString $resA
+    $strB = Get-ExpressionStructureString $resB
     return $strA -ne $strB
 }
 

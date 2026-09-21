@@ -6,6 +6,7 @@
 | Proof Discipline | C:\Dev\JS2PS\docs\HILL-CLIMBING.md | 919efd2a174218c522d1d2470117ae86f0142d72 | Separation between search heuristic and semantic correctness gate. |
 | SMA Lowering Probe | `C:\Dev\PSPersistence\probes\Test-SmaCompilation.ps1` | f4c07ae96e1a49a0c4ff82421abf2795926b60f9 | Reflection machinery to reach authentic SMA expression tree via _scriptBlockData and Compiler.Compile. |
 | Proposal Provider & Mutation DSL | `C:\Dev\ChangeModel\src\Proposal.ps1` | In-tree synthesis | Constrained representation mutation language (`AddFeature`, `RemoveFeature`, `Combine`), provider boundary, and independent replay verification gate. |
+| SMA Experience Dataset Generator | `C:\Dev\ChangeModel\src\SmaDataset.ps1` | In-tree synthesis | Couples SMA AST/token parser, compiler lowering reflection, and live delegate invocation into measured transformation dimensions. |
 
 ## PowerShell Source Oracle
 

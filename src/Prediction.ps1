@@ -14,8 +14,9 @@ function Measure-Experience {
     $totalError = 0
     $contradictions = 0
 
-    # Predictor logic: we have a Magnitude parameter.
+    # Predictor parameters:
     $magnitude = 2
+    $predictorTable = @{}
 
     foreach ($record in $History) {
         $canonical = $record.CanonicalBefore
@@ -23,11 +24,15 @@ function Measure-Experience {
         $key = Get-ContradictionKey -RepresentedBefore $repState -Action $record.Action
         
         # Predict
-        $dir = 1
         if ($repState.ContainsKey('Direction')) {
             $dir = $repState['Direction']
+            $predDelta = $magnitude * $dir
+        } elseif ($predictorTable.ContainsKey($key)) {
+            $predDelta = $predictorTable[$key]
+        } else {
+            # Deliberately incorrect initial prediction
+            $predDelta = 2
         }
-        $predDelta = $magnitude * $dir
         
         $actualDelta = $record.ActualDelta
         $error = [math]::Abs($predDelta - $actualDelta)
@@ -43,9 +48,14 @@ function Measure-Experience {
             -PredictionError $error `
             -ContradictionKey $key))
 
-        # Learn for next time (simple update for our toy model)
-        if ($dir -ne 0) {
-            $magnitude = $actualDelta / $dir
+        # Learn for next time
+        if ($repState.ContainsKey('Direction')) {
+            $dir = $repState['Direction']
+            if ($dir -ne 0) {
+                $magnitude = $actualDelta / $dir
+            }
+        } else {
+            $predictorTable[$key] = $actualDelta
         }
 
         if (-not $keyToDeltas.ContainsKey($key)) {
