@@ -7,6 +7,8 @@
 | SMA Lowering Probe | `C:\Dev\PSPersistence\probes\Test-SmaCompilation.ps1` | f4c07ae96e1a49a0c4ff82421abf2795926b60f9 | Reflection machinery to reach authentic SMA expression tree via _scriptBlockData and Compiler.Compile. |
 | Proposal Provider & Mutation DSL | `C:\Dev\ChangeModel\src\Proposal.ps1` | In-tree synthesis | Constrained representation mutation language (`AddFeature`, `RemoveFeature`, `Combine`), provider boundary, and independent replay verification gate. |
 | SMA Experience Dataset Generator | `C:\Dev\ChangeModel\src\SmaDataset.ps1` | In-tree synthesis | Couples SMA AST/token parser, compiler lowering reflection, and live delegate invocation into measured transformation dimensions. |
+| Authentic SMA Expression Feature Extractor | `C:\Dev\ChangeModel\src\ExpressionFeatures.ps1` | In-tree synthesis | Deep inspection of authentic SMA LINQ expression tree nodes: binders, operations, constants, operand ordering, and node types. |
+| Contentful SMA Dataset Generator | `C:\Dev\ChangeModel\src\SmaContentfulDataset.ps1` | In-tree synthesis | Multi-quadrant adversarial corpus generator preserving canonical fingerprints and derived delta features. |
 
 ## PowerShell Source Oracle
 
