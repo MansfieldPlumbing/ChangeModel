@@ -33,9 +33,9 @@ Write-Host "  Q2 (Expr changed   / Beh unchanged): $q2Count"
 Write-Host "  Q3 (Expr changed   / Beh changed)  : $q3Count"
 Write-Host "  Q4 (Expr unchanged / Beh changed)  : $q4Count (Measured fact: 0 for pure closed SMA lowering)"
 
-# Condition 7: At least one behavior-preserving and one behavior-changing specimen both have DeltaExpression = 1
-if ($q2Count -lt 1 -or $q3Count -lt 1) {
-    throw "Condition 7 Failure: Must have both behavior-preserving ($q2Count) and behavior-changing ($q3Count) specimens with CoarseDeltaExpression=1."
+# Condition 7: Multiple behavior-preserving and multiple behavior-changing specimens both have DeltaExpression = 1
+if ($q2Count -lt 2 -or $q3Count -lt 2) {
+    throw "Condition 7 Failure: Must have multiple behavior-preserving (found $q2Count >= 2) and multiple behavior-changing (found $q3Count >= 2) specimens with CoarseDeltaExpression=1."
 }
 
 # 3. Condition 1: Evaluate impoverished representation R0 = { CoarseDeltaExpression }

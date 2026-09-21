@@ -21,6 +21,12 @@ function Get-SmaContentfulSpecimenPairs {
             Domain = 'NumericDouble'
         },
         [pscustomobject]@{
+            Name = 'Preserving_CommutativeMultiplication'
+            SourceA = 'param([double]$a, [double]$b) $a * $b'
+            SourceB = 'param([double]$a, [double]$b) $b * $a'
+            Domain = 'NumericDouble'
+        },
+        [pscustomobject]@{
             Name = 'Preserving_Identical'
             SourceA = 'param([double]$a, [double]$b) $a + $b'
             SourceB = 'param([double]$a, [double]$b) $a + $b'
@@ -56,9 +62,9 @@ function Get-SmaContentfulSpecimenPairs {
 function Get-SmaContentfulHeldOutPairs {
     return @(
         [pscustomobject]@{
-            Name = 'HeldOut_Preserving_CommutativeMult'
-            SourceA = 'param([double]$a, [double]$b) $a * $b'
-            SourceB = 'param([double]$a, [double]$b) $b * $a'
+            Name = 'HeldOut_Preserving_CommutativeEquality'
+            SourceA = 'param([double]$a, [double]$b) $a -eq $b'
+            SourceB = 'param([double]$a, [double]$b) $b -eq $a'
             Domain = 'NumericDouble'
         },
         [pscustomobject]@{
@@ -71,6 +77,12 @@ function Get-SmaContentfulHeldOutPairs {
             Name = 'HeldOut_Breaking_ScaleConstant'
             SourceA = 'param([double]$a) $a * 3.0'
             SourceB = 'param([double]$a) $a * 7.0'
+            Domain = 'NumericDouble'
+        },
+        [pscustomobject]@{
+            Name = 'HeldOut_Breaking_OpAndConstant'
+            SourceA = 'param([double]$a) $a * 2.0'
+            SourceB = 'param([double]$a) $a - 8.0'
             Domain = 'NumericDouble'
         }
     )
