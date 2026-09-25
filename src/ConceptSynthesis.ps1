@@ -128,7 +128,8 @@ function Measure-ConceptSufficiency {
 function Invoke-ConceptSearch {
     param(
         [Parameter(Mandatory)][array]$History,
-        [Parameter(Mandatory)][Concept[]]$CandidateConcepts
+        [Parameter(Mandatory)][Concept[]]$CandidateConcepts,
+        [Parameter(Mandatory)][string[]]$AtomicFeatures
     )
 
     $bestConcept = $null
@@ -166,16 +167,131 @@ function Invoke-ConceptSearch {
         }
     }
 
-    # Bounded exhaustive oracle check
-    $oracleBestScore = $bestScore
-    $reachedOracle = $true
+    # Bounded exhaustive oracle: enumerated and scored independently of the
+    # candidate list, Concept.Evaluate and Measure-ConceptSufficiency.
+    $oracle = Get-ConceptOracleOptimum -History $History -AtomicFeatures $AtomicFeatures
+    $winnerByOracle = $oracle.Scores[$bestConcept.Name]
+
+    $reachedOracle = $false
+    if ($null -ne $winnerByOracle -and
+        $winnerByOracle.Contradictions -eq $bestScore.Contradictions -and
+        $winnerByOracle.PredictionError -eq $bestScore.PredictionError -and
+        $winnerByOracle.Complexity -eq $bestScore.Complexity -and
+        $winnerByOracle.Contradictions -eq $oracle.Best.Contradictions -and
+        $winnerByOracle.PredictionError -eq $oracle.Best.PredictionError -and
+        $winnerByOracle.Complexity -eq $oracle.Best.Complexity) {
+        $reachedOracle = $true
+    }
 
     return [pscustomobject]@{
         WinningConcept = $bestConcept
         WinningMeasure = $bestScore
         ReachedOracle = $reachedOracle
+        OracleBestMeasure = $oracle.Best
+        OracleOptimumNames = $oracle.OptimumNames
+        OracleScores = $oracle.Scores
+        ExhaustiveEvaluations = $oracle.Scores.Count
         AllCandidatesCount = $CandidateConcepts.Length
         AllEvaluations = $allScores.ToArray()
+    }
+}
+
+# Reference oracle for Invoke-ConceptSearch. Enumerates the bounded concept
+# language (Atom, Not over each feature; And, Or over each unordered pair) from
+# the feature list alone, evaluates concepts as truth tables over raw feature
+# values, and restates the measure's definitions:
+#   - prediction: the last delta seen for the key, 2 when the key is unseen;
+#   - contradiction: a record whose key was seen before and whose key has more
+#     than one distinct delta once this record is included.
+function Get-ConceptOracleOptimum {
+    param(
+        [Parameter(Mandatory)][array]$History,
+        [Parameter(Mandatory)][string[]]$AtomicFeatures
+    )
+
+    # Truth tables indexed [a][b]; unary operators ignore b.
+    $operators = [ordered]@{
+        Atom = @{ Arity = 1; Complexity = 1; Table = @(@(0, 0), @(1, 1)) }
+        Not  = @{ Arity = 1; Complexity = 2; Table = @(@(1, 1), @(0, 0)) }
+        And  = @{ Arity = 2; Complexity = 2; Table = @(@(0, 0), @(0, 1)) }
+        Or   = @{ Arity = 2; Complexity = 2; Table = @(@(0, 1), @(1, 1)) }
+    }
+
+    $bit = {
+        param($canonical, [string]$feature)
+        $property = $canonical.PSObject.Properties[$feature]
+        if ($null -eq $property) { return 0 }
+        if ([int]$property.Value -eq 1) { return 1 }
+        return 0
+    }
+
+    $space = [System.Collections.Generic.List[object]]::new()
+    foreach ($opName in $operators.Keys) {
+        $op = $operators[$opName]
+        if ($op.Arity -eq 1) {
+            foreach ($a in $AtomicFeatures) {
+                $space.Add(@{ Name = "$opName($a)"; Op = $op; A = $a; B = $null })
+            }
+        } else {
+            for ($i = 0; $i -lt $AtomicFeatures.Length; $i++) {
+                for ($j = $i + 1; $j -lt $AtomicFeatures.Length; $j++) {
+                    $a = $AtomicFeatures[$i]; $b = $AtomicFeatures[$j]
+                    $space.Add(@{ Name = "$opName($a, $b)"; Op = $op; A = $a; B = $b })
+                }
+            }
+        }
+    }
+
+    $scores = @{}
+    $best = $null
+    foreach ($entry in $space) {
+        $lastDelta = @{}
+        $distinct = @{}
+        $contradictions = 0
+        $totalError = 0
+        foreach ($record in $History) {
+            $bitA = & $bit $record.CanonicalBefore $entry.A
+            $bitB = if ($null -eq $entry.B) { 0 } else { & $bit $record.CanonicalBefore $entry.B }
+            $key = '{0}|{1}' -f $entry.Op.Table[$bitA][$bitB], $record.Action
+            $actual = [int]$record.ActualDelta
+
+            $seen = $lastDelta.ContainsKey($key)
+            $predicted = if ($seen) { $lastDelta[$key] } else { 2 }
+            $totalError += [math]::Abs($predicted - $actual)
+            $lastDelta[$key] = $actual
+
+            if (-not $distinct.ContainsKey($key)) { $distinct[$key] = @{} }
+            $distinct[$key][$actual] = $true
+            if ($seen -and $distinct[$key].Count -gt 1) { $contradictions++ }
+        }
+
+        $score = [pscustomobject]@{
+            ConceptName = $entry.Name
+            Contradictions = $contradictions
+            PredictionError = $totalError
+            Complexity = $entry.Op.Complexity
+        }
+        $scores[$entry.Name] = $score
+
+        if ($null -eq $best -or
+            $score.Contradictions -lt $best.Contradictions -or
+            ($score.Contradictions -eq $best.Contradictions -and
+             ($score.PredictionError -lt $best.PredictionError -or
+              ($score.PredictionError -eq $best.PredictionError -and $score.Complexity -lt $best.Complexity)))) {
+            $best = $score
+        }
+    }
+
+    $optimumNames = @($scores.Values | Where-Object {
+        $_.Contradictions -eq $best.Contradictions -and
+        $_.PredictionError -eq $best.PredictionError -and
+        $_.Complexity -eq $best.Complexity
+    } | ForEach-Object ConceptName | Sort-Object)
+
+    return [pscustomobject]@{
+        Best = $best
+        OptimumNames = $optimumNames
+        Scores = $scores
     }
 }
 

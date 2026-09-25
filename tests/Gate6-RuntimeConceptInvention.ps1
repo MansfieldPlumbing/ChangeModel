@@ -47,7 +47,7 @@ if ($atomsWithContradictions -ne $atomicFeatures.Length) {
 Write-Host "Confirmed all $($atomicFeatures.Length) individual atomic features suffer from structural residuals."
 
 # Step 3: Search and score candidate concepts against execution evidence
-$searchResult = Invoke-ConceptSearch -History $trainingDataset -CandidateConcepts $candidateConcepts
+$searchResult = Invoke-ConceptSearch -History $trainingDataset -CandidateConcepts $candidateConcepts -AtomicFeatures $atomicFeatures
 $winningConcept = $searchResult.WinningConcept
 $winningMeasure = $searchResult.WinningMeasure
 
@@ -76,6 +76,31 @@ if ($winningMeasure.Contradictions -ne 0) {
 if (-not $searchResult.ReachedOracle) {
     throw "Criterion 4 Failure: Concept selection did not match exhaustive oracle optimum."
 }
+if ($searchResult.ExhaustiveEvaluations -ne $candidateConcepts.Length) {
+    throw "Criterion 4 Failure: Oracle enumerated $($searchResult.ExhaustiveEvaluations) concepts; the candidate generator produced $($candidateConcepts.Length)."
+}
+foreach ($evaluation in $searchResult.AllEvaluations) {
+    $reference = $searchResult.OracleScores[$evaluation.Concept.Name]
+    if ($null -eq $reference -or
+        $reference.Contradictions -ne $evaluation.Score.Contradictions -or
+        $reference.PredictionError -ne $evaluation.Score.PredictionError -or
+        $reference.Complexity -ne $evaluation.Score.Complexity) {
+        throw "Criterion 4 Failure: Search and oracle disagree on '$($evaluation.Concept.Name)'."
+    }
+}
+
+# Criterion 4 negative control: with every oracle-optimal concept withheld from
+# the search, the oracle check must report failure.
+$withheld = @($candidateConcepts | Where-Object { $_.Name -notin $searchResult.OracleOptimumNames })
+if ($withheld.Length -eq $candidateConcepts.Length) {
+    throw "Criterion 4 Control Failure: No candidate matched an oracle-optimal name."
+}
+$controlResult = Invoke-ConceptSearch -History $trainingDataset -CandidateConcepts $withheld -AtomicFeatures $atomicFeatures
+if ($controlResult.ReachedOracle) {
+    throw "Criterion 4 Control Failure: Oracle check passed with the optimum withheld ($($controlResult.WinningConcept.Name))."
+}
+Write-Host "Oracle optimum: $($searchResult.OracleOptimumNames -join ', ') over $($searchResult.ExhaustiveEvaluations) concepts"
+Write-Host "Control: optimum withheld, search chose $($controlResult.WinningConcept.Name), Reached Oracle = $($controlResult.ReachedOracle)"
 
 # Criterion 5: Held-out behavioral predictions under explicitly reported support
 $learnedTable = $winningMeasure.PredictorTable
