@@ -8,7 +8,9 @@
 
 ## 1. Executive Summary & Epistemological Axioms
 
-`ChangeModel` is an empirical systems framework implemented in pure PowerShell (System.Management.Automation / SMA) that operationalizes the formal boundary between **parametric error** ("wrong") and **representational insufficiency** ("not even wrong"), and proves that an autonomous runtime can synthesize, verify, and materialize novel semantic concepts directly into a live execution environment.
+`ChangeModel` is an experimental framework in pure PowerShell (System.Management.Automation / SMA). It separates **parametric error** ("wrong") from **representational insufficiency** ("not even wrong"), searches for a representation that removes the insufficiency, and materializes the result in a live SMA runtime through upstream extension points (ETS type data, `DynamicKeyword`).
+
+The aim is a learning component inside PowerShell/SMA that grows its own perception of inputs over time. The gates below bound what is demonstrated so far: small, hand-built or single-specimen corpora, and search methods that are established in the literature (see [Section 7](#7-relation-to-prior-work)). The PowerShell engineering is this repository's own contribution; the learning methods are not new.
 
 ### The Two Modes of Failure
 1. **Wrong (Parametric Error)**:  
@@ -30,8 +32,8 @@ Every claim in `ChangeModel` corresponds to an executable verification script un
 | **Gate 2** | **Not Even Wrong** | [`tests/Gate2-NotEvenWrong.ps1`](tests/Gate2-NotEvenWrong.ps1) | Impoverished $\mathcal{R}_1 = \{X\}$ induces contradictions ($\text{Contradictions} > 0$). Bounded search over candidate features discovers $\{X, \text{Direction}\}$ with zero contradictions and minimal complexity. |
 | **Gate 3** | **Model Proposal & Replay** | [`tests/Gate3-ModelProposal.ps1`](tests/Gate3-ModelProposal.ps1) | A statistical or learned proposer suggests representation mutations (`AddFeature`, `RemoveFeature`, `Combine`), but proposals must pass independent, deterministic oracle replay. Proposals that do not strictly reduce contradictions are rejected. |
 | **Gate 4** | **SMA Representation Revision** | [`tests/Gate4-SmaNotEvenWrong.ps1`](tests/Gate4-SmaNotEvenWrong.ps1) | Extends structural contradiction detection to authentic PowerShell AST lowering and DLR LINQ expression tree generation. |
-| **Gate 5** | **Contentful SMA Delta** | [`tests/Gate5-ContentfulDelta.ps1`](tests/Gate5-ContentfulDelta.ps1) | Demonstrates that coarse representation $\mathcal{R}_0 = \{\text{CoarseDeltaExpression}\}$ conflates behavior-preserving and behavior-altering AST transformations ($\text{Contradictions} = 4$). Bounded search over authentic SMA expression features discovers the minimal zero-contradiction feature pair $\{\text{BinderOperationChanged}, \text{ConstantValueChanged}\}$ with $100\%$ held-out generalization. |
-| **Gate 6** | **Runtime Concept Invention** | [`tests/Gate6-RuntimeConceptInvention.ps1`](tests/Gate6-RuntimeConceptInvention.ps1) | Synthesizes a composite predicate $\text{Or}(\text{BinderOperationChanged}, \text{ConstantValueChanged})$ from atomic primitives, verifies it against execution evidence, and materializes it into the live runspace via PowerShell Extended Type System (`Update-TypeData`). Proves that pre-compiled `ScriptBlock` instances dynamically resolve the newly invented concept without recompilation, and proves semantic reversibility when the type data is removed. |
+| **Gate 5** | **Contentful SMA Delta** | [`tests/Gate5-ContentfulDelta.ps1`](tests/Gate5-ContentfulDelta.ps1) | Demonstrates that coarse representation $\mathcal{R}_0 = \{\text{CoarseDeltaExpression}\}$ conflates behavior-preserving and behavior-altering AST transformations ($\text{Contradictions} = 4$). Bounded search over authentic SMA expression features discovers the minimal zero-contradiction feature pair $\{\text{BinderOperationChanged}, \text{ConstantValueChanged}\}$ and classifies all 4 held-out pairs correctly (9 training pairs). |
+| **Gate 6** | **Runtime Concept Invention** | [`tests/Gate6-RuntimeConceptInvention.ps1`](tests/Gate6-RuntimeConceptInvention.ps1) | Synthesizes a composite predicate $\text{Or}(\text{BinderOperationChanged}, \text{ConstantValueChanged})$ from atomic primitives, verifies it against execution evidence, and materializes it into the live runspace via PowerShell Extended Type System (`Update-TypeData`). Proves that pre-compiled `ScriptBlock` instances dynamically resolve the newly invented concept without recompilation, and removes it with `Remove-TypeData`. **Known defect:** `Invoke-ConceptSearch` sets `ReachedOracle = $true` without comparing against an exhaustive result, so criterion 4 cannot fail; that criterion is unproved until fixed. |
 | **Gate 7** | **World Reconstruction After Process Death** | [`tests/Gate7-WorldReconstruction.ps1`](tests/Gate7-WorldReconstruction.ps1) | Learns one representational delta from real JS2PS evidence (unmodified OGL source as SMA perceives it, judged by an ECMAScript oracle), records it as a replayable `.psd1` world tape (`src/WorldTape.ps1`), rebuilds the identical world in a separate `pwsh` process, and rolls back to the pristine state exactly. Needs `JS2PS_ROOT`. Result and limits: [`docs/GATE7-RESULT.md`](docs/GATE7-RESULT.md); upstream audit: [`UPSTREAM-AUDIT.md`](UPSTREAM-AUDIT.md). |
 
 ---
@@ -65,8 +67,12 @@ ChangeModel/
     ├── Gate3-ModelProposal.ps1                # Untrusted proposer / deterministic replay gate
     ├── Gate4-SmaNotEvenWrong.ps1              # SMA AST expression lowering proof
     ├── Gate5-ContentfulDelta.ps1              # Multi-quadrant SMA contentful delta proof
-    └── Gate6-RuntimeConceptInvention.ps1      # Dynamic concept synthesis & ETS live materialization proof
+    ├── Gate6-RuntimeConceptInvention.ps1      # Dynamic concept synthesis & ETS live materialization proof
+    ├── Gate7-WorldReconstruction.ps1          # Two-process world-tape replay and rollback gate
+    └── Gate7-Phase.ps1                        # One Gate 7 phase, run in its own pwsh process
 ```
+
+`src/WorldTape.ps1` writes and reads the Gate 7 world tape.
 
 ---
 
@@ -87,7 +93,7 @@ In `tests/Gate5-ContentfulDelta.ps1`, pairs of scriptblocks are evaluated across
 - **Q1 (Expr Unchanged / Behavior Unchanged)**: Idempotent or identical script blocks.
 - **Q2 (Expr Changed / Behavior Unchanged)**: Syntactic or representation changes that preserve runtime semantics (e.g., parameter renames, neutral rewrites).
 - **Q3 (Expr Changed / Behavior Changed)**: Semantic changes where both AST lowering and runtime outputs diverge.
-- **Q4 (Expr Unchanged / Behavior Changed)**: Measured as $0$ (guaranteed by pure, closed SMA compilation).
+- **Q4 (Expr Unchanged / Behavior Changed)**: Measured as $0$ on this corpus. This is not proved in general.
 
 A coarse feature like `CoarseDeltaExpression` cannot differentiate Q2 from Q3, triggering persistent structural contradictions. `ChangeModel` searches the space of expression features to isolate the exact minimal basis that separates behavior-preserving transforms from behavior-altering transforms.
 
@@ -95,12 +101,12 @@ A coarse feature like `CoarseDeltaExpression` cannot differentiate Q2 from Q3, t
 
 ## 5. Runtime Concept Invention & Live ETS Materialization
 
-In Gate 6, `ChangeModel` proves that conceptual invention is not merely an offline search heuristic, but can be translated into live OS/runtime reality:
+Gate 6 composes existing features into a new predicate and installs it in the live runspace:
 
 1. **Concept Synthesis**: The engine evaluates compositions of atomic features using logical operators ($\text{Or}, \text{And}$). It identifies that while no single feature is sufficient, $\text{Or}(\text{BinderOperationChanged}, \text{ConstantValueChanged})$ achieves zero contradictions and zero held-out error with minimal complexity.
 2. **ETS Dynamic Installation**: The synthesized concept is materialized into the live PowerShell runspace using `Update-TypeData` with dynamic `ScriptProperty` definitions registered under the `System.Management.Automation.ScriptBlock` type hierarchy.
 3. **DLR Callsite Rule Invalidation**: Because PowerShell's member binder (`PSGetMemberBinder`) enforces instance-level type table restrictions, **pre-existing, already-compiled `ScriptBlock` instances immediately resolve the new concept property at runtime** without recompilation or AST rewriting.
-4. **Semantic Reversibility**: Upon executing `Remove-TypeData`, the synthesized concept cleanly evaporates from the runtime, restoring the exact pristine state of the host engine.
+4. **Removal**: `Remove-TypeData` removes the synthesized property from the runspace's type table.
 
 ---
 
@@ -132,3 +138,26 @@ GATE5_CONTENTFUL_DELTA=PASS
 Winning Concept: Or(BinderOperationChanged, ConstantValueChanged)
 GATE6_RUNTIME_CONCEPT_INVENTION=PASS
 ```
+
+---
+
+## 7. Relation to Prior Work
+
+Each mechanism in `ChangeModel` has an established counterpart. This repository reimplements them inside SMA; it does not claim them as new.
+
+| `ChangeModel` | Established counterpart |
+| :--- | :--- |
+| Contradiction: identical feature vectors with different outcomes | Inconsistent decision table (Pawlak, rough sets); perceptual aliasing in reinforcement learning |
+| Minimal zero-contradiction feature subset (Gates 2 and 5) | FOCUS and the MIN-FEATURES bias (Almuallim and Dietterich, AAAI 1991); rough-set reducts |
+| Separating "wrong" from "not even wrong" | Parameter error versus representation inadequacy under aliasing (McCallum, Utile Distinction Memory, ICML 1993; Huang, arXiv 2608.02267, 2026) |
+| Growing the perceived state space only where outcomes disagree | U-Tree (McCallum, *Reinforcement Learning with Selective Perception and Hidden State*, 1996); Feature Reinforcement Learning (Hutter, arXiv 0906.1713) |
+| Composite concept `Or(A, B)` from primitives (Gate 6) | Constructive induction; predicate invention in inductive logic programming |
+| Impasse, then a learned result installed so the impasse does not recur | Soar impasses, substates and chunking (Laird, arXiv 2205.03854) |
+| Extending the vocabulary the system perceives and expresses | DreamCoder library learning (Ellis et al., PLDI 2021, arXiv 2006.08381) |
+| Ordered structural additions, each with a history record (world tape, Gate 7) | NEAT historical markings / innovation numbers (Stanley and Miikkulainen, 2002); event sourcing |
+
+### Open questions this repository can test
+
+- Whether `Invoke-RepresentationSearch` finds anything FOCUS does not, on the same features. Until a gate compares them, assume it does not.
+- Whether a learned change to SMA's perception improves a downstream outcome: parse errors, successful compilation, or task reward. Gate 7 changed token classification but not parse errors (10, 25 and 48 before and after).
+- Whether a learned percept generalizes beyond the words it was learned from. Gate 7's `Text` percept covers only words seen in training: held-out contradictions went from 366 to 332, and the remainder is almost entirely `this` and `typeof`, which the training specimen does not contain.
