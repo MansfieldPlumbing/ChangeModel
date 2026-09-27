@@ -1,13 +1,20 @@
 [CmdletBinding()]
 param(
     [string]$SourceA = 'param($a, $b) [void]($a + $b)',
-    [string]$SourceB = 'param($a, $b) [void]( $a + $b )'
+    [string]$SourceB = 'param($a, $b) [void]( $a + $b )',
+    [object]$LoweredA,
+    [object]$LoweredB
 )
 
 $probe = "$PSScriptRoot\Observe-SmaLowering.ps1"
 
-$resA = & $probe -Source $SourceA -PassThru
-$resB = & $probe -Source $SourceB -PassThru
+if ($null -ne $LoweredA -and $null -ne $LoweredB) {
+    $resA = $LoweredA
+    $resB = $LoweredB
+} else {
+    $resA = & $probe -Source $SourceA -PassThru
+    $resB = & $probe -Source $SourceB -PassThru
+}
 
 function Get-AstStructureString ($ast) {
     $sb = [System.Text.StringBuilder]::new()

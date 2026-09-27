@@ -106,7 +106,7 @@ function New-SmaContentfulDataset {
         $features = Get-ContentfulDeltaFeatures -LoweredResultA $loweredA -LoweredResultB $loweredB
 
         # 3. Authentic behavior measurement
-        $deltaMeasurement = & $DeltasProbePath -SourceA $pair.SourceA -SourceB $pair.SourceB
+        $deltaMeasurement = & $DeltasProbePath -SourceA $pair.SourceA -SourceB $pair.SourceB -LoweredA $loweredA -LoweredB $loweredB
         $actualBehaviorDelta = if ($deltaMeasurement.DeltaBehavior) { 1 } else { 0 }
 
         # Canonical evidence preserving both sides and all contentful features
