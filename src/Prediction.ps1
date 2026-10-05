@@ -1,12 +1,12 @@
 function Get-ActualDelta {
-    param([WorldState]$Before, [WorldState]$After)
+    param([LinearState]$Before, [LinearState]$After)
     return $After.X - $Before.X
 }
 
-function Measure-Experience {
+function Measure-Representation {
     param([array]$History, [Representation]$Rep, [string]$RepVersion)
 
-    # Replay experience against representation
+    # Replay observations against representation
     $replayHistory = [System.Collections.Generic.List[object]]::new()
     
     # Track observed deltas for contradictions
@@ -21,7 +21,7 @@ function Measure-Experience {
     foreach ($record in $History) {
         $canonical = $record.CanonicalBefore
         $repState = $Rep.GetRepresentedState($canonical)
-        $key = Get-ContradictionKey -RepresentedBefore $repState -Action $record.Action
+        $key = Get-ConditionKey -RepresentedBefore $repState -Action $record.Action
         
         # Predict
         if ($repState.ContainsKey('Direction')) {
@@ -38,7 +38,7 @@ function Measure-Experience {
         $error = [math]::Abs($predDelta - $actualDelta)
         $totalError += $error
 
-        $replayHistory.Add((New-ExperienceRecord `
+        $replayHistory.Add((New-ObservationRecord `
             -RepresentationVersion $RepVersion `
             -CanonicalBefore $canonical `
             -RepresentedBefore $repState `
@@ -46,7 +46,7 @@ function Measure-Experience {
             -PredictedDelta $predDelta `
             -ActualDelta $actualDelta `
             -PredictionError $error `
-            -ContradictionKey $key))
+            -ConditionKey $key))
 
         # Learn for next time
         if ($repState.ContainsKey('Direction')) {

@@ -43,7 +43,7 @@ function Get-SmaSpecimenPairs {
     )
 }
 
-function New-SmaExperienceDataset {
+function New-SmaSpecimenDataset {
     param(
         [string]$ProbePath = "$PSScriptRoot\..\probes\Measure-SmaDeltas.ps1",
         [array]$SpecimenPairs = (Get-SmaSpecimenPairs)

@@ -1,4 +1,4 @@
-function Get-AuthenticExpressionFingerprint {
+function Get-ExpressionSignature {
     param([Parameter(Mandatory)]$LoweredResult)
 
     $flags = [Reflection.BindingFlags]'Instance,NonPublic,Public'
@@ -61,7 +61,7 @@ function Get-AuthenticExpressionFingerprint {
         NodeTypes = @($nodeTypes | Sort-Object)
         Calls = @($calls | Sort-Object)
         OperandOrder = @($operandOrder)
-        FullFingerprint = $fullTokens -join ';'
+        ExpressionSignature = $fullTokens -join ';'
     }
 }
 
@@ -71,15 +71,15 @@ function Get-ContentfulDeltaFeatures {
         [Parameter(Mandatory)]$LoweredResultB
     )
 
-    $fpA = Get-AuthenticExpressionFingerprint $LoweredResultA
-    $fpB = Get-AuthenticExpressionFingerprint $LoweredResultB
+    $sigA = Get-ExpressionSignature $LoweredResultA
+    $sigB = Get-ExpressionSignature $LoweredResultB
 
-    $coarseDeltaExpr = if ($fpA.FullFingerprint -ne $fpB.FullFingerprint) { 1 } else { 0 }
-    $binderOpChanged = if (($fpA.BinderOperations -join ';') -ne ($fpB.BinderOperations -join ';')) { 1 } else { 0 }
-    $constantValChanged = if (($fpA.ConstantValues -join ';') -ne ($fpB.ConstantValues -join ';')) { 1 } else { 0 }
-    $operandOrderChanged = if (($fpA.OperandOrder -join ';') -ne ($fpB.OperandOrder -join ';')) { 1 } else { 0 }
-    $nodeTypeChanged = if (($fpA.NodeTypes -join ';') -ne ($fpB.NodeTypes -join ';')) { 1 } else { 0 }
-    $callTargetChanged = if (($fpA.Calls -join ';') -ne ($fpB.Calls -join ';')) { 1 } else { 0 }
+    $coarseDeltaExpr = if ($sigA.ExpressionSignature -ne $sigB.ExpressionSignature) { 1 } else { 0 }
+    $binderOpChanged = if (($sigA.BinderOperations -join ';') -ne ($sigB.BinderOperations -join ';')) { 1 } else { 0 }
+    $constantValChanged = if (($sigA.ConstantValues -join ';') -ne ($sigB.ConstantValues -join ';')) { 1 } else { 0 }
+    $operandOrderChanged = if (($sigA.OperandOrder -join ';') -ne ($sigB.OperandOrder -join ';')) { 1 } else { 0 }
+    $nodeTypeChanged = if (($sigA.NodeTypes -join ';') -ne ($sigB.NodeTypes -join ';')) { 1 } else { 0 }
+    $callTargetChanged = if (($sigA.Calls -join ';') -ne ($sigB.Calls -join ';')) { 1 } else { 0 }
 
     return [pscustomobject]@{
         CoarseDeltaExpression = $coarseDeltaExpr
@@ -88,7 +88,7 @@ function Get-ContentfulDeltaFeatures {
         OperandOrderChanged = $operandOrderChanged
         NodeTypeChanged = $nodeTypeChanged
         CallTargetChanged = $callTargetChanged
-        ExpressionBeforeFingerprint = $fpA
-        ExpressionAfterFingerprint = $fpB
+        ExpressionBeforeSignature = $sigA
+        ExpressionAfterSignature = $sigB
     }
 }

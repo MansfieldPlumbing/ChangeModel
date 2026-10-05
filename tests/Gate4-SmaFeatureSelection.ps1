@@ -1,21 +1,21 @@
 $ErrorActionPreference = 'Stop'
 
 . $PSScriptRoot\..\src\Representation.ps1
-. $PSScriptRoot\..\src\Experience.ps1
+. $PSScriptRoot\..\src\ObservationRecord.ps1
 . $PSScriptRoot\..\src\Prediction.ps1
 . $PSScriptRoot\..\src\Search.ps1
 . $PSScriptRoot\..\src\Proposal.ps1
 . $PSScriptRoot\..\src\SmaDataset.ps1
 
-# 1. Generate authentic experience dataset from SMA compiler lowering & behavior probes
-$trainingDataset = New-SmaExperienceDataset
+# 1. Generate authentic specimen dataset from SMA compiler lowering & behavior probes
+$trainingDataset = New-SmaSpecimenDataset
 if ($trainingDataset.Count -lt 4) {
     throw "Dataset generation failed: Insufficient records ($($trainingDataset.Count))."
 }
 
 # 2. Evaluate under surface syntax representation R1 = { DeltaSource }
 $r1 = [Representation]::new([string[]]@('DeltaSource'))
-$measureR1 = Measure-Experience -History $trainingDataset -Rep $r1 -RepVersion "R1_SurfaceSource"
+$measureR1 = Measure-Representation -History $trainingDataset -Rep $r1 -RepVersion "R1_SurfaceSource"
 
 if ($measureR1.Contradictions -le 0) {
     throw "Gate 4 Precondition Failure: Expected contradictions under surface syntax representation R1, got $($measureR1.Contradictions)."
@@ -33,8 +33,8 @@ $searchResult = Invoke-RepresentationSearch `
     -History $trainingDataset `
     -AllFeatures $allMeasuredDimensions
 
-if (-not $searchResult.ReachedOracle) {
-    throw "Representation search failed to reach exhaustive oracle optimum on authentic SMA artifacts."
+if (-not $searchResult.ReachedExhaustiveOptimum) {
+    throw "Representation search failed to reach exhaustive optimum on authentic SMA artifacts."
 }
 
 $finalRep = $searchResult.FinalRep
@@ -52,7 +52,7 @@ if (-not ($finalRep.Features -contains 'DeltaExpression')) {
 if ($finalRep.Features.Length -gt 1) {
     # Check if single feature DeltaExpression alone was sufficient
     $singleExprRep = [Representation]::new([string[]]@('DeltaExpression'))
-    $singleMeasure = Measure-Experience -History $trainingDataset -Rep $singleExprRep -RepVersion "R_SingleExpr"
+    $singleMeasure = Measure-Representation -History $trainingDataset -Rep $singleExprRep -RepVersion "R_SingleExpr"
     if ($singleMeasure.Contradictions -eq 0 -and $finalRep.Features.Length -gt 1) {
         throw "Complexity was not minimal: Selected $($finalRep.Features.Length) features when 1 was sufficient."
     }
@@ -72,11 +72,11 @@ $heldOutPairs = @(
     }
 )
 
-$heldOutDataset = New-SmaExperienceDataset -SpecimenPairs $heldOutPairs
-$heldOutMeasure = Measure-Experience -History $heldOutDataset -Rep $finalRep -RepVersion "R2_HeldOut"
+$heldOutDataset = New-SmaSpecimenDataset -SpecimenPairs $heldOutPairs
+$heldOutMeasure = Measure-Representation -History $heldOutDataset -Rep $finalRep -RepVersion "R2_HeldOut"
 
 if ($heldOutMeasure.Contradictions -ne 0) {
     throw "Held-out validation failed: Detected contradictions under revised representation R2."
 }
 
-Write-Host "GATE4_SMA_NOT_EVEN_WRONG=PASS"
+Write-Host "GATE4_SMA_FEATURE_SELECTION=PASS"

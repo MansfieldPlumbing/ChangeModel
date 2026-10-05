@@ -1,7 +1,7 @@
 $ErrorActionPreference = 'Stop'
 
 . $PSScriptRoot\..\src\Representation.ps1
-. $PSScriptRoot\..\src\Experience.ps1
+. $PSScriptRoot\..\src\ObservationRecord.ps1
 . $PSScriptRoot\..\src\Prediction.ps1
 . $PSScriptRoot\..\src\Search.ps1
 . $PSScriptRoot\..\src\Proposal.ps1
@@ -16,8 +16,8 @@ $heldOutDataset  = New-SmaContentfulDataset -SpecimenPairs (Get-SmaContentfulHel
 
 # Verify canonical evidence retention on every record
 foreach ($rec in $trainingDataset) {
-    if (-not $rec.CanonicalBefore.ExpressionBeforeFingerprint -or -not $rec.CanonicalBefore.ExpressionAfterFingerprint) {
-        throw "Canonical evidence violation: Missing expression fingerprints on specimen '$($rec.SpecimenName)'."
+    if (-not $rec.CanonicalBefore.ExpressionBeforeSignature -or -not $rec.CanonicalBefore.ExpressionAfterSignature) {
+        throw "Canonical evidence violation: Missing expression signatures on specimen '$($rec.SpecimenName)'."
     }
 }
 
@@ -40,7 +40,7 @@ if ($q2Count -lt 2 -or $q3Count -lt 2) {
 
 # 3. Condition 1: Evaluate impoverished representation R0 = { CoarseDeltaExpression }
 $r0 = [Representation]::new([string[]]@('CoarseDeltaExpression'))
-$measureR0 = Measure-Experience -History $trainingDataset -Rep $r0 -RepVersion "R0_CoarseDelta"
+$measureR0 = Measure-Representation -History $trainingDataset -Rep $r0 -RepVersion "R0_CoarseDelta"
 
 if ($measureR0.Contradictions -le 0) {
     throw "Condition 1 Failure: Expected structural contradiction under coarse R0, got $($measureR0.Contradictions)."
@@ -72,7 +72,7 @@ $winningMeasure = $searchResult.FinalMeasure
 Write-Host "Selected Features: $($winningRep.Features -join ', ')"
 Write-Host "Winning Measure Contradictions: $($winningMeasure.Contradictions)"
 Write-Host "Winning Measure Complexity    : $($winningMeasure.RepresentationComplexity)"
-Write-Host "Reached Exhaustive Oracle     : $($searchResult.ReachedOracle)"
+Write-Host "Reached Exhaustive Optimum    : $($searchResult.ReachedExhaustiveOptimum)"
 
 # Condition 2: Search selects richer contentful representation (not just coarse delta)
 if ($winningRep.Features -contains 'CoarseDeltaExpression' -and $winningRep.Features.Length -eq 1) {
@@ -85,8 +85,8 @@ if ($winningMeasure.Contradictions -ne 0) {
 }
 
 # Condition 4: Reaches exhaustive optimum over the bounded feature set
-if (-not $searchResult.ReachedOracle) {
-    throw "Condition 4 Failure: Greedy search result did not reach exhaustive oracle optimum."
+if (-not $searchResult.ReachedExhaustiveOptimum) {
+    throw "Condition 4 Failure: Greedy search result did not reach exhaustive optimum."
 }
 
 # Condition 5: Minimal complexity among equally predictive representations
@@ -97,7 +97,7 @@ for ($mask = 1; $mask -lt (1 -shl $candidateFeatures.Length); $mask++) {
     }
     if ($subFeatures.Count -lt $winningRep.Features.Length) {
         $trialRep = [Representation]::new($subFeatures.ToArray())
-        $trialMeasure = Measure-Experience -History $trainingDataset -Rep $trialRep -RepVersion "Trial_Check"
+        $trialMeasure = Measure-Representation -History $trainingDataset -Rep $trialRep -RepVersion "Trial_Check"
         if ($trialMeasure.Contradictions -eq 0) {
             throw "Condition 5 Failure: Found smaller zero-contradiction representation: $($subFeatures -join ', ')"
         }
@@ -110,7 +110,7 @@ Write-Host "Confirmed Minimal Complexity: $($winningRep.Features.Length) is mini
 $learnedTable = @{}
 foreach ($rec in $trainingDataset) {
     $state = $winningRep.GetRepresentedState($rec.CanonicalBefore)
-    $key = Get-ContradictionKey -RepresentedBefore $state -Action $rec.Action
+    $key = Get-ConditionKey -RepresentedBefore $state -Action $rec.Action
     $learnedTable[$key] = $rec.ActualDelta
 }
 
@@ -121,7 +121,7 @@ $heldOutUnseenKeys = 0
 
 foreach ($rec in $heldOutDataset) {
     $state = $winningRep.GetRepresentedState($rec.CanonicalBefore)
-    $key = Get-ContradictionKey -RepresentedBefore $state -Action $rec.Action
+    $key = Get-ConditionKey -RepresentedBefore $state -Action $rec.Action
 
     if (-not $learnedTable.ContainsKey($key)) {
         $heldOutUnseenKeys++

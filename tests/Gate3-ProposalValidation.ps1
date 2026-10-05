@@ -5,9 +5,9 @@ param(
 
 $ErrorActionPreference = 'Stop'
 
-. $PSScriptRoot\..\src\World.ps1
+. $PSScriptRoot\..\src\LinearState.ps1
 . $PSScriptRoot\..\src\Representation.ps1
-. $PSScriptRoot\..\src\Experience.ps1
+. $PSScriptRoot\..\src\ObservationRecord.ps1
 . $PSScriptRoot\..\src\Prediction.ps1
 . $PSScriptRoot\..\src\Search.ps1
 . $PSScriptRoot\..\src\Proposal.ps1
@@ -15,19 +15,19 @@ $ErrorActionPreference = 'Stop'
 $history = [System.Collections.Generic.List[object]]::new()
 
 # Generate history where same X produces incompatible deltas (+1 vs -1) due to hidden Direction
-$s1 = [WorldState]::new(); $s1.X = 5; $s1.Direction = 1; $next1 = Invoke-WorldStep $s1
+$s1 = [LinearState]::new(); $s1.X = 5; $s1.Direction = 1; $next1 = Invoke-LinearStep $s1
 $history.Add([pscustomobject]@{ CanonicalBefore = $s1; Action = 'Step'; ActualDelta = ($next1.X - $s1.X) })
 
-$s2 = [WorldState]::new(); $s2.X = 5; $s2.Direction = -1; $next2 = Invoke-WorldStep $s2
+$s2 = [LinearState]::new(); $s2.X = 5; $s2.Direction = -1; $next2 = Invoke-LinearStep $s2
 $history.Add([pscustomobject]@{ CanonicalBefore = $s2; Action = 'Step'; ActualDelta = ($next2.X - $s2.X) })
 
-$s3 = [WorldState]::new(); $s3.X = 6; $s3.Direction = 1; $next3 = Invoke-WorldStep $s3
+$s3 = [LinearState]::new(); $s3.X = 6; $s3.Direction = 1; $next3 = Invoke-LinearStep $s3
 $history.Add([pscustomobject]@{ CanonicalBefore = $s3; Action = 'Step'; ActualDelta = ($next3.X - $s3.X) })
 
 $r1 = [Representation]::new([string[]]@('X'))
 
 # Verify initial crippled representation has structural residuals
-$measureR1 = Measure-Experience -History $history -Rep $r1 -RepVersion "R1"
+$measureR1 = Measure-Representation -History $history -Rep $r1 -RepVersion "R1"
 if ($measureR1.Contradictions -eq 0) {
     throw "Precondition failure: Expected contradictions under crippled R1."
 }
@@ -113,12 +113,12 @@ if (-not ($validAudit.CandidateRepresentation.Features -contains 'Direction')) {
 # -------------------------------------------------------------------------
 $heldOut = [System.Collections.Generic.List[object]]::new()
 for ($i = 20; $i -lt 25; $i++) {
-    $s = [WorldState]::new(); $s.X = $i; $s.Direction = if ($i % 2 -eq 0) { 1 } else { -1 }
-    $next = Invoke-WorldStep $s
+    $s = [LinearState]::new(); $s.X = $i; $s.Direction = if ($i % 2 -eq 0) { 1 } else { -1 }
+    $next = Invoke-LinearStep $s
     $heldOut.Add([pscustomobject]@{ CanonicalBefore = $s; Action = 'Step'; ActualDelta = ($next.X - $s.X) })
 }
 
-$heldOutMeasure = Measure-Experience `
+$heldOutMeasure = Measure-Representation `
     -History $heldOut `
     -Rep $validAudit.CandidateRepresentation `
     -RepVersion "R_Accepted"
@@ -127,4 +127,4 @@ if ($heldOutMeasure.Contradictions -ne 0) {
     throw "Held-out verification failed: contradictions detected under accepted representation."
 }
 
-Write-Host "GATE3_MODEL_PROPOSAL=PASS"
+Write-Host "GATE3_PROPOSAL_VALIDATION=PASS"

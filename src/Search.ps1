@@ -6,7 +6,7 @@ function Invoke-RepresentationSearch {
     $selected = [System.Collections.Generic.HashSet[string]]::new()
     
     $currentRep = [Representation]::new([string[]]@($selected))
-    $currentMeasure = Measure-Experience -History $History -Rep $currentRep -RepVersion "V_Current"
+    $currentMeasure = Measure-Representation -History $History -Rep $currentRep -RepVersion "V_Current"
     $evaluations++
 
     $searchHistory = [System.Collections.Generic.List[object]]::new()
@@ -20,7 +20,7 @@ function Invoke-RepresentationSearch {
             $null = $trialSelection.Add($feature)
             $trialRep = [Representation]::new([string[]]@($trialSelection))
             
-            $trialMeasure = Measure-Experience -History $History -Rep $trialRep -RepVersion "V_Trial"
+            $trialMeasure = Measure-Representation -History $History -Rep $trialRep -RepVersion "V_Trial"
             $evaluations++
 
             # Lexicographic score: 1. Contradictions (lower better), 2. PredictionError (lower better), 3. Complexity (lower better)
@@ -72,42 +72,42 @@ function Invoke-RepresentationSearch {
         $currentMeasure = $best.Measure
     }
 
-    # Exhaustive oracle
+    # Exhaustive search for global optimum
     $combinationCount = [math]::Pow(2, $AllFeatures.Length)
-    $oracleBest = $null
+    $exhaustiveBest = $null
 
     for ($mask = 0; $mask -lt $combinationCount; $mask++) {
-        $oracleSelected = [System.Collections.Generic.HashSet[string]]::new()
+        $exhaustiveSelected = [System.Collections.Generic.HashSet[string]]::new()
         for ($index = 0; $index -lt $AllFeatures.Length; $index++) {
-            if ($mask -band (1 -shl $index)) { $null = $oracleSelected.Add($AllFeatures[$index]) }
+            if ($mask -band (1 -shl $index)) { $null = $exhaustiveSelected.Add($AllFeatures[$index]) }
         }
         
-        $oracleRep = [Representation]::new([string[]]@($oracleSelected))
-        $measure = Measure-Experience -History $History -Rep $oracleRep -RepVersion "V_Oracle"
+        $exhaustiveRep = [Representation]::new([string[]]@($exhaustiveSelected))
+        $measure = Measure-Representation -History $History -Rep $exhaustiveRep -RepVersion "V_Exhaustive"
         
         $isBetter = $false
-        if ($null -eq $oracleBest) {
+        if ($null -eq $exhaustiveBest) {
             $isBetter = $true
         } else {
-            if ($measure.Contradictions -lt $oracleBest.Contradictions) { $isBetter = $true }
-            elseif ($measure.Contradictions -eq $oracleBest.Contradictions) {
-                if ($measure.PredictionError -lt $oracleBest.PredictionError) { $isBetter = $true }
-                elseif ($measure.PredictionError -eq $oracleBest.PredictionError) {
-                    if ($measure.Contradictions -eq 0 -and $measure.RepresentationComplexity -lt $oracleBest.RepresentationComplexity) { $isBetter = $true }
+            if ($measure.Contradictions -lt $exhaustiveBest.Contradictions) { $isBetter = $true }
+            elseif ($measure.Contradictions -eq $exhaustiveBest.Contradictions) {
+                if ($measure.PredictionError -lt $exhaustiveBest.PredictionError) { $isBetter = $true }
+                elseif ($measure.PredictionError -eq $exhaustiveBest.PredictionError) {
+                    if ($measure.Contradictions -eq 0 -and $measure.RepresentationComplexity -lt $exhaustiveBest.RepresentationComplexity) { $isBetter = $true }
                 }
             }
         }
 
         if ($isBetter) {
-            $oracleBest = $measure
+            $exhaustiveBest = $measure
         }
     }
 
-    $reachedOracle = $false
-    if ($currentMeasure.Contradictions -eq $oracleBest.Contradictions -and
-        $currentMeasure.PredictionError -eq $oracleBest.PredictionError -and
-        $currentMeasure.RepresentationComplexity -eq $oracleBest.RepresentationComplexity) {
-        $reachedOracle = $true
+    $reachedOptimum = $false
+    if ($currentMeasure.Contradictions -eq $exhaustiveBest.Contradictions -and
+        $currentMeasure.PredictionError -eq $exhaustiveBest.PredictionError -and
+        $currentMeasure.RepresentationComplexity -eq $exhaustiveBest.RepresentationComplexity) {
+        $reachedOptimum = $true
     }
 
     [pscustomobject]@{
@@ -116,7 +116,7 @@ function Invoke-RepresentationSearch {
         History = $searchHistory.ToArray()
         Evaluations = $evaluations
         ExhaustiveEvaluations = [int]$combinationCount
-        OracleBestMeasure = $oracleBest
-        ReachedOracle = $reachedOracle
+        ExhaustiveBestMeasure = $exhaustiveBest
+        ReachedExhaustiveOptimum = $reachedOptimum
     }
 }

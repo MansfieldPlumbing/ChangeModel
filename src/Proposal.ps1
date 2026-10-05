@@ -144,7 +144,7 @@ function Test-RepresentationProposal {
     )
 
     # 1. Measure under current representation
-    $currentMeasure = Measure-Experience -History $Experience -Rep $CurrentRepresentation -RepVersion "V_Current"
+    $currentMeasure = Measure-Representation -History $Experience -Rep $CurrentRepresentation -RepVersion "V_Current"
     $residualsBefore = Get-Residuals -MeasureResult $currentMeasure
 
     # 2. Invoke proposal provider across the boundary
@@ -158,7 +158,7 @@ function Test-RepresentationProposal {
     $candidateRep = Invoke-ApplyMutation -Representation $CurrentRepresentation -Mutation $mutation
 
     # 4. Replay complete ledger
-    $candidateMeasure = Measure-Experience -History $Experience -Rep $candidateRep -RepVersion $RepVersion
+    $candidateMeasure = Measure-Representation -History $Experience -Rep $candidateRep -RepVersion $RepVersion
     $residualsAfter = Get-Residuals -MeasureResult $candidateMeasure
 
     # 5. Measure and decide strictly by evidence (lexicographic ordering)

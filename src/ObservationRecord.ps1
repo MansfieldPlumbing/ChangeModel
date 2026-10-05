@@ -1,4 +1,4 @@
-function New-ExperienceRecord {
+function New-ObservationRecord {
     param(
         $RepresentationVersion,
         $CanonicalBefore,
@@ -7,22 +7,22 @@ function New-ExperienceRecord {
         $PredictedDelta,
         $ActualDelta,
         $PredictionError,
-        $ContradictionKey
+        $ConditionKey
     )
 
     [pscustomobject]@{
         RepresentationVersion = $RepresentationVersion
-        CanonicalBefore = $CanonicalBefore
-        RepresentedBefore = $RepresentedBefore
-        Action = $Action
-        PredictedDelta = $PredictedDelta
-        ActualDelta = $ActualDelta
-        PredictionError = $PredictionError
-        ContradictionKey = $ContradictionKey
+        CanonicalBefore       = $CanonicalBefore
+        RepresentedBefore     = $RepresentedBefore
+        Action                = $Action
+        PredictedDelta        = $PredictedDelta
+        ActualDelta           = $ActualDelta
+        PredictionError       = $PredictionError
+        ConditionKey          = $ConditionKey
     }
 }
 
-function Get-ContradictionKey {
+function Get-ConditionKey {
     param([hashtable]$RepresentedBefore, [string]$Action)
     # create a deterministic string key from state + action
     $keys = $RepresentedBefore.Keys | Sort-Object

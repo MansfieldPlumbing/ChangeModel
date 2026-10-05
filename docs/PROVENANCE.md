@@ -1,20 +1,20 @@
 # Provenance
 
-| Component | Source Path | Commit Hash | Purpose |
+| Component | Origin Reference | Commit Hash | Purpose |
 | :--- | :--- | :--- | :--- |
-| Representation Search Engine | C:\Dev\JS2PS\tests\Prove-AstGuidedHillClimb.ps1 | 919efd2a174218c522d1d2470117ae86f0142d72 | Bounded hill-climbing search with strict improvement and exhaustive oracle validation, adapted from AST node insertion to state feature selection. |
-| Proof Discipline | C:\Dev\JS2PS\docs\HILL-CLIMBING.md | 919efd2a174218c522d1d2470117ae86f0142d72 | Separation between search heuristic and semantic correctness gate. |
-| SMA Lowering Probe | `C:\Dev\PSPersistence\probes\Test-SmaCompilation.ps1` | f4c07ae96e1a49a0c4ff82421abf2795926b60f9 | Reflection machinery to reach authentic SMA expression tree via _scriptBlockData and Compiler.Compile. |
-| Proposal Provider & Mutation DSL | `C:\Dev\ChangeModel\src\Proposal.ps1` | In-tree synthesis | Constrained representation mutation language (`AddFeature`, `RemoveFeature`, `Combine`), provider boundary, and independent replay verification gate. |
-| SMA Experience Dataset Generator | `C:\Dev\ChangeModel\src\SmaDataset.ps1` | In-tree synthesis | Couples SMA AST/token parser, compiler lowering reflection, and live delegate invocation into measured transformation dimensions. |
-| Authentic SMA Expression Feature Extractor | `C:\Dev\ChangeModel\src\ExpressionFeatures.ps1` | In-tree synthesis | Deep inspection of authentic SMA LINQ expression tree nodes: binders, operations, constants, operand ordering, and node types. |
-| Contentful SMA Dataset Generator | `C:\Dev\ChangeModel\src\SmaContentfulDataset.ps1` | In-tree synthesis | Multi-quadrant adversarial corpus generator preserving canonical fingerprints and derived delta features. |
-| Runtime Concept Invention & ETS Synthesis | `C:\Dev\ChangeModel\src\ConceptSynthesis.ps1` | In-tree synthesis | Synthesizes novel derived predicates over atomic features, scores against evidence, and materializes concepts into live PowerShell TypeData without source rewriting. |
+| Representation Search Engine | JS2PS: `tests/Prove-AstGuidedHillClimb.ps1` | `919efd2a174218c522d1d2470117ae86f0142d72` | Bounded hill-climbing search with strict improvement and exhaustive optimum validation, adapted from AST node insertion to state feature selection. |
+| Proof Discipline | JS2PS: `docs/HILL-CLIMBING.md` | `919efd2a174218c522d1d2470117ae86f0142d72` | Separation between search heuristic and semantic correctness gate. |
+| SMA Lowering Probe | PSPersistence: `probes/Test-SmaCompilation.ps1` | `f4c07ae96e1a49a0c4ff82421abf2795926b60f9` | Reflection machinery to reach authentic SMA expression tree via _scriptBlockData and Compiler.Compile. |
+| Proposal Provider & Mutation DSL | `src/Proposal.ps1` | In-tree synthesis | Constrained representation mutation language (`AddFeature`, `RemoveFeature`, `Combine`), provider boundary, and independent replay verification gate. |
+| SMA Specimen Dataset Generator | `src/SmaDataset.ps1` | In-tree synthesis | Couples SMA AST/token parser, compiler lowering reflection, and live delegate invocation into measured transformation dimensions. |
+| Authentic SMA Expression Feature Extractor | `src/ExpressionFeatures.ps1` | In-tree synthesis | Deep inspection of authentic SMA LINQ expression tree nodes: binders, operations, constants, operand ordering, and node types. |
+| Contentful SMA Dataset Generator | `src/SmaContentfulDataset.ps1` | In-tree synthesis | Multi-quadrant adversarial corpus generator preserving canonical signatures and derived delta features. |
+| Runtime Predicate Synthesis & ETS Materialization | `src/PredicateSynthesis.ps1` | In-tree synthesis | Synthesizes novel derived predicates over atomic features, scores against evidence, and materializes predicates into live PowerShell TypeData without source rewriting. |
 
-## PowerShell Source Oracle
+## PowerShell Source Reference
 
-Authoritative source tree: C:\Dev\.vendor\PowerShell
-Commit: 1481b98f0079f979f658e49a7281024cc754049b
+Authoritative upstream reference: `PowerShell/PowerShell`  
+Commit: `1481b98f0079f979f658e49a7281024cc754049b`
 
 ### Private SMA Members & Subsystems Accessed
 
@@ -27,5 +27,4 @@ Commit: 1481b98f0079f979f658e49a7281024cc754049b
 | `src\System.Management.Automation\engine\parser\Compiler.cs` (implicit) | `System.Management.Automation.Language.PowerShellLoopExpression` | `_exprs` (Field) | Allows observing child expressions of SMA's custom loop expression nodes without modifying them. |
 | `src\System.Management.Automation\engine\runtime\Binding\Binders.cs` | `System.Management.Automation.Language.PSGetMemberBinder` | Dynamic callsite rule binding (Lines 5839-5845) | Governs live dynamic member dispatch via `BindingRestrictions.GetInstanceRestriction(typeTable)`. Explains how pre-compiled `ScriptBlock` instances resolve newly installed ETS `ScriptProperty` members upon `Update-TypeData` without recompilation or AST rewriting. |
 | `src\System.Management.Automation\engine\TypeTable.cs` | `System.Management.Automation.TypeTable` | TypeTable member dictionary | Active runspace ETS member catalog keyed by `PSTypeNames` string hierarchy. |
-| `src\Microsoft.PowerShell.Commands.Utility\commands\utility\Update-TypeData.cs` | `Microsoft.PowerShell.Commands.UpdateTypeDataCommand` | ETS dynamic registration | Installs synthesized runtime concepts into the live runspace `TypeTable` and invalidates previous callsite rules. |
-
+| `src\Microsoft.PowerShell.Commands.Utility\commands\utility\Update-TypeData.cs` | `Microsoft.PowerShell.Commands.UpdateTypeDataCommand` | ETS dynamic registration | Installs synthesized runtime predicates into the live runspace `TypeTable` and invalidates previous callsite rules. |

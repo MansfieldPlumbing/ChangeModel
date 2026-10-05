@@ -1,15 +1,15 @@
 $ErrorActionPreference = 'Stop'
 
 . $PSScriptRoot\..\src\Representation.ps1
-. $PSScriptRoot\..\src\Experience.ps1
+. $PSScriptRoot\..\src\ObservationRecord.ps1
 . $PSScriptRoot\..\src\Prediction.ps1
 . $PSScriptRoot\..\src\Search.ps1
 . $PSScriptRoot\..\src\Proposal.ps1
 . $PSScriptRoot\..\src\ExpressionFeatures.ps1
 . $PSScriptRoot\..\src\SmaContentfulDataset.ps1
-. $PSScriptRoot\..\src\ConceptSynthesis.ps1
+. $PSScriptRoot\..\src\PredicateSynthesis.ps1
 
-Write-Host "--- Gate 6: Runtime Concept Invention ---"
+Write-Host "--- Gate 6: Predicate Synthesis ---"
 
 # Step 1: Extract atomic delta features from authentic SMA lowering pairs
 $trainingDataset = New-SmaContentfulDataset
@@ -25,20 +25,20 @@ $atomicFeatures = @(
 
 # Verify canonical evidence retention on every record
 foreach ($rec in $trainingDataset) {
-    if (-not $rec.CanonicalBefore.ExpressionBeforeFingerprint -or -not $rec.CanonicalBefore.ExpressionAfterFingerprint) {
-        throw "Canonical evidence violation: Missing expression fingerprints on '$($rec.SpecimenName)'."
+    if (-not $rec.CanonicalBefore.ExpressionBeforeSignature -or -not $rec.CanonicalBefore.ExpressionAfterSignature) {
+        throw "Canonical evidence violation: Missing expression signatures on '$($rec.SpecimenName)'."
     }
 }
 
-# Step 2: Enumerate candidate concepts across atomic features
-$candidateConcepts = Get-CandidateConcepts -AtomicFeatures $atomicFeatures
-Write-Host "Candidate concepts generated: $($candidateConcepts.Length)"
+# Step 2: Enumerate candidate predicates across atomic features
+$candidatePredicates = Get-CandidatePredicates -AtomicFeatures $atomicFeatures
+Write-Host "Candidate predicates generated: $($candidatePredicates.Length)"
 
 # Baseline test: Prove any single atomic feature alone fails to resolve contradictions
 $atomsWithContradictions = 0
 foreach ($atom in $atomicFeatures) {
-    $atomConcept = [Concept]::new('Atom', $atom)
-    $m = Measure-ConceptSufficiency -History $trainingDataset -Concept $atomConcept
+    $atomPred = [BooleanPredicate]::new('Atom', $atom)
+    $m = Measure-PredicateSufficiency -History $trainingDataset -Predicate $atomPred
     if ($m.Contradictions -gt 0) { $atomsWithContradictions++ }
 }
 if ($atomsWithContradictions -ne $atomicFeatures.Length) {
@@ -46,61 +46,61 @@ if ($atomsWithContradictions -ne $atomicFeatures.Length) {
 }
 Write-Host "Confirmed all $($atomicFeatures.Length) individual atomic features suffer from structural residuals."
 
-# Step 3: Search and score candidate concepts against execution evidence
-$searchResult = Invoke-ConceptSearch -History $trainingDataset -CandidateConcepts $candidateConcepts -AtomicFeatures $atomicFeatures
-$winningConcept = $searchResult.WinningConcept
+# Step 3: Search and score candidate predicates against execution evidence
+$searchResult = Invoke-PredicateSearch -History $trainingDataset -CandidatePredicates $candidatePredicates -AtomicFeatures $atomicFeatures
+$winningPred = $searchResult.WinningPredicate
 $winningMeasure = $searchResult.WinningMeasure
 
-Write-Host "Winning Concept: $($winningConcept.Name)"
+Write-Host "Winning Predicate: $($winningPred.Name)"
 Write-Host "  Contradictions : $($winningMeasure.Contradictions)"
 Write-Host "  PredictionError: $($winningMeasure.PredictionError)"
 Write-Host "  Complexity     : $($winningMeasure.Complexity)"
-Write-Host "  Reached Oracle : $($searchResult.ReachedOracle)"
+Write-Host "  Reached Optimum: $($searchResult.ReachedExhaustiveOptimum)"
 
-# Criterion 1: The winning concept was constructed from lower-level atomic features
-if ($winningConcept.Kind -eq 'Atom') {
-    throw "Criterion 1 Failure: Winning concept is a primitive atom, not a constructed concept."
+# Criterion 1: The winning predicate was constructed from lower-level atomic features
+if ($winningPred.Kind -eq 'Atom') {
+    throw "Criterion 1 Failure: Winning predicate is a primitive atom, not a constructed predicate."
 }
 
 # Criterion 2: It was not present in the supplied feature vocabulary
-if ($atomicFeatures -contains $winningConcept.Name) {
-    throw "Criterion 2 Failure: Winning concept was already present in the input feature vocabulary."
+if ($atomicFeatures -contains $winningPred.Name) {
+    throw "Criterion 2 Failure: Winning predicate was already present in the input feature vocabulary."
 }
 
-# Criterion 3: The concept improves predictive sufficiency over the original representation
+# Criterion 3: The predicate improves predictive sufficiency over the original representation
 if ($winningMeasure.Contradictions -ne 0) {
-    throw "Criterion 3 Failure: Winning concept failed to reduce contradictions to zero ($($winningMeasure.Contradictions))."
+    throw "Criterion 3 Failure: Winning predicate failed to reduce contradictions to zero ($($winningMeasure.Contradictions))."
 }
 
-# Criterion 4: Its selection is verified against a bounded exhaustive oracle
-if (-not $searchResult.ReachedOracle) {
-    throw "Criterion 4 Failure: Concept selection did not match exhaustive oracle optimum."
+# Criterion 4: Its selection is verified against a bounded exhaustive optimum
+if (-not $searchResult.ReachedExhaustiveOptimum) {
+    throw "Criterion 4 Failure: Predicate selection did not match exhaustive optimum."
 }
-if ($searchResult.ExhaustiveEvaluations -ne $candidateConcepts.Length) {
-    throw "Criterion 4 Failure: Oracle enumerated $($searchResult.ExhaustiveEvaluations) concepts; the candidate generator produced $($candidateConcepts.Length)."
+if ($searchResult.ExhaustiveEvaluations -ne $candidatePredicates.Length) {
+    throw "Criterion 4 Failure: Exhaustive search evaluated $($searchResult.ExhaustiveEvaluations) predicates; the candidate generator produced $($candidatePredicates.Length)."
 }
 foreach ($evaluation in $searchResult.AllEvaluations) {
-    $reference = $searchResult.OracleScores[$evaluation.Concept.Name]
+    $reference = $searchResult.ExhaustiveScores[$evaluation.Predicate.Name]
     if ($null -eq $reference -or
         $reference.Contradictions -ne $evaluation.Score.Contradictions -or
         $reference.PredictionError -ne $evaluation.Score.PredictionError -or
         $reference.Complexity -ne $evaluation.Score.Complexity) {
-        throw "Criterion 4 Failure: Search and oracle disagree on '$($evaluation.Concept.Name)'."
+        throw "Criterion 4 Failure: Search and exhaustive optimum disagree on '$($evaluation.Predicate.Name)'."
     }
 }
 
-# Criterion 4 negative control: with every oracle-optimal concept withheld from
-# the search, the oracle check must report failure.
-$withheld = @($candidateConcepts | Where-Object { $_.Name -notin $searchResult.OracleOptimumNames })
-if ($withheld.Length -eq $candidateConcepts.Length) {
-    throw "Criterion 4 Control Failure: No candidate matched an oracle-optimal name."
+# Criterion 4 negative control: with every exhaustive-optimal predicate withheld from
+# the search, the optimum check must report failure.
+$withheld = @($candidatePredicates | Where-Object { $_.Name -notin $searchResult.ExhaustiveOptimumNames })
+if ($withheld.Length -eq $candidatePredicates.Length) {
+    throw "Criterion 4 Control Failure: No candidate matched an exhaustive-optimal name."
 }
-$controlResult = Invoke-ConceptSearch -History $trainingDataset -CandidateConcepts $withheld -AtomicFeatures $atomicFeatures
-if ($controlResult.ReachedOracle) {
-    throw "Criterion 4 Control Failure: Oracle check passed with the optimum withheld ($($controlResult.WinningConcept.Name))."
+$controlResult = Invoke-PredicateSearch -History $trainingDataset -CandidatePredicates $withheld -AtomicFeatures $atomicFeatures
+if ($controlResult.ReachedExhaustiveOptimum) {
+    throw "Criterion 4 Control Failure: Exhaustive check passed with the optimum withheld ($($controlResult.WinningPredicate.Name))."
 }
-Write-Host "Oracle optimum: $($searchResult.OracleOptimumNames -join ', ') over $($searchResult.ExhaustiveEvaluations) concepts"
-Write-Host "Control: optimum withheld, search chose $($controlResult.WinningConcept.Name), Reached Oracle = $($controlResult.ReachedOracle)"
+Write-Host "Exhaustive optimum: $($searchResult.ExhaustiveOptimumNames -join ', ') over $($searchResult.ExhaustiveEvaluations) predicates"
+Write-Host "Control: optimum withheld, search chose $($controlResult.WinningPredicate.Name), Reached Optimum = $($controlResult.ReachedExhaustiveOptimum)"
 
 # Criterion 5: Held-out behavioral predictions under explicitly reported support
 $learnedTable = $winningMeasure.PredictorTable
@@ -110,8 +110,8 @@ $heldOutError = 0
 $heldOutUnseenKeys = 0
 
 foreach ($r in $heldOutDataset) {
-    $conceptVal = $winningConcept.Evaluate($r.CanonicalBefore)
-    $key = "Concept=$conceptVal|Action=$($r.Action)"
+    $predVal = $winningPred.Evaluate($r.CanonicalBefore)
+    $key = "Predicate=$predVal|Action=$($r.Action)"
 
     if (-not $learnedTable.ContainsKey($key)) {
         $heldOutUnseenKeys++
@@ -137,7 +137,7 @@ if ($heldOutUnseenKeys -ne 0 -or $heldOutError -ne 0 -or $heldOutCorrect -ne $he
 }
 
 # Step 5, 6, 7: Materialize into live PowerShell ETS, test pre-compiled ScriptBlock, and prove reversibility
-$syntheticTypeName = "ChangeModel.Concept.SemanticMutation.$([math]::Abs($winningConcept.Name.GetHashCode()))"
+$syntheticTypeName = "ChangeModel.Predicate.SemanticMutation.$([math]::Abs($winningPred.Name.GetHashCode()))"
 
 $deltaPreserving = $trainingDataset[0].CanonicalBefore
 $deltaBreaking   = $trainingDataset[5].CanonicalBefore
@@ -146,7 +146,7 @@ $deltaBreaking   = $trainingDataset[5].CanonicalBefore
 $deltaPreserving.PSObject.TypeNames.Insert(0, $syntheticTypeName)
 $deltaBreaking.PSObject.TypeNames.Insert(0, $syntheticTypeName)
 
-# Criterion 7: A ScriptBlock created before installation cannot use the concept before installation
+# Criterion 7: A ScriptBlock created before installation cannot use the predicate before installation
 $preCompiledScript = {
     param($delta)
     $delta.SemanticEffect
@@ -156,14 +156,14 @@ $beforePreserving = & $preCompiledScript $deltaPreserving
 $beforeBreaking   = & $preCompiledScript $deltaBreaking
 
 if ($null -ne $beforePreserving -or $null -ne $beforeBreaking) {
-    throw "Criterion 7 Failure: Concept resolved before it was installed in the runtime type system."
+    throw "Criterion 7 Failure: Predicate resolved before it was installed in the runtime type system."
 }
 Write-Host "Confirmed: Pre-compiled ScriptBlock cannot resolve SemanticEffect prior to installation."
 
 # Criterion 6: Materialize into live PowerShell type system
-Install-RuntimeConcept -TypeName $syntheticTypeName -Concept $winningConcept
+Install-RuntimePredicate -TypeName $syntheticTypeName -Predicate $winningPred
 
-# Criterion 8: The exact same ScriptBlock instance can use the concept after installation
+# Criterion 8: The exact same ScriptBlock instance can use the predicate after installation
 $afterPreserving = & $preCompiledScript $deltaPreserving
 $afterBreaking   = & $preCompiledScript $deltaBreaking
 
@@ -180,17 +180,17 @@ $methodBreaking   = $deltaBreaking.PredictBehavior()
 if ($methodPreserving -ne 0 -or $methodBreaking -ne 1) {
     throw "Criterion 8 Failure: PredictBehavior() method returned incorrect values ($methodPreserving, $methodBreaking)."
 }
-Write-Host "Confirmed: EXACT SAME ScriptBlock instance resolved newly materialized concept without recompilation."
+Write-Host "Confirmed: EXACT SAME ScriptBlock instance resolved newly materialized predicate without recompilation."
 
-# Criterion 9: Removing the concept reverses that behavior
-Uninstall-RuntimeConcept -TypeName $syntheticTypeName
+# Criterion 9: Removing the predicate reverses that behavior
+Uninstall-RuntimePredicate -TypeName $syntheticTypeName
 
 $afterRemovalPreserving = & $preCompiledScript $deltaPreserving
 $afterRemovalBreaking   = & $preCompiledScript $deltaBreaking
 
 if ($null -ne $afterRemovalPreserving -or $null -ne $afterRemovalBreaking) {
-    throw "Criterion 9 Failure: Concept remained active after uninstallation from the runtime type system."
+    throw "Criterion 9 Failure: Predicate remained active after uninstallation from the runtime type system."
 }
 Write-Host "Confirmed: Semantic reversibility proven — property access reverted to null on exact same ScriptBlock."
 
-Write-Host "GATE6_RUNTIME_CONCEPT_INVENTION=PASS"
+Write-Host "GATE6_PREDICATE_SYNTHESIS=PASS"

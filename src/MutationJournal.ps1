@@ -1,13 +1,18 @@
-# World tape: a worldview is a known base state plus an ordered program of reversible
-# mutations. The tape is a PowerShell data file (.psd1): written here with SMA's own
-# single-quote escaping, read back with Import-PowerShellDataFile, never executed.
+# Mutation Journal: Persistence and deterministic replay support mechanisms for
+# reconstructing runtime representation mutations across process boundaries.
+# The journal is formatted as a restricted PowerShell data file (.psd1):
+# written via SMA's single-quote escaping, read back with Import-PowerShellDataFile,
+# never executed as script.
 #
-# Opcodes (only those the reconstruction gate needs):
-#   Observe     binds the tape to one evidence file; no state change.
-#   AddPercept  the representation gains a feature. Inverse: the feature is removed.
+# ARCHITECTURAL BASELINE: Persistence and replay journals are support mechanisms,
+# NOT the model, learning objective, or product.
+#
+# Opcodes (state reconstruction support):
+#   Observe     binds the journal to one evidence file; no state change.
+#   AddPercept  the representation gains a feature. Inverse: feature is removed.
 #   Compose     materializes a learned distinction into SMA as DynamicKeyword entries.
 #               Precondition: none of the names is registered. Inverse: remove them.
-#   Accept      asserts the world fingerprint reached by the steps before it; no state change.
+#   Accept      asserts the runtime state digest reached by preceding steps; no state change.
 
 function ConvertTo-Psd1Text {
     param($Value, [int] $Depth = 0)
@@ -37,16 +42,16 @@ function ConvertTo-Psd1Text {
         $lines.Add($pad + ')')
         return $lines -join "`n"
     }
-    throw "The world tape holds only null, bool, integer, string, arrays and dictionaries; got $($Value.GetType().FullName)."
+    throw "The mutation journal holds only null, bool, integer, string, arrays and dictionaries; got $($Value.GetType().FullName)."
 }
 
-function Write-WorldTape {
-    param([Parameter(Mandatory)][Collections.IDictionary] $Tape, [Parameter(Mandatory)][string] $Path)
-    $text = (ConvertTo-Psd1Text $Tape) + "`n"
+function Write-MutationJournal {
+    param([Parameter(Mandatory)][Collections.IDictionary] $Journal, [Parameter(Mandatory)][string] $Path)
+    $text = (ConvertTo-Psd1Text $Journal) + "`n"
     [IO.File]::WriteAllText($Path, $text, [Text.UTF8Encoding]::new($false))
 }
 
-function Read-WorldTape {
+function Read-MutationJournal {
     param([Parameter(Mandatory)][string] $Path)
     Import-PowerShellDataFile -LiteralPath $Path
 }
@@ -56,7 +61,7 @@ function Get-Sha256Hex {
     [Convert]::ToHexString([Security.Cryptography.SHA256]::HashData([Text.Encoding]::UTF8.GetBytes($Text)))
 }
 
-function New-WorldContext {
+function New-FeatureContext {
     [pscustomobject]@{
         Features = [Collections.Generic.SortedSet[string]]::new([StringComparer]::Ordinal)
     }
@@ -69,7 +74,7 @@ function Get-DynamicKeywordState {
     @($names | Sort-Object -CaseSensitive)
 }
 
-function Get-PerceptionFingerprint {
+function Get-TokenizationDigest {
     param([Parameter(Mandatory)][object[]] $Observations)
     $lines = [Collections.Generic.List[string]]::new()
     foreach ($obs in $Observations) {
@@ -83,13 +88,13 @@ function Get-PerceptionFingerprint {
     Get-Sha256Hex ($lines -join "`n")
 }
 
-function Get-OracleFingerprint {
+function Get-ReferenceDigest {
     param([Parameter(Mandatory)] $Evidence)
-    $lines = foreach ($p in ($Evidence.OracleOutcomes.PSObject.Properties | Sort-Object Name -CaseSensitive)) { $p.Name + '=' + $p.Value }
-    Get-Sha256Hex ((@($Evidence.Oracle.Id, $Evidence.Oracle.AuthorityVersion) + @($lines)) -join "`n")
+    $lines = foreach ($p in ($Evidence.ReferenceOutcomes.PSObject.Properties | Sort-Object Name -CaseSensitive)) { $p.Name + '=' + $p.Value }
+    Get-Sha256Hex ((@($Evidence.Reference.Id, $Evidence.Reference.AuthorityVersion) + @($lines)) -join "`n")
 }
 
-function Get-WorldFingerprint {
+function Get-RuntimeStateDigest {
     param([Parameter(Mandatory)] $Context, [Parameter(Mandatory)][object[]] $Observations, [Parameter(Mandatory)] $Evidence)
     $sma = [System.Management.Automation.PSObject].Assembly
     $lines = @(
@@ -98,25 +103,25 @@ function Get-WorldFingerprint {
         'sma-mvid=' + $sma.ManifestModule.ModuleVersionId
         'features=' + (@($Context.Features) -join ',')
         'dynamic-keywords=' + ((Get-DynamicKeywordState) -join ',')
-        'perception=' + (Get-PerceptionFingerprint $Observations)
-        'oracle=' + (Get-OracleFingerprint $Evidence)
+        'tokenization=' + (Get-TokenizationDigest $Observations)
+        'reference=' + (Get-ReferenceDigest $Evidence)
     )
     Get-Sha256Hex ($lines -join "`n")
 }
 
-function Invoke-WorldStep {
+function Invoke-JournalStep {
     param(
         [Parameter(Mandatory)] $Step,
         [Parameter(Mandatory)] $Context,
         [Parameter(Mandatory)][ValidateSet('Forward', 'Inverse')][string] $Direction,
-        [scriptblock] $Fingerprint
+        [scriptblock] $StateDigestBlock
     )
     switch ($Step.Op) {
         'Observe' { }
         'Accept' {
             if ($Direction -eq 'Forward') {
-                $actual = & $Fingerprint
-                if ($actual -cne $Step.WorldSha256) { throw "Accept failed: world is $actual, the tape expects $($Step.WorldSha256)." }
+                $actual = & $StateDigestBlock
+                if ($actual -cne $Step.StateDigest) { throw "Accept failed: runtime state is $actual, journal expects $($Step.StateDigest)." }
             }
         }
         'AddPercept' {
@@ -142,24 +147,24 @@ function Invoke-WorldStep {
                 }
             }
         }
-        default { throw "Unknown world-tape opcode '$($Step.Op)'." }
+        default { throw "Unknown mutation journal opcode '$($Step.Op)'." }
     }
 }
 
-function Invoke-WorldTape {
+function Invoke-MutationJournal {
     param(
-        [Parameter(Mandatory)] $Tape,
+        [Parameter(Mandatory)] $Journal,
         [Parameter(Mandatory)] $Context,
         [Parameter(Mandatory)][ValidateSet('Forward', 'Inverse')][string] $Direction,
-        [scriptblock] $Fingerprint
+        [scriptblock] $StateDigestBlock
     )
-    $steps = @($Tape.Steps)
+    $steps = @($Journal.Steps)
     if ($Direction -eq 'Inverse') { [array]::Reverse($steps) }
-    foreach ($step in $steps) { Invoke-WorldStep -Step $step -Context $Context -Direction $Direction -Fingerprint $Fingerprint }
+    foreach ($step in $steps) { Invoke-JournalStep -Step $step -Context $Context -Direction $Direction -StateDigestBlock $StateDigestBlock }
 }
 
-function New-LexicalExperience {
-    # Turns sensor observations plus oracle outcomes into ChangeModel experience records.
+function New-LexicalObservationRecords {
+    # Transforms lexer observations and reference outcomes into ChangeModel observation records.
     param([Parameter(Mandatory)][object[]] $Observations, [Parameter(Mandatory)] $Outcomes)
     foreach ($obs in $Observations) {
         foreach ($u in $obs.Units) {

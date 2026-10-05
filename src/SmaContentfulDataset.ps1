@@ -117,8 +117,8 @@ function New-SmaContentfulDataset {
             OperandOrderChanged    = $features.OperandOrderChanged
             NodeTypeChanged        = $features.NodeTypeChanged
             CallTargetChanged      = $features.CallTargetChanged
-            ExpressionBeforeFingerprint = $features.ExpressionBeforeFingerprint
-            ExpressionAfterFingerprint  = $features.ExpressionAfterFingerprint
+            ExpressionBeforeSignature = $features.ExpressionBeforeSignature
+            ExpressionAfterSignature  = $features.ExpressionAfterSignature
         }
 
         $dataset.Add([pscustomobject]@{

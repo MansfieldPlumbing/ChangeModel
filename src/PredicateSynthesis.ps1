@@ -1,11 +1,11 @@
-class Concept {
+class BooleanPredicate {
     [string]$Kind       # 'Atom', 'Not', 'And', 'Or'
     [string]$FeatureA
     [string]$FeatureB
     [string]$Name
     [int]$Complexity
 
-    Concept([string]$kind, [string]$featA) {
+    BooleanPredicate([string]$kind, [string]$featA) {
         $this.Kind = $kind
         $this.FeatureA = $featA
         $this.FeatureB = $null
@@ -16,11 +16,11 @@ class Concept {
             $this.Name = "Not($featA)"
             $this.Complexity = 2
         } else {
-            throw "Invalid unary concept kind: $kind"
+            throw "Invalid unary predicate kind: $kind"
         }
     }
 
-    Concept([string]$kind, [string]$featA, [string]$featB) {
+    BooleanPredicate([string]$kind, [string]$featA, [string]$featB) {
         $this.Kind = $kind
         $this.FeatureA = $featA
         $this.FeatureB = $featB
@@ -28,7 +28,7 @@ class Concept {
         if ($kind -in @('And', 'Or')) {
             $this.Name = "$kind($featA, $featB)"
         } else {
-            throw "Invalid binary concept kind: $kind"
+            throw "Invalid binary predicate kind: $kind"
         }
     }
 
@@ -61,15 +61,15 @@ class Concept {
     }
 }
 
-function Get-CandidateConcepts {
+function Get-CandidatePredicates {
     param([Parameter(Mandatory)][string[]]$AtomicFeatures)
 
-    $concepts = [System.Collections.Generic.List[Concept]]::new()
+    $predicates = [System.Collections.Generic.List[BooleanPredicate]]::new()
 
     # 1. Unary atoms and nots
     foreach ($feat in $AtomicFeatures) {
-        $concepts.Add([Concept]::new('Atom', $feat))
-        $concepts.Add([Concept]::new('Not', $feat))
+        $predicates.Add([BooleanPredicate]::new('Atom', $feat))
+        $predicates.Add([BooleanPredicate]::new('Not', $feat))
     }
 
     # 2. Binary compositions (And, Or)
@@ -77,18 +77,18 @@ function Get-CandidateConcepts {
         for ($j = $i + 1; $j -lt $AtomicFeatures.Length; $j++) {
             $fA = $AtomicFeatures[$i]
             $fB = $AtomicFeatures[$j]
-            $concepts.Add([Concept]::new('And', $fA, $fB))
-            $concepts.Add([Concept]::new('Or', $fA, $fB))
+            $predicates.Add([BooleanPredicate]::new('And', $fA, $fB))
+            $predicates.Add([BooleanPredicate]::new('Or', $fA, $fB))
         }
     }
 
-    return $concepts.ToArray()
+    return $predicates.ToArray()
 }
 
-function Measure-ConceptSufficiency {
+function Measure-PredicateSufficiency {
     param(
         [Parameter(Mandatory)][array]$History,
-        [Parameter(Mandatory)][Concept]$Concept
+        [Parameter(Mandatory)][BooleanPredicate]$Predicate
     )
 
     $keyToDeltas = @{}
@@ -98,8 +98,8 @@ function Measure-ConceptSufficiency {
 
     foreach ($record in $History) {
         $canonical = $record.CanonicalBefore
-        $conceptVal = $Concept.Evaluate($canonical)
-        $key = "Concept=$conceptVal|Action=$($record.Action)"
+        $predVal = $Predicate.Evaluate($canonical)
+        $key = "Predicate=$predVal|Action=$($record.Action)"
         $actual = $record.ActualDelta
 
         # Deterministic prediction
@@ -117,28 +117,28 @@ function Measure-ConceptSufficiency {
     }
 
     return [pscustomobject]@{
-        ConceptName = $Concept.Name
+        PredicateName = $Predicate.Name
         Contradictions = $contradictions
         PredictionError = $totalError
-        Complexity = $Concept.Complexity
+        Complexity = $Predicate.Complexity
         PredictorTable = $predictorTable
     }
 }
 
-function Invoke-ConceptSearch {
+function Invoke-PredicateSearch {
     param(
         [Parameter(Mandatory)][array]$History,
-        [Parameter(Mandatory)][Concept[]]$CandidateConcepts,
+        [Parameter(Mandatory)][BooleanPredicate[]]$CandidatePredicates,
         [Parameter(Mandatory)][string[]]$AtomicFeatures
     )
 
-    $bestConcept = $null
+    $bestPredicate = $null
     $bestScore = $null
     $allScores = [System.Collections.Generic.List[object]]::new()
 
-    foreach ($c in $CandidateConcepts) {
-        $score = Measure-ConceptSufficiency -History $History -Concept $c
-        $allScores.Add([pscustomobject]@{ Concept = $c; Score = $score })
+    foreach ($p in $CandidatePredicates) {
+        $score = Measure-PredicateSufficiency -History $History -Predicate $p
+        $allScores.Add([pscustomobject]@{ Predicate = $p; Score = $score })
 
         # Lexicographic selection:
         # 1. Contradictions (lower is better)
@@ -162,48 +162,48 @@ function Invoke-ConceptSearch {
         }
 
         if ($isBetter) {
-            $bestConcept = $c
+            $bestPredicate = $p
             $bestScore = $score
         }
     }
 
-    # Bounded exhaustive oracle: enumerated and scored independently of the
-    # candidate list, Concept.Evaluate and Measure-ConceptSufficiency.
-    $oracle = Get-ConceptOracleOptimum -History $History -AtomicFeatures $AtomicFeatures
-    $winnerByOracle = $oracle.Scores[$bestConcept.Name]
+    # Bounded exhaustive optimum: enumerated and scored independently of the
+    # candidate list, BooleanPredicate.Evaluate and Measure-PredicateSufficiency.
+    $exhaustive = Get-ExhaustivePredicateOptimum -History $History -AtomicFeatures $AtomicFeatures
+    $winnerByExhaustive = $exhaustive.Scores[$bestPredicate.Name]
 
-    $reachedOracle = $false
-    if ($null -ne $winnerByOracle -and
-        $winnerByOracle.Contradictions -eq $bestScore.Contradictions -and
-        $winnerByOracle.PredictionError -eq $bestScore.PredictionError -and
-        $winnerByOracle.Complexity -eq $bestScore.Complexity -and
-        $winnerByOracle.Contradictions -eq $oracle.Best.Contradictions -and
-        $winnerByOracle.PredictionError -eq $oracle.Best.PredictionError -and
-        $winnerByOracle.Complexity -eq $oracle.Best.Complexity) {
-        $reachedOracle = $true
+    $reachedOptimum = $false
+    if ($null -ne $winnerByExhaustive -and
+        $winnerByExhaustive.Contradictions -eq $bestScore.Contradictions -and
+        $winnerByExhaustive.PredictionError -eq $bestScore.PredictionError -and
+        $winnerByExhaustive.Complexity -eq $bestScore.Complexity -and
+        $winnerByExhaustive.Contradictions -eq $exhaustive.Best.Contradictions -and
+        $winnerByExhaustive.PredictionError -eq $exhaustive.Best.PredictionError -and
+        $winnerByExhaustive.Complexity -eq $exhaustive.Best.Complexity) {
+        $reachedOptimum = $true
     }
 
     return [pscustomobject]@{
-        WinningConcept = $bestConcept
+        WinningPredicate = $bestPredicate
         WinningMeasure = $bestScore
-        ReachedOracle = $reachedOracle
-        OracleBestMeasure = $oracle.Best
-        OracleOptimumNames = $oracle.OptimumNames
-        OracleScores = $oracle.Scores
-        ExhaustiveEvaluations = $oracle.Scores.Count
-        AllCandidatesCount = $CandidateConcepts.Length
+        ReachedExhaustiveOptimum = $reachedOptimum
+        ExhaustiveBestMeasure = $exhaustive.Best
+        ExhaustiveOptimumNames = $exhaustive.OptimumNames
+        ExhaustiveScores = $exhaustive.Scores
+        ExhaustiveEvaluations = $exhaustive.Scores.Count
+        AllCandidatesCount = $CandidatePredicates.Length
         AllEvaluations = $allScores.ToArray()
     }
 }
 
-# Reference oracle for Invoke-ConceptSearch. Enumerates the bounded concept
+# Reference exhaustive ground truth for Invoke-PredicateSearch. Enumerates the bounded predicate
 # language (Atom, Not over each feature; And, Or over each unordered pair) from
-# the feature list alone, evaluates concepts as truth tables over raw feature
+# the feature list alone, evaluates predicates as truth tables over raw feature
 # values, and restates the measure's definitions:
 #   - prediction: the last delta seen for the key, 2 when the key is unseen;
 #   - contradiction: a record whose key was seen before and whose key has more
 #     than one distinct delta once this record is included.
-function Get-ConceptOracleOptimum {
+function Get-ExhaustivePredicateOptimum {
     param(
         [Parameter(Mandatory)][array]$History,
         [Parameter(Mandatory)][string[]]$AtomicFeatures
@@ -266,7 +266,7 @@ function Get-ConceptOracleOptimum {
         }
 
         $score = [pscustomobject]@{
-            ConceptName = $entry.Name
+            PredicateName = $entry.Name
             Contradictions = $contradictions
             PredictionError = $totalError
             Complexity = $entry.Op.Complexity
@@ -276,8 +276,8 @@ function Get-ConceptOracleOptimum {
         if ($null -eq $best -or
             $score.Contradictions -lt $best.Contradictions -or
             ($score.Contradictions -eq $best.Contradictions -and
-             ($score.PredictionError -lt $best.PredictionError -or
-              ($score.PredictionError -eq $best.PredictionError -and $score.Complexity -lt $best.Complexity)))) {
+            ($score.PredictionError -lt $best.PredictionError -or
+            ($score.PredictionError -eq $best.PredictionError -and $score.Complexity -lt $best.Complexity)))) {
             $best = $score
         }
     }
@@ -286,7 +286,7 @@ function Get-ConceptOracleOptimum {
         $_.Contradictions -eq $best.Contradictions -and
         $_.PredictionError -eq $best.PredictionError -and
         $_.Complexity -eq $best.Complexity
-    } | ForEach-Object ConceptName | Sort-Object)
+    } | ForEach-Object PredicateName | Sort-Object)
 
     return [pscustomobject]@{
         Best = $best
@@ -295,13 +295,13 @@ function Get-ConceptOracleOptimum {
     }
 }
 
-function Install-RuntimeConcept {
+function Install-RuntimePredicate {
     param(
         [Parameter(Mandatory)][string]$TypeName,
-        [Parameter(Mandatory)][Concept]$Concept
+        [Parameter(Mandatory)][BooleanPredicate]$Predicate
     )
 
-    $predicateStr = $Concept.ToPredicateString()
+    $predicateStr = $Predicate.ToPredicateString()
     
     # 1. ScriptProperty: SemanticEffect ('Breaking' vs 'Preserving')
     $effectScript = [scriptblock]::Create("if ($predicateStr) { 'Breaking' } else { 'Preserving' }")
@@ -312,7 +312,7 @@ function Install-RuntimeConcept {
     Update-TypeData -TypeName $TypeName -MemberType ScriptMethod -MemberName 'PredictBehavior' -Value $methodScript -Force
 }
 
-function Uninstall-RuntimeConcept {
+function Uninstall-RuntimePredicate {
     param([Parameter(Mandatory)][string]$TypeName)
 
     Remove-TypeData -TypeName $TypeName -ErrorAction SilentlyContinue
