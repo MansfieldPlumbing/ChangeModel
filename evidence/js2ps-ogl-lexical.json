@@ -1,0 +1,5157 @@
+{
+  "Schema": 1,
+  "Provenance": {
+    "JS2PSCommit": "485044dee8e797386977e4f780ec943ad7c6b9b9",
+    "PowerShellVersion": "7.7.0-preview.5",
+    "SmaAssemblyVersion": "7.7.0.5",
+    "SmaModuleVersionId": "ecba0531-bc70-4f8d-b8bb-aa470dca0f76",
+    "Sensor": "tools/Observe-SmaPerception.ps1"
+  },
+  "Oracle": {
+    "Id": "ecma262.strict-binding-identifier",
+    "Contract": "In strict-mode Script code, the IdentifierName is a ReservedWord and cannot be a BindingIdentifier (1) or it can (0).",
+    "Authority": "node vm.Script",
+    "AuthorityVersion": "v22.22.2"
+  },
+  "OracleOutcomes": {
+    "Array": 0,
+    "Box": 0,
+    "Float32Array": 0,
+    "Geometry": 0,
+    "Mat4": 0,
+    "Mat4Func": 0,
+    "Plane": 0,
+    "Uint16Array": 0,
+    "Uint32Array": 0,
+    "Vec3": 0,
+    "Vec3Func": 0,
+    "a": 0,
+    "add": 0,
+    "as": 0,
+    "aspect": 0,
+    "attributes": 0,
+    "axis": 0,
+    "back": 0,
+    "bottom": 0,
+    "class": 1,
+    "compose": 0,
+    "const": 1,
+    "constructor": 0,
+    "copy": 0,
+    "dSegs": 0,
+    "decompose": 0,
+    "depth": 0,
+    "depthSegments": 0,
+    "determinant": 0,
+    "divide": 0,
+    "else": 1,
+    "export": 1,
+    "extends": 1,
+    "eye": 0,
+    "far": 0,
+    "fov": 0,
+    "from": 0,
+    "fromArray": 0,
+    "fromOrthogonal": 0,
+    "fromPerspective": 0,
+    "fromQuaternion": 0,
+    "front": 0,
+    "get": 0,
+    "getMaxScaleOnAxis": 0,
+    "getRotation": 0,
+    "getScaling": 0,
+    "getTranslation": 0,
+    "gl": 0,
+    "hSegs": 0,
+    "height": 0,
+    "heightSegments": 0,
+    "i": 0,
+    "identity": 0,
+    "if": 1,
+    "ii": 0,
+    "import": 1,
+    "index": 0,
+    "inverse": 0,
+    "left": 0,
+    "let": 1,
+    "lookAt": 0,
+    "m": 0,
+    "m00": 0,
+    "m01": 0,
+    "m02": 0,
+    "m03": 0,
+    "m10": 0,
+    "m11": 0,
+    "m12": 0,
+    "m13": 0,
+    "m20": 0,
+    "m21": 0,
+    "m22": 0,
+    "m23": 0,
+    "m30": 0,
+    "m31": 0,
+    "m32": 0,
+    "m33": 0,
+    "ma": 0,
+    "mb": 0,
+    "multiply": 0,
+    "near": 0,
+    "new": 1,
+    "normal": 0,
+    "num": 0,
+    "numIndices": 0,
+    "o": 0,
+    "pos": 0,
+    "position": 0,
+    "q": 0,
+    "return": 1,
+    "right": 0,
+    "rotate": 0,
+    "scale": 0,
+    "set": 0,
+    "setPosition": 0,
+    "sub": 0,
+    "super": 1,
+    "target": 0,
+    "this": 1,
+    "toArray": 0,
+    "top": 0,
+    "translate": 0,
+    "typeof": 1,
+    "up": 0,
+    "uv": 0,
+    "v": 0,
+    "va": 0,
+    "vb": 0,
+    "w": 0,
+    "wSegs": 0,
+    "width": 0,
+    "widthSegments": 0,
+    "x": 0,
+    "y": 0,
+    "z": 0
+  },
+  "Train": [
+    {
+      "Path": "fixtures/ogl/extras/Box.js",
+      "Sha256": "3F3709EF90BD58DFA36422FFAB4D53E5796D3CA8813D89F494C397CA3D6E8A62",
+      "TokenCount": 634,
+      "ErrorIds": [
+        "MissingArgument",
+        "MissingArgument",
+        "MissingArgument",
+        "MissingArgument",
+        "MissingArgument",
+        "MissingArgument",
+        "MissingArgument",
+        "MissingArgument",
+        "MissingExpression",
+        "MissingArgument"
+      ],
+      "StatementTypes": [
+        "PipelineAst",
+        "PipelineAst",
+        "PipelineAst"
+      ],
+      "Units": [
+        {
+          "Start": 0,
+          "Length": 6,
+          "Text": "import",
+          "SmaTokenKind": "Identifier",
+          "SmaKeywordFlag": 0,
+          "SmaCommandNameFlag": 1
+        },
+        {
+          "Start": 9,
+          "Length": 8,
+          "Text": "Geometry",
+          "SmaTokenKind": "Identifier",
+          "SmaKeywordFlag": 0,
+          "SmaCommandNameFlag": 1
+        },
+        {
+          "Start": 20,
+          "Length": 4,
+          "Text": "from",
+          "SmaTokenKind": "Generic",
+          "SmaKeywordFlag": 0,
+          "SmaCommandNameFlag": 0
+        },
+        {
+          "Start": 48,
+          "Length": 6,
+          "Text": "import",
+          "SmaTokenKind": "Identifier",
+          "SmaKeywordFlag": 0,
+          "SmaCommandNameFlag": 1
+        },
+        {
+          "Start": 57,
+          "Length": 5,
+          "Text": "Plane",
+          "SmaTokenKind": "Identifier",
+          "SmaKeywordFlag": 0,
+          "SmaCommandNameFlag": 1
+        },
+        {
+          "Start": 65,
+          "Length": 4,
+          "Text": "from",
+          "SmaTokenKind": "Generic",
+          "SmaKeywordFlag": 0,
+          "SmaCommandNameFlag": 0
+        },
+        {
+          "Start": 85,
+          "Length": 6,
+          "Text": "export",
+          "SmaTokenKind": "Identifier",
+          "SmaKeywordFlag": 0,
+          "SmaCommandNameFlag": 1
+        },
+        {
+          "Start": 92,
+          "Length": 5,
+          "Text": "class",
+          "SmaTokenKind": "Generic",
+          "SmaKeywordFlag": 0,
+          "SmaCommandNameFlag": 0
+        },
+        {
+          "Start": 98,
+          "Length": 3,
+          "Text": "Box",
+          "SmaTokenKind": "Identifier",
+          "SmaKeywordFlag": 0,
+          "SmaCommandNameFlag": 0
+        },
+        {
+          "Start": 102,
+          "Length": 7,
+          "Text": "extends",
+          "SmaTokenKind": "Identifier",
+          "SmaKeywordFlag": 0,
+          "SmaCommandNameFlag": 0
+        },
+        {
+          "Start": 110,
+          "Length": 8,
+          "Text": "Geometry",
+          "SmaTokenKind": "Identifier",
+          "SmaKeywordFlag": 0,
+          "SmaCommandNameFlag": 0
+        },
+        {
+          "Start": 125,
+          "Length": 11,
+          "Text": "constructor",
+          "SmaTokenKind": "Identifier",
+          "SmaKeywordFlag": 0,
+          "SmaCommandNameFlag": 1
+        },
+        {
+          "Start": 137,
+          "Length": 2,
+          "Text": "gl",
+          "SmaTokenKind": "Identifier",
+          "SmaKeywordFlag": 0,
+          "SmaCommandNameFlag": 1
+        },
+        {
+          "Start": 143,
+          "Length": 5,
+          "Text": "width",
+          "SmaTokenKind": "Identifier",
+          "SmaKeywordFlag": 0,
+          "SmaCommandNameFlag": 1
+        },
+        {
+          "Start": 154,
+          "Length": 6,
+          "Text": "height",
+          "SmaTokenKind": "Identifier",
+          "SmaKeywordFlag": 0,
+          "SmaCommandNameFlag": 0
+        },
+        {
+          "Start": 166,
+          "Length": 5,
+          "Text": "depth",
+          "SmaTokenKind": "Identifier",
+          "SmaKeywordFlag": 0,
+          "SmaCommandNameFlag": 0
+        },
+        {
+          "Start": 177,
+          "Length": 13,
+          "Text": "widthSegments",
+          "SmaTokenKind": "Identifier",
+          "SmaKeywordFlag": 0,
+          "SmaCommandNameFlag": 0
+        },
+        {
+          "Start": 196,
+          "Length": 14,
+          "Text": "heightSegments",
+          "SmaTokenKind": "Identifier",
+          "SmaKeywordFlag": 0,
+          "SmaCommandNameFlag": 0
+        },
+        {
+          "Start": 216,
+          "Length": 13,
+          "Text": "depthSegments",
+          "SmaTokenKind": "Identifier",
+          "SmaKeywordFlag": 0,
+          "SmaCommandNameFlag": 0
+        },
+        {
+          "Start": 235,
+          "Length": 10,
+          "Text": "attributes",
+          "SmaTokenKind": "Identifier",
+          "SmaKeywordFlag": 0,
+          "SmaCommandNameFlag": 0
+        },
+        {
+          "Start": 269,
+          "Length": 5,
+          "Text": "const",
+          "SmaTokenKind": "Identifier",
+          "SmaKeywordFlag": 0,
+          "SmaCommandNameFlag": 1
+        },
+        {
+          "Start": 275,
+          "Length": 5,
+          "Text": "wSegs",
+          "SmaTokenKind": "Identifier",
+          "SmaKeywordFlag": 0,
+          "SmaCommandNameFlag": 0
+        },
+        {
+          "Start": 283,
+          "Length": 13,
+          "Text": "widthSegments",
+          "SmaTokenKind": "Identifier",
+          "SmaKeywordFlag": 0,
+          "SmaCommandNameFlag": 0
+        },
+        {
+          "Start": 306,
+          "Length": 5,
+          "Text": "const",
+          "SmaTokenKind": "Identifier",
+          "SmaKeywordFlag": 0,
+          "SmaCommandNameFlag": 1
+        },
+        {
+          "Start": 312,
+          "Length": 5,
+          "Text": "hSegs",
+          "SmaTokenKind": "Identifier",
+          "SmaKeywordFlag": 0,
+          "SmaCommandNameFlag": 0
+        },
+        {
+          "Start": 320,
+          "Length": 14,
+          "Text": "heightSegments",
+          "SmaTokenKind": "Identifier",
+          "SmaKeywordFlag": 0,
+          "SmaCommandNameFlag": 0
+        },
+        {
+          "Start": 344,
+          "Length": 5,
+          "Text": "const",
+          "SmaTokenKind": "Identifier",
+          "SmaKeywordFlag": 0,
+          "SmaCommandNameFlag": 1
+        },
+        {
+          "Start": 350,
+          "Length": 5,
+          "Text": "dSegs",
+          "SmaTokenKind": "Identifier",
+          "SmaKeywordFlag": 0,
+          "SmaCommandNameFlag": 0
+        },
+        {
+          "Start": 358,
+          "Length": 13,
+          "Text": "depthSegments",
+          "SmaTokenKind": "Identifier",
+          "SmaKeywordFlag": 0,
+          "SmaCommandNameFlag": 0
+        },
+        {
+          "Start": 382,
+          "Length": 5,
+          "Text": "const",
+          "SmaTokenKind": "Identifier",
+          "SmaKeywordFlag": 0,
+          "SmaCommandNameFlag": 1
+        },
+        {
+          "Start": 388,
+          "Length": 3,
+          "Text": "num",
+          "SmaTokenKind": "Identifier",
+          "SmaKeywordFlag": 0,
+          "SmaCommandNameFlag": 0
+        },
+        {
+          "Start": 395,
+          "Length": 5,
+          "Text": "wSegs",
+          "SmaTokenKind": "Identifier",
+          "SmaKeywordFlag": 0,
+          "SmaCommandNameFlag": 1
+        },
+        {
+          "Start": 409,
+          "Length": 5,
+          "Text": "hSegs",
+          "SmaTokenKind": "Identifier",
+          "SmaKeywordFlag": 0,
+          "SmaCommandNameFlag": 1
+        },
+        {
+          "Start": 427,
+          "Length": 5,
+          "Text": "wSegs",
+          "SmaTokenKind": "Identifier",
+          "SmaKeywordFlag": 0,
+          "SmaCommandNameFlag": 1
+        },
+        {
+          "Start": 441,
+          "Length": 5,
+          "Text": "dSegs",
+          "SmaTokenKind": "Identifier",
+          "SmaKeywordFlag": 0,
+          "SmaCommandNameFlag": 1
+        },
+        {
+          "Start": 459,
+          "Length": 5,
+          "Text": "hSegs",
+          "SmaTokenKind": "Identifier",
+          "SmaKeywordFlag": 0,
+          "SmaCommandNameFlag": 1
+        },
+        {
+          "Start": 473,
+          "Length": 5,
+          "Text": "dSegs",
+          "SmaTokenKind": "Identifier",
+          "SmaKeywordFlag": 0,
+          "SmaCommandNameFlag": 1
+        },
+        {
+          "Start": 497,
+          "Length": 5,
+          "Text": "const",
+          "SmaTokenKind": "Identifier",
+          "SmaKeywordFlag": 0,
+          "SmaCommandNameFlag": 1
+        },
+        {
+          "Start": 503,
+          "Length": 10,
+          "Text": "numIndices",
+          "SmaTokenKind": "Identifier",
+          "SmaKeywordFlag": 0,
+          "SmaCommandNameFlag": 0
+        },
+        {
+          "Start": 517,
+          "Length": 5,
+          "Text": "wSegs",
+          "SmaTokenKind": "Identifier",
+          "SmaKeywordFlag": 0,
+          "SmaCommandNameFlag": 1
+        },
+        {
+          "Start": 525,
+          "Length": 5,
+          "Text": "hSegs",
+          "SmaTokenKind": "Identifier",
+          "SmaKeywordFlag": 0,
+          "SmaCommandNameFlag": 0
+        },
+        {
+          "Start": 537,
+          "Length": 5,
+          "Text": "wSegs",
+          "SmaTokenKind": "Identifier",
+          "SmaKeywordFlag": 0,
+          "SmaCommandNameFlag": 0
+        },
+        {
+          "Start": 545,
+          "Length": 5,
+          "Text": "dSegs",
+          "SmaTokenKind": "Identifier",
+          "SmaKeywordFlag": 0,
+          "SmaCommandNameFlag": 0
+        },
+        {
+          "Start": 557,
+          "Length": 5,
+          "Text": "hSegs",
+          "SmaTokenKind": "Identifier",
+          "SmaKeywordFlag": 0,
+          "SmaCommandNameFlag": 0
+        },
+        {
+          "Start": 565,
+          "Length": 5,
+          "Text": "dSegs",
+          "SmaTokenKind": "Identifier",
+          "SmaKeywordFlag": 0,
+          "SmaCommandNameFlag": 0
+        },
+        {
+          "Start": 590,
+          "Length": 5,
+          "Text": "const",
+          "SmaTokenKind": "Identifier",
+          "SmaKeywordFlag": 0,
+          "SmaCommandNameFlag": 1
+        },
+        {
+          "Start": 596,
+          "Length": 8,
+          "Text": "position",
+          "SmaTokenKind": "Identifier",
+          "SmaKeywordFlag": 0,
+          "SmaCommandNameFlag": 0
+        },
+        {
+          "Start": 607,
+          "Length": 3,
+          "Text": "new",
+          "SmaTokenKind": "Identifier",
+          "SmaKeywordFlag": 0,
+          "SmaCommandNameFlag": 0
+        },
+        {
+          "Start": 611,
+          "Length": 12,
+          "Text": "Float32Array",
+          "SmaTokenKind": "Identifier",
+          "SmaKeywordFlag": 0,
+          "SmaCommandNameFlag": 0
+        },
+        {
+          "Start": 624,
+          "Length": 3,
+          "Text": "num",
+          "SmaTokenKind": "Identifier",
+          "SmaKeywordFlag": 0,
+          "SmaCommandNameFlag": 1
+        },
+        {
+          "Start": 642,
+          "Length": 5,
+          "Text": "const",
+          "SmaTokenKind": "Identifier",
+          "SmaKeywordFlag": 0,
+          "SmaCommandNameFlag": 1
+        },
+        {
+          "Start": 648,
+          "Length": 6,
+          "Text": "normal",
+          "SmaTokenKind": "Identifier",
+          "SmaKeywordFlag": 0,
+          "SmaCommandNameFlag": 0
+        },
+        {
+          "Start": 657,
+          "Length": 3,
+          "Text": "new",
+          "SmaTokenKind": "Identifier",
+          "SmaKeywordFlag": 0,
+          "SmaCommandNameFlag": 0
+        },
+        {
+          "Start": 661,
+          "Length": 12,
+          "Text": "Float32Array",
+          "SmaTokenKind": "Identifier",
+          "SmaKeywordFlag": 0,
+          "SmaCommandNameFlag": 0
+        },
+        {
+          "Start": 674,
+          "Length": 3,
+          "Text": "num",
+          "SmaTokenKind": "Identifier",
+          "SmaKeywordFlag": 0,
+          "SmaCommandNameFlag": 1
+        },
+        {
+          "Start": 692,
+          "Length": 5,
+          "Text": "const",
+          "SmaTokenKind": "Identifier",
+          "SmaKeywordFlag": 0,
+          "SmaCommandNameFlag": 1
+        },
+        {
+          "Start": 698,
+          "Length": 2,
+          "Text": "uv",
+          "SmaTokenKind": "Identifier",
+          "SmaKeywordFlag": 0,
+          "SmaCommandNameFlag": 0
+        },
+        {
+          "Start": 703,
+          "Length": 3,
+          "Text": "new",
+          "SmaTokenKind": "Identifier",
+          "SmaKeywordFlag": 0,
+          "SmaCommandNameFlag": 0
+        },
+        {
+          "Start": 707,
+          "Length": 12,
+          "Text": "Float32Array",
+          "SmaTokenKind": "Identifier",
+          "SmaKeywordFlag": 0,
+          "SmaCommandNameFlag": 0
+        },
+        {
+          "Start": 720,
+          "Length": 3,
+          "Text": "num",
+          "SmaTokenKind": "Identifier",
+          "SmaKeywordFlag": 0,
+          "SmaCommandNameFlag": 1
+        },
+        {
+          "Start": 738,
+          "Length": 5,
+          "Text": "const",
+          "SmaTokenKind": "Identifier",
+          "SmaKeywordFlag": 0,
+          "SmaCommandNameFlag": 1
+        },
+        {
+          "Start": 744,
+          "Length": 5,
+          "Text": "index",
+          "SmaTokenKind": "Identifier",
+          "SmaKeywordFlag": 0,
+          "SmaCommandNameFlag": 0
+        },
+        {
+          "Start": 752,
+          "Length": 3,
+          "Text": "num",
+          "SmaTokenKind": "Identifier",
+          "SmaKeywordFlag": 0,
+          "SmaCommandNameFlag": 0
+        },
+        {
+          "Start": 766,
+          "Length": 3,
+          "Text": "new",
+          "SmaTokenKind": "Identifier",
+          "SmaKeywordFlag": 0,
+          "SmaCommandNameFlag": 0
+        },
+        {
+          "Start": 770,
+          "Length": 11,
+          "Text": "Uint32Array",
+          "SmaTokenKind": "Identifier",
+          "SmaKeywordFlag": 0,
+          "SmaCommandNameFlag": 0
+        },
+        {
+          "Start": 782,
+          "Length": 10,
+          "Text": "numIndices",
+          "SmaTokenKind": "Identifier",
+          "SmaKeywordFlag": 0,
+          "SmaCommandNameFlag": 1
+        },
+        {
+          "Start": 796,
+          "Length": 3,
+          "Text": "new",
+          "SmaTokenKind": "Identifier",
+          "SmaKeywordFlag": 0,
+          "SmaCommandNameFlag": 0
+        },
+        {
+          "Start": 800,
+          "Length": 11,
+          "Text": "Uint16Array",
+          "SmaTokenKind": "Identifier",
+          "SmaKeywordFlag": 0,
+          "SmaCommandNameFlag": 0
+        },
+        {
+          "Start": 812,
+          "Length": 10,
+          "Text": "numIndices",
+          "SmaTokenKind": "Identifier",
+          "SmaKeywordFlag": 0,
+          "SmaCommandNameFlag": 1
+        },
+        {
+          "Start": 834,
+          "Length": 3,
+          "Text": "let",
+          "SmaTokenKind": "Identifier",
+          "SmaKeywordFlag": 0,
+          "SmaCommandNameFlag": 1
+        },
+        {
+          "Start": 838,
+          "Length": 1,
+          "Text": "i",
+          "SmaTokenKind": "Identifier",
+          "SmaKeywordFlag": 0,
+          "SmaCommandNameFlag": 0
+        },
+        {
+          "Start": 853,
+          "Length": 3,
+          "Text": "let",
+          "SmaTokenKind": "Identifier",
+          "SmaKeywordFlag": 0,
+          "SmaCommandNameFlag": 1
+        },
+        {
+          "Start": 857,
+          "Length": 2,
+          "Text": "ii",
+          "SmaTokenKind": "Identifier",
+          "SmaKeywordFlag": 0,
+          "SmaCommandNameFlag": 0
+        },
+        {
+          "Start": 877,
+          "Length": 4,
+          "Text": "left",
+          "SmaTokenKind": "Identifier",
+          "SmaKeywordFlag": 0,
+          "SmaCommandNameFlag": 0
+        },
+        {
+          "Start": 883,
+          "Length": 5,
+          "Text": "right",
+          "SmaTokenKind": "Identifier",
+          "SmaKeywordFlag": 0,
+          "SmaCommandNameFlag": 0
+        },
+        {
+          "Start": 914,
+          "Length": 8,
+          "Text": "position",
+          "SmaTokenKind": "Identifier",
+          "SmaKeywordFlag": 0,
+          "SmaCommandNameFlag": 1
+        },
+        {
+          "Start": 924,
+          "Length": 6,
+          "Text": "normal",
+          "SmaTokenKind": "Identifier",
+          "SmaKeywordFlag": 0,
+          "SmaCommandNameFlag": 0
+        },
+        {
+          "Start": 932,
+          "Length": 2,
+          "Text": "uv",
+          "SmaTokenKind": "Identifier",
+          "SmaKeywordFlag": 0,
+          "SmaCommandNameFlag": 0
+        },
+        {
+          "Start": 936,
+          "Length": 5,
+          "Text": "index",
+          "SmaTokenKind": "Identifier",
+          "SmaKeywordFlag": 0,
+          "SmaCommandNameFlag": 0
+        },
+        {
+          "Start": 943,
+          "Length": 5,
+          "Text": "depth",
+          "SmaTokenKind": "Identifier",
+          "SmaKeywordFlag": 0,
+          "SmaCommandNameFlag": 0
+        },
+        {
+          "Start": 950,
+          "Length": 6,
+          "Text": "height",
+          "SmaTokenKind": "Identifier",
+          "SmaKeywordFlag": 0,
+          "SmaCommandNameFlag": 0
+        },
+        {
+          "Start": 958,
+          "Length": 5,
+          "Text": "width",
+          "SmaTokenKind": "Identifier",
+          "SmaKeywordFlag": 0,
+          "SmaCommandNameFlag": 0
+        },
+        {
+          "Start": 965,
+          "Length": 5,
+          "Text": "dSegs",
+          "SmaTokenKind": "Identifier",
+          "SmaKeywordFlag": 0,
+          "SmaCommandNameFlag": 0
+        },
+        {
+          "Start": 972,
+          "Length": 5,
+          "Text": "hSegs",
+          "SmaTokenKind": "Identifier",
+          "SmaKeywordFlag": 0,
+          "SmaCommandNameFlag": 0
+        },
+        {
+          "Start": 996,
+          "Length": 1,
+          "Text": "i",
+          "SmaTokenKind": "Identifier",
+          "SmaKeywordFlag": 0,
+          "SmaCommandNameFlag": 0
+        },
+        {
+          "Start": 999,
+          "Length": 2,
+          "Text": "ii",
+          "SmaTokenKind": "Identifier",
+          "SmaKeywordFlag": 0,
+          "SmaCommandNameFlag": 0
+        },
+        {
+          "Start": 1012,
+          "Length": 1,
+          "Text": "i",
+          "SmaTokenKind": "Identifier",
+          "SmaKeywordFlag": 0,
+          "SmaCommandNameFlag": 1
+        },
+        {
+          "Start": 1018,
+          "Length": 5,
+          "Text": "dSegs",
+          "SmaTokenKind": "Identifier",
+          "SmaKeywordFlag": 0,
+          "SmaCommandNameFlag": 1
+        },
+        {
+          "Start": 1032,
+          "Length": 5,
+          "Text": "hSegs",
+          "SmaTokenKind": "Identifier",
+          "SmaKeywordFlag": 0,
+          "SmaCommandNameFlag": 1
+        },
+        {
+          "Start": 1052,
+          "Length": 2,
+          "Text": "ii",
+          "SmaTokenKind": "Identifier",
+          "SmaKeywordFlag": 0,
+          "SmaCommandNameFlag": 1
+        },
+        {
+          "Start": 1058,
+          "Length": 5,
+          "Text": "dSegs",
+          "SmaTokenKind": "Identifier",
+          "SmaKeywordFlag": 0,
+          "SmaCommandNameFlag": 0
+        },
+        {
+          "Start": 1066,
+          "Length": 5,
+          "Text": "hSegs",
+          "SmaTokenKind": "Identifier",
+          "SmaKeywordFlag": 0,
+          "SmaCommandNameFlag": 0
+        },
+        {
+          "Start": 1099,
+          "Length": 8,
+          "Text": "position",
+          "SmaTokenKind": "Identifier",
+          "SmaKeywordFlag": 0,
+          "SmaCommandNameFlag": 1
+        },
+        {
+          "Start": 1109,
+          "Length": 6,
+          "Text": "normal",
+          "SmaTokenKind": "Identifier",
+          "SmaKeywordFlag": 0,
+          "SmaCommandNameFlag": 0
+        },
+        {
+          "Start": 1117,
+          "Length": 2,
+          "Text": "uv",
+          "SmaTokenKind": "Identifier",
+          "SmaKeywordFlag": 0,
+          "SmaCommandNameFlag": 0
+        },
+        {
+          "Start": 1121,
+          "Length": 5,
+          "Text": "index",
+          "SmaTokenKind": "Identifier",
+          "SmaKeywordFlag": 0,
+          "SmaCommandNameFlag": 0
+        },
+        {
+          "Start": 1128,
+          "Length": 5,
+          "Text": "depth",
+          "SmaTokenKind": "Identifier",
+          "SmaKeywordFlag": 0,
+          "SmaCommandNameFlag": 0
+        },
+        {
+          "Start": 1135,
+          "Length": 6,
+          "Text": "height",
+          "SmaTokenKind": "Identifier",
+          "SmaKeywordFlag": 0,
+          "SmaCommandNameFlag": 0
+        },
+        {
+          "Start": 1151,
+          "Length": 5,
+          "Text": "dSegs",
+          "SmaTokenKind": "Identifier",
+          "SmaKeywordFlag": 0,
+          "SmaCommandNameFlag": 0
+        },
+        {
+          "Start": 1158,
+          "Length": 5,
+          "Text": "hSegs",
+          "SmaTokenKind": "Identifier",
+          "SmaKeywordFlag": 0,
+          "SmaCommandNameFlag": 0
+        },
+        {
+          "Start": 1181,
+          "Length": 1,
+          "Text": "i",
+          "SmaTokenKind": "Identifier",
+          "SmaKeywordFlag": 0,
+          "SmaCommandNameFlag": 0
+        },
+        {
+          "Start": 1184,
+          "Length": 2,
+          "Text": "ii",
+          "SmaTokenKind": "Identifier",
+          "SmaKeywordFlag": 0,
+          "SmaCommandNameFlag": 0
+        },
+        {
+          "Start": 1197,
+          "Length": 1,
+          "Text": "i",
+          "SmaTokenKind": "Identifier",
+          "SmaKeywordFlag": 0,
+          "SmaCommandNameFlag": 1
+        },
+        {
+          "Start": 1203,
+          "Length": 5,
+          "Text": "dSegs",
+          "SmaTokenKind": "Identifier",
+          "SmaKeywordFlag": 0,
+          "SmaCommandNameFlag": 1
+        },
+        {
+          "Start": 1217,
+          "Length": 5,
+          "Text": "hSegs",
+          "SmaTokenKind": "Identifier",
+          "SmaKeywordFlag": 0,
+          "SmaCommandNameFlag": 1
+        },
+        {
+          "Start": 1237,
+          "Length": 2,
+          "Text": "ii",
+          "SmaTokenKind": "Identifier",
+          "SmaKeywordFlag": 0,
+          "SmaCommandNameFlag": 1
+        },
+        {
+          "Start": 1243,
+          "Length": 5,
+          "Text": "dSegs",
+          "SmaTokenKind": "Identifier",
+          "SmaKeywordFlag": 0,
+          "SmaCommandNameFlag": 0
+        },
+        {
+          "Start": 1251,
+          "Length": 5,
+          "Text": "hSegs",
+          "SmaTokenKind": "Identifier",
+          "SmaKeywordFlag": 0,
+          "SmaCommandNameFlag": 0
+        },
+        {
+          "Start": 1270,
+          "Length": 3,
+          "Text": "top",
+          "SmaTokenKind": "Identifier",
+          "SmaKeywordFlag": 0,
+          "SmaCommandNameFlag": 0
+        },
+        {
+          "Start": 1275,
+          "Length": 6,
+          "Text": "bottom",
+          "SmaTokenKind": "Identifier",
+          "SmaKeywordFlag": 0,
+          "SmaCommandNameFlag": 0
+        },
+        {
+          "Start": 1307,
+          "Length": 8,
+          "Text": "position",
+          "SmaTokenKind": "Identifier",
+          "SmaKeywordFlag": 0,
+          "SmaCommandNameFlag": 1
+        },
+        {
+          "Start": 1317,
+          "Length": 6,
+          "Text": "normal",
+          "SmaTokenKind": "Identifier",
+          "SmaKeywordFlag": 0,
+          "SmaCommandNameFlag": 0
+        },
+        {
+          "Start": 1325,
+          "Length": 2,
+          "Text": "uv",
+          "SmaTokenKind": "Identifier",
+          "SmaKeywordFlag": 0,
+          "SmaCommandNameFlag": 0
+        },
+        {
+          "Start": 1329,
+          "Length": 5,
+          "Text": "index",
+          "SmaTokenKind": "Identifier",
+          "SmaKeywordFlag": 0,
+          "SmaCommandNameFlag": 0
+        },
+        {
+          "Start": 1336,
+          "Length": 5,
+          "Text": "width",
+          "SmaTokenKind": "Identifier",
+          "SmaKeywordFlag": 0,
+          "SmaCommandNameFlag": 0
+        },
+        {
+          "Start": 1343,
+          "Length": 5,
+          "Text": "depth",
+          "SmaTokenKind": "Identifier",
+          "SmaKeywordFlag": 0,
+          "SmaCommandNameFlag": 0
+        },
+        {
+          "Start": 1350,
+          "Length": 6,
+          "Text": "height",
+          "SmaTokenKind": "Identifier",
+          "SmaKeywordFlag": 0,
+          "SmaCommandNameFlag": 0
+        },
+        {
+          "Start": 1358,
+          "Length": 5,
+          "Text": "dSegs",
+          "SmaTokenKind": "Identifier",
+          "SmaKeywordFlag": 0,
+          "SmaCommandNameFlag": 0
+        },
+        {
+          "Start": 1365,
+          "Length": 5,
+          "Text": "wSegs",
+          "SmaTokenKind": "Identifier",
+          "SmaKeywordFlag": 0,
+          "SmaCommandNameFlag": 0
+        },
+        {
+          "Start": 1387,
+          "Length": 1,
+          "Text": "i",
+          "SmaTokenKind": "Identifier",
+          "SmaKeywordFlag": 0,
+          "SmaCommandNameFlag": 0
+        },
+        {
+          "Start": 1390,
+          "Length": 2,
+          "Text": "ii",
+          "SmaTokenKind": "Identifier",
+          "SmaKeywordFlag": 0,
+          "SmaCommandNameFlag": 0
+        },
+        {
+          "Start": 1403,
+          "Length": 1,
+          "Text": "i",
+          "SmaTokenKind": "Identifier",
+          "SmaKeywordFlag": 0,
+          "SmaCommandNameFlag": 1
+        },
+        {
+          "Start": 1409,
+          "Length": 5,
+          "Text": "wSegs",
+          "SmaTokenKind": "Identifier",
+          "SmaKeywordFlag": 0,
+          "SmaCommandNameFlag": 1
+        },
+        {
+          "Start": 1423,
+          "Length": 5,
+          "Text": "dSegs",
+          "SmaTokenKind": "Identifier",
+          "SmaKeywordFlag": 0,
+          "SmaCommandNameFlag": 1
+        },
+        {
+          "Start": 1443,
+          "Length": 2,
+          "Text": "ii",
+          "SmaTokenKind": "Identifier",
+          "SmaKeywordFlag": 0,
+          "SmaCommandNameFlag": 1
+        },
+        {
+          "Start": 1449,
+          "Length": 5,
+          "Text": "wSegs",
+          "SmaTokenKind": "Identifier",
+          "SmaKeywordFlag": 0,
+          "SmaCommandNameFlag": 0
+        },
+        {
+          "Start": 1457,
+          "Length": 5,
+          "Text": "dSegs",
+          "SmaTokenKind": "Identifier",
+          "SmaKeywordFlag": 0,
+          "SmaCommandNameFlag": 0
+        },
+        {
+          "Start": 1490,
+          "Length": 8,
+          "Text": "position",
+          "SmaTokenKind": "Identifier",
+          "SmaKeywordFlag": 0,
+          "SmaCommandNameFlag": 1
+        },
+        {
+          "Start": 1500,
+          "Length": 6,
+          "Text": "normal",
+          "SmaTokenKind": "Identifier",
+          "SmaKeywordFlag": 0,
+          "SmaCommandNameFlag": 0
+        },
+        {
+          "Start": 1508,
+          "Length": 2,
+          "Text": "uv",
+          "SmaTokenKind": "Identifier",
+          "SmaKeywordFlag": 0,
+          "SmaCommandNameFlag": 0
+        },
+        {
+          "Start": 1512,
+          "Length": 5,
+          "Text": "index",
+          "SmaTokenKind": "Identifier",
+          "SmaKeywordFlag": 0,
+          "SmaCommandNameFlag": 0
+        },
+        {
+          "Start": 1519,
+          "Length": 5,
+          "Text": "width",
+          "SmaTokenKind": "Identifier",
+          "SmaKeywordFlag": 0,
+          "SmaCommandNameFlag": 0
+        },
+        {
+          "Start": 1526,
+          "Length": 5,
+          "Text": "depth",
+          "SmaTokenKind": "Identifier",
+          "SmaKeywordFlag": 0,
+          "SmaCommandNameFlag": 0
+        },
+        {
+          "Start": 1542,
+          "Length": 5,
+          "Text": "dSegs",
+          "SmaTokenKind": "Identifier",
+          "SmaKeywordFlag": 0,
+          "SmaCommandNameFlag": 0
+        },
+        {
+          "Start": 1549,
+          "Length": 5,
+          "Text": "wSegs",
+          "SmaTokenKind": "Identifier",
+          "SmaKeywordFlag": 0,
+          "SmaCommandNameFlag": 0
+        },
+        {
+          "Start": 1572,
+          "Length": 1,
+          "Text": "i",
+          "SmaTokenKind": "Identifier",
+          "SmaKeywordFlag": 0,
+          "SmaCommandNameFlag": 0
+        },
+        {
+          "Start": 1575,
+          "Length": 2,
+          "Text": "ii",
+          "SmaTokenKind": "Identifier",
+          "SmaKeywordFlag": 0,
+          "SmaCommandNameFlag": 0
+        },
+        {
+          "Start": 1588,
+          "Length": 1,
+          "Text": "i",
+          "SmaTokenKind": "Identifier",
+          "SmaKeywordFlag": 0,
+          "SmaCommandNameFlag": 1
+        },
+        {
+          "Start": 1594,
+          "Length": 5,
+          "Text": "wSegs",
+          "SmaTokenKind": "Identifier",
+          "SmaKeywordFlag": 0,
+          "SmaCommandNameFlag": 1
+        },
+        {
+          "Start": 1608,
+          "Length": 5,
+          "Text": "dSegs",
+          "SmaTokenKind": "Identifier",
+          "SmaKeywordFlag": 0,
+          "SmaCommandNameFlag": 1
+        },
+        {
+          "Start": 1628,
+          "Length": 2,
+          "Text": "ii",
+          "SmaTokenKind": "Identifier",
+          "SmaKeywordFlag": 0,
+          "SmaCommandNameFlag": 1
+        },
+        {
+          "Start": 1634,
+          "Length": 5,
+          "Text": "wSegs",
+          "SmaTokenKind": "Identifier",
+          "SmaKeywordFlag": 0,
+          "SmaCommandNameFlag": 0
+        },
+        {
+          "Start": 1642,
+          "Length": 5,
+          "Text": "dSegs",
+          "SmaTokenKind": "Identifier",
+          "SmaKeywordFlag": 0,
+          "SmaCommandNameFlag": 0
+        },
+        {
+          "Start": 1661,
+          "Length": 5,
+          "Text": "front",
+          "SmaTokenKind": "Identifier",
+          "SmaKeywordFlag": 0,
+          "SmaCommandNameFlag": 0
+        },
+        {
+          "Start": 1668,
+          "Length": 4,
+          "Text": "back",
+          "SmaTokenKind": "Identifier",
+          "SmaKeywordFlag": 0,
+          "SmaCommandNameFlag": 0
+        },
+        {
+          "Start": 1698,
+          "Length": 8,
+          "Text": "position",
+          "SmaTokenKind": "Identifier",
+          "SmaKeywordFlag": 0,
+          "SmaCommandNameFlag": 1
+        },
+        {
+          "Start": 1708,
+          "Length": 6,
+          "Text": "normal",
+          "SmaTokenKind": "Identifier",
+          "SmaKeywordFlag": 0,
+          "SmaCommandNameFlag": 0
+        },
+        {
+          "Start": 1716,
+          "Length": 2,
+          "Text": "uv",
+          "SmaTokenKind": "Identifier",
+          "SmaKeywordFlag": 0,
+          "SmaCommandNameFlag": 0
+        },
+        {
+          "Start": 1720,
+          "Length": 5,
+          "Text": "index",
+          "SmaTokenKind": "Identifier",
+          "SmaKeywordFlag": 0,
+          "SmaCommandNameFlag": 0
+        },
+        {
+          "Start": 1727,
+          "Length": 5,
+          "Text": "width",
+          "SmaTokenKind": "Identifier",
+          "SmaKeywordFlag": 0,
+          "SmaCommandNameFlag": 0
+        },
+        {
+          "Start": 1734,
+          "Length": 6,
+          "Text": "height",
+          "SmaTokenKind": "Identifier",
+          "SmaKeywordFlag": 0,
+          "SmaCommandNameFlag": 0
+        },
+        {
+          "Start": 1750,
+          "Length": 5,
+          "Text": "wSegs",
+          "SmaTokenKind": "Identifier",
+          "SmaKeywordFlag": 0,
+          "SmaCommandNameFlag": 0
+        },
+        {
+          "Start": 1757,
+          "Length": 5,
+          "Text": "hSegs",
+          "SmaTokenKind": "Identifier",
+          "SmaKeywordFlag": 0,
+          "SmaCommandNameFlag": 0
+        },
+        {
+          "Start": 1781,
+          "Length": 1,
+          "Text": "i",
+          "SmaTokenKind": "Identifier",
+          "SmaKeywordFlag": 0,
+          "SmaCommandNameFlag": 0
+        },
+        {
+          "Start": 1784,
+          "Length": 2,
+          "Text": "ii",
+          "SmaTokenKind": "Identifier",
+          "SmaKeywordFlag": 0,
+          "SmaCommandNameFlag": 0
+        },
+        {
+          "Start": 1797,
+          "Length": 1,
+          "Text": "i",
+          "SmaTokenKind": "Identifier",
+          "SmaKeywordFlag": 0,
+          "SmaCommandNameFlag": 1
+        },
+        {
+          "Start": 1803,
+          "Length": 5,
+          "Text": "wSegs",
+          "SmaTokenKind": "Identifier",
+          "SmaKeywordFlag": 0,
+          "SmaCommandNameFlag": 1
+        },
+        {
+          "Start": 1817,
+          "Length": 5,
+          "Text": "hSegs",
+          "SmaTokenKind": "Identifier",
+          "SmaKeywordFlag": 0,
+          "SmaCommandNameFlag": 1
+        },
+        {
+          "Start": 1837,
+          "Length": 2,
+          "Text": "ii",
+          "SmaTokenKind": "Identifier",
+          "SmaKeywordFlag": 0,
+          "SmaCommandNameFlag": 1
+        },
+        {
+          "Start": 1843,
+          "Length": 5,
+          "Text": "wSegs",
+          "SmaTokenKind": "Identifier",
+          "SmaKeywordFlag": 0,
+          "SmaCommandNameFlag": 0
+        },
+        {
+          "Start": 1851,
+          "Length": 5,
+          "Text": "hSegs",
+          "SmaTokenKind": "Identifier",
+          "SmaKeywordFlag": 0,
+          "SmaCommandNameFlag": 0
+        },
+        {
+          "Start": 1884,
+          "Length": 8,
+          "Text": "position",
+          "SmaTokenKind": "Identifier",
+          "SmaKeywordFlag": 0,
+          "SmaCommandNameFlag": 1
+        },
+        {
+          "Start": 1894,
+          "Length": 6,
+          "Text": "normal",
+          "SmaTokenKind": "Identifier",
+          "SmaKeywordFlag": 0,
+          "SmaCommandNameFlag": 0
+        },
+        {
+          "Start": 1902,
+          "Length": 2,
+          "Text": "uv",
+          "SmaTokenKind": "Identifier",
+          "SmaKeywordFlag": 0,
+          "SmaCommandNameFlag": 0
+        },
+        {
+          "Start": 1906,
+          "Length": 5,
+          "Text": "index",
+          "SmaTokenKind": "Identifier",
+          "SmaKeywordFlag": 0,
+          "SmaCommandNameFlag": 0
+        },
+        {
+          "Start": 1913,
+          "Length": 5,
+          "Text": "width",
+          "SmaTokenKind": "Identifier",
+          "SmaKeywordFlag": 0,
+          "SmaCommandNameFlag": 0
+        },
+        {
+          "Start": 1920,
+          "Length": 6,
+          "Text": "height",
+          "SmaTokenKind": "Identifier",
+          "SmaKeywordFlag": 0,
+          "SmaCommandNameFlag": 0
+        },
+        {
+          "Start": 1928,
+          "Length": 5,
+          "Text": "depth",
+          "SmaTokenKind": "Identifier",
+          "SmaKeywordFlag": 0,
+          "SmaCommandNameFlag": 0
+        },
+        {
+          "Start": 1935,
+          "Length": 5,
+          "Text": "wSegs",
+          "SmaTokenKind": "Identifier",
+          "SmaKeywordFlag": 0,
+          "SmaCommandNameFlag": 0
+        },
+        {
+          "Start": 1942,
+          "Length": 5,
+          "Text": "hSegs",
+          "SmaTokenKind": "Identifier",
+          "SmaKeywordFlag": 0,
+          "SmaCommandNameFlag": 0
+        },
+        {
+          "Start": 1965,
+          "Length": 1,
+          "Text": "i",
+          "SmaTokenKind": "Identifier",
+          "SmaKeywordFlag": 0,
+          "SmaCommandNameFlag": 0
+        },
+        {
+          "Start": 1968,
+          "Length": 2,
+          "Text": "ii",
+          "SmaTokenKind": "Identifier",
+          "SmaKeywordFlag": 0,
+          "SmaCommandNameFlag": 0
+        },
+        {
+          "Start": 1996,
+          "Length": 10,
+          "Text": "attributes",
+          "SmaTokenKind": "Identifier",
+          "SmaKeywordFlag": 0,
+          "SmaCommandNameFlag": 1
+        },
+        {
+          "Start": 2049,
+          "Length": 8,
+          "Text": "position",
+          "SmaTokenKind": "Identifier",
+          "SmaKeywordFlag": 0,
+          "SmaCommandNameFlag": 0
+        },
+        {
+          "Start": 2098,
+          "Length": 6,
+          "Text": "normal",
+          "SmaTokenKind": "Identifier",
+          "SmaKeywordFlag": 0,
+          "SmaCommandNameFlag": 0
+        },
+        {
+          "Start": 2141,
+          "Length": 2,
+          "Text": "uv",
+          "SmaTokenKind": "Identifier",
+          "SmaKeywordFlag": 0,
+          "SmaCommandNameFlag": 0
+        },
+        {
+          "Start": 2174,
+          "Length": 5,
+          "Text": "index",
+          "SmaTokenKind": "Identifier",
+          "SmaKeywordFlag": 0,
+          "SmaCommandNameFlag": 0
+        },
+        {
+          "Start": 2204,
+          "Length": 5,
+          "Text": "super",
+          "SmaTokenKind": "Identifier",
+          "SmaKeywordFlag": 0,
+          "SmaCommandNameFlag": 1
+        },
+        {
+          "Start": 2210,
+          "Length": 2,
+          "Text": "gl",
+          "SmaTokenKind": "Identifier",
+          "SmaKeywordFlag": 0,
+          "SmaCommandNameFlag": 1
+        },
+        {
+          "Start": 2214,
+          "Length": 10,
+          "Text": "attributes",
+          "SmaTokenKind": "Identifier",
+          "SmaKeywordFlag": 0,
+          "SmaCommandNameFlag": 0
+        }
+      ]
+    }
+  ],
+  "HeldOut": [
+    {
+      "Path": "fixtures/ogl/math/Vec3.js",
+      "Sha256": "A05A9E0726DF48E62B3CCF7003DD922FDDEEAD3618C8D06A1921644AF4CFB121",
+      "TokenCount": 382,
+      "ErrorIds": [
+        "MissingArgument",
+        "ExpectedExpression",
+        "ExpectedExpression",
+        "ExpectedExpression",
+        "MissingArgument",
+        "MissingStatementBlock",
+        "MissingArgument",
+        "MissingArgument",
+        "MissingArgument",
+        "MissingStatementBlock",
+        "MissingArgument",
+        "MissingArgument",
+        "MissingArgument",
+        "MissingStatementBlock",
+        "MissingArgument",
+        "MissingArgument",
+        "MissingStatementBlock",
+        "MissingArgument",
+        "MissingArgument",
+        "MissingStatementBlock",
+        "MissingArgument",
+        "MissingArgument",
+        "MissingArgument",
+        "TerminatorExpectedAtEndOfString",
+        "MissingEndCurlyBrace"
+      ],
+      "StatementTypes": [
+        "PipelineAst",
+        "PipelineAst"
+      ],
+      "Units": [
+        {
+          "Start": 0,
+          "Length": 6,
+          "Text": "import",
+          "SmaTokenKind": "Identifier",
+          "SmaKeywordFlag": 0,
+          "SmaCommandNameFlag": 1
+        },
+        {
+          "Start": 9,
+          "Length": 2,
+          "Text": "as",
+          "SmaTokenKind": "Identifier",
+          "SmaKeywordFlag": 0,
+          "SmaCommandNameFlag": 0
+        },
+        {
+          "Start": 12,
+          "Length": 8,
+          "Text": "Vec3Func",
+          "SmaTokenKind": "Identifier",
+          "SmaKeywordFlag": 0,
+          "SmaCommandNameFlag": 0
+        },
+        {
+          "Start": 21,
+          "Length": 4,
+          "Text": "from",
+          "SmaTokenKind": "Generic",
+          "SmaKeywordFlag": 0,
+          "SmaCommandNameFlag": 0
+        },
+        {
+          "Start": 54,
+          "Length": 6,
+          "Text": "export",
+          "SmaTokenKind": "Identifier",
+          "SmaKeywordFlag": 0,
+          "SmaCommandNameFlag": 1
+        },
+        {
+          "Start": 61,
+          "Length": 5,
+          "Text": "class",
+          "SmaTokenKind": "Generic",
+          "SmaKeywordFlag": 0,
+          "SmaCommandNameFlag": 0
+        },
+        {
+          "Start": 67,
+          "Length": 4,
+          "Text": "Vec3",
+          "SmaTokenKind": "Identifier",
+          "SmaKeywordFlag": 0,
+          "SmaCommandNameFlag": 0
+        },
+        {
+          "Start": 72,
+          "Length": 7,
+          "Text": "extends",
+          "SmaTokenKind": "Identifier",
+          "SmaKeywordFlag": 0,
+          "SmaCommandNameFlag": 0
+        },
+        {
+          "Start": 80,
+          "Length": 5,
+          "Text": "Array",
+          "SmaTokenKind": "Identifier",
+          "SmaKeywordFlag": 0,
+          "SmaCommandNameFlag": 0
+        },
+        {
+          "Start": 92,
+          "Length": 11,
+          "Text": "constructor",
+          "SmaTokenKind": "Identifier",
+          "SmaKeywordFlag": 0,
+          "SmaCommandNameFlag": 1
+        },
+        {
+          "Start": 104,
+          "Length": 1,
+          "Text": "x",
+          "SmaTokenKind": "Identifier",
+          "SmaKeywordFlag": 0,
+          "SmaCommandNameFlag": 1
+        },
+        {
+          "Start": 111,
+          "Length": 1,
+          "Text": "y",
+          "SmaTokenKind": "Identifier",
+          "SmaKeywordFlag": 0,
+          "SmaCommandNameFlag": 0
+        },
+        {
+          "Start": 115,
+          "Length": 1,
+          "Text": "x",
+          "SmaTokenKind": "Identifier",
+          "SmaKeywordFlag": 0,
+          "SmaCommandNameFlag": 0
+        },
+        {
+          "Start": 118,
+          "Length": 1,
+          "Text": "z",
+          "SmaTokenKind": "Identifier",
+          "SmaKeywordFlag": 0,
+          "SmaCommandNameFlag": 0
+        },
+        {
+          "Start": 122,
+          "Length": 1,
+          "Text": "x",
+          "SmaTokenKind": "Identifier",
+          "SmaKeywordFlag": 0,
+          "SmaCommandNameFlag": 0
+        },
+        {
+          "Start": 135,
+          "Length": 5,
+          "Text": "super",
+          "SmaTokenKind": "Identifier",
+          "SmaKeywordFlag": 0,
+          "SmaCommandNameFlag": 1
+        },
+        {
+          "Start": 141,
+          "Length": 1,
+          "Text": "x",
+          "SmaTokenKind": "Identifier",
+          "SmaKeywordFlag": 0,
+          "SmaCommandNameFlag": 1
+        },
+        {
+          "Start": 144,
+          "Length": 1,
+          "Text": "y",
+          "SmaTokenKind": "Identifier",
+          "SmaKeywordFlag": 0,
+          "SmaCommandNameFlag": 0
+        },
+        {
+          "Start": 147,
+          "Length": 1,
+          "Text": "z",
+          "SmaTokenKind": "Identifier",
+          "SmaKeywordFlag": 0,
+          "SmaCommandNameFlag": 0
+        },
+        {
+          "Start": 159,
+          "Length": 6,
+          "Text": "return",
+          "SmaTokenKind": "Return",
+          "SmaKeywordFlag": 1,
+          "SmaCommandNameFlag": 0
+        },
+        {
+          "Start": 166,
+          "Length": 4,
+          "Text": "this",
+          "SmaTokenKind": "Identifier",
+          "SmaKeywordFlag": 0,
+          "SmaCommandNameFlag": 1
+        },
+        {
+          "Start": 183,
+          "Length": 3,
+          "Text": "get",
+          "SmaTokenKind": "Identifier",
+          "SmaKeywordFlag": 0,
+          "SmaCommandNameFlag": 1
+        },
+        {
+          "Start": 187,
+          "Length": 1,
+          "Text": "x",
+          "SmaTokenKind": "Identifier",
+          "SmaKeywordFlag": 0,
+          "SmaCommandNameFlag": 0
+        },
+        {
+          "Start": 201,
+          "Length": 6,
+          "Text": "return",
+          "SmaTokenKind": "Return",
+          "SmaKeywordFlag": 1,
+          "SmaCommandNameFlag": 0
+        },
+        {
+          "Start": 228,
+          "Length": 3,
+          "Text": "get",
+          "SmaTokenKind": "Identifier",
+          "SmaKeywordFlag": 0,
+          "SmaCommandNameFlag": 1
+        },
+        {
+          "Start": 232,
+          "Length": 1,
+          "Text": "y",
+          "SmaTokenKind": "Identifier",
+          "SmaKeywordFlag": 0,
+          "SmaCommandNameFlag": 0
+        },
+        {
+          "Start": 246,
+          "Length": 6,
+          "Text": "return",
+          "SmaTokenKind": "Return",
+          "SmaKeywordFlag": 1,
+          "SmaCommandNameFlag": 0
+        },
+        {
+          "Start": 273,
+          "Length": 3,
+          "Text": "get",
+          "SmaTokenKind": "Identifier",
+          "SmaKeywordFlag": 0,
+          "SmaCommandNameFlag": 1
+        },
+        {
+          "Start": 277,
+          "Length": 1,
+          "Text": "z",
+          "SmaTokenKind": "Identifier",
+          "SmaKeywordFlag": 0,
+          "SmaCommandNameFlag": 0
+        },
+        {
+          "Start": 291,
+          "Length": 6,
+          "Text": "return",
+          "SmaTokenKind": "Return",
+          "SmaKeywordFlag": 1,
+          "SmaCommandNameFlag": 0
+        },
+        {
+          "Start": 318,
+          "Length": 3,
+          "Text": "set",
+          "SmaTokenKind": "Identifier",
+          "SmaKeywordFlag": 0,
+          "SmaCommandNameFlag": 1
+        },
+        {
+          "Start": 322,
+          "Length": 1,
+          "Text": "x",
+          "SmaTokenKind": "Identifier",
+          "SmaKeywordFlag": 0,
+          "SmaCommandNameFlag": 0
+        },
+        {
+          "Start": 324,
+          "Length": 1,
+          "Text": "v",
+          "SmaTokenKind": "Identifier",
+          "SmaKeywordFlag": 0,
+          "SmaCommandNameFlag": 1
+        },
+        {
+          "Start": 347,
+          "Length": 1,
+          "Text": "v",
+          "SmaTokenKind": "Identifier",
+          "SmaKeywordFlag": 0,
+          "SmaCommandNameFlag": 0
+        },
+        {
+          "Start": 361,
+          "Length": 3,
+          "Text": "set",
+          "SmaTokenKind": "Identifier",
+          "SmaKeywordFlag": 0,
+          "SmaCommandNameFlag": 1
+        },
+        {
+          "Start": 365,
+          "Length": 1,
+          "Text": "y",
+          "SmaTokenKind": "Identifier",
+          "SmaKeywordFlag": 0,
+          "SmaCommandNameFlag": 0
+        },
+        {
+          "Start": 367,
+          "Length": 1,
+          "Text": "v",
+          "SmaTokenKind": "Identifier",
+          "SmaKeywordFlag": 0,
+          "SmaCommandNameFlag": 1
+        },
+        {
+          "Start": 390,
+          "Length": 1,
+          "Text": "v",
+          "SmaTokenKind": "Identifier",
+          "SmaKeywordFlag": 0,
+          "SmaCommandNameFlag": 0
+        },
+        {
+          "Start": 404,
+          "Length": 3,
+          "Text": "set",
+          "SmaTokenKind": "Identifier",
+          "SmaKeywordFlag": 0,
+          "SmaCommandNameFlag": 1
+        },
+        {
+          "Start": 408,
+          "Length": 1,
+          "Text": "z",
+          "SmaTokenKind": "Identifier",
+          "SmaKeywordFlag": 0,
+          "SmaCommandNameFlag": 0
+        },
+        {
+          "Start": 410,
+          "Length": 1,
+          "Text": "v",
+          "SmaTokenKind": "Identifier",
+          "SmaKeywordFlag": 0,
+          "SmaCommandNameFlag": 1
+        },
+        {
+          "Start": 433,
+          "Length": 1,
+          "Text": "v",
+          "SmaTokenKind": "Identifier",
+          "SmaKeywordFlag": 0,
+          "SmaCommandNameFlag": 0
+        },
+        {
+          "Start": 447,
+          "Length": 3,
+          "Text": "set",
+          "SmaTokenKind": "Identifier",
+          "SmaKeywordFlag": 0,
+          "SmaCommandNameFlag": 1
+        },
+        {
+          "Start": 451,
+          "Length": 1,
+          "Text": "x",
+          "SmaTokenKind": "Identifier",
+          "SmaKeywordFlag": 0,
+          "SmaCommandNameFlag": 1
+        },
+        {
+          "Start": 454,
+          "Length": 1,
+          "Text": "y",
+          "SmaTokenKind": "Identifier",
+          "SmaKeywordFlag": 0,
+          "SmaCommandNameFlag": 0
+        },
+        {
+          "Start": 458,
+          "Length": 1,
+          "Text": "x",
+          "SmaTokenKind": "Identifier",
+          "SmaKeywordFlag": 0,
+          "SmaCommandNameFlag": 0
+        },
+        {
+          "Start": 461,
+          "Length": 1,
+          "Text": "z",
+          "SmaTokenKind": "Identifier",
+          "SmaKeywordFlag": 0,
+          "SmaCommandNameFlag": 0
+        },
+        {
+          "Start": 465,
+          "Length": 1,
+          "Text": "x",
+          "SmaTokenKind": "Identifier",
+          "SmaKeywordFlag": 0,
+          "SmaCommandNameFlag": 0
+        },
+        {
+          "Start": 478,
+          "Length": 2,
+          "Text": "if",
+          "SmaTokenKind": "If",
+          "SmaKeywordFlag": 1,
+          "SmaCommandNameFlag": 0
+        },
+        {
+          "Start": 492,
+          "Length": 6,
+          "Text": "return",
+          "SmaTokenKind": "Return",
+          "SmaKeywordFlag": 1,
+          "SmaCommandNameFlag": 0
+        },
+        {
+          "Start": 509,
+          "Length": 1,
+          "Text": "x",
+          "SmaTokenKind": "Identifier",
+          "SmaKeywordFlag": 0,
+          "SmaCommandNameFlag": 1
+        },
+        {
+          "Start": 534,
+          "Length": 4,
+          "Text": "this",
+          "SmaTokenKind": "Identifier",
+          "SmaKeywordFlag": 0,
+          "SmaCommandNameFlag": 1
+        },
+        {
+          "Start": 540,
+          "Length": 1,
+          "Text": "x",
+          "SmaTokenKind": "Identifier",
+          "SmaKeywordFlag": 0,
+          "SmaCommandNameFlag": 0
+        },
+        {
+          "Start": 543,
+          "Length": 1,
+          "Text": "y",
+          "SmaTokenKind": "Identifier",
+          "SmaKeywordFlag": 0,
+          "SmaCommandNameFlag": 0
+        },
+        {
+          "Start": 546,
+          "Length": 1,
+          "Text": "z",
+          "SmaTokenKind": "Identifier",
+          "SmaKeywordFlag": 0,
+          "SmaCommandNameFlag": 0
+        },
+        {
+          "Start": 558,
+          "Length": 6,
+          "Text": "return",
+          "SmaTokenKind": "Return",
+          "SmaKeywordFlag": 1,
+          "SmaCommandNameFlag": 0
+        },
+        {
+          "Start": 565,
+          "Length": 4,
+          "Text": "this",
+          "SmaTokenKind": "Identifier",
+          "SmaKeywordFlag": 0,
+          "SmaCommandNameFlag": 1
+        },
+        {
+          "Start": 582,
+          "Length": 4,
+          "Text": "copy",
+          "SmaTokenKind": "Identifier",
+          "SmaKeywordFlag": 0,
+          "SmaCommandNameFlag": 1
+        },
+        {
+          "Start": 587,
+          "Length": 1,
+          "Text": "v",
+          "SmaTokenKind": "Identifier",
+          "SmaKeywordFlag": 0,
+          "SmaCommandNameFlag": 1
+        },
+        {
+          "Start": 614,
+          "Length": 4,
+          "Text": "this",
+          "SmaTokenKind": "Identifier",
+          "SmaKeywordFlag": 0,
+          "SmaCommandNameFlag": 1
+        },
+        {
+          "Start": 620,
+          "Length": 1,
+          "Text": "v",
+          "SmaTokenKind": "Identifier",
+          "SmaKeywordFlag": 0,
+          "SmaCommandNameFlag": 0
+        },
+        {
+          "Start": 632,
+          "Length": 6,
+          "Text": "return",
+          "SmaTokenKind": "Return",
+          "SmaKeywordFlag": 1,
+          "SmaCommandNameFlag": 0
+        },
+        {
+          "Start": 639,
+          "Length": 4,
+          "Text": "this",
+          "SmaTokenKind": "Identifier",
+          "SmaKeywordFlag": 0,
+          "SmaCommandNameFlag": 1
+        },
+        {
+          "Start": 656,
+          "Length": 3,
+          "Text": "add",
+          "SmaTokenKind": "Identifier",
+          "SmaKeywordFlag": 0,
+          "SmaCommandNameFlag": 1
+        },
+        {
+          "Start": 660,
+          "Length": 2,
+          "Text": "va",
+          "SmaTokenKind": "Identifier",
+          "SmaKeywordFlag": 0,
+          "SmaCommandNameFlag": 1
+        },
+        {
+          "Start": 664,
+          "Length": 2,
+          "Text": "vb",
+          "SmaTokenKind": "Identifier",
+          "SmaKeywordFlag": 0,
+          "SmaCommandNameFlag": 0
+        },
+        {
+          "Start": 678,
+          "Length": 2,
+          "Text": "if",
+          "SmaTokenKind": "If",
+          "SmaKeywordFlag": 1,
+          "SmaCommandNameFlag": 0
+        },
+        {
+          "Start": 682,
+          "Length": 2,
+          "Text": "vb",
+          "SmaTokenKind": "Identifier",
+          "SmaKeywordFlag": 0,
+          "SmaCommandNameFlag": 1
+        },
+        {
+          "Start": 699,
+          "Length": 4,
+          "Text": "this",
+          "SmaTokenKind": "Identifier",
+          "SmaKeywordFlag": 0,
+          "SmaCommandNameFlag": 1
+        },
+        {
+          "Start": 705,
+          "Length": 2,
+          "Text": "va",
+          "SmaTokenKind": "Identifier",
+          "SmaKeywordFlag": 0,
+          "SmaCommandNameFlag": 0
+        },
+        {
+          "Start": 709,
+          "Length": 2,
+          "Text": "vb",
+          "SmaTokenKind": "Identifier",
+          "SmaKeywordFlag": 0,
+          "SmaCommandNameFlag": 0
+        },
+        {
+          "Start": 722,
+          "Length": 4,
+          "Text": "else",
+          "SmaTokenKind": "Else",
+          "SmaKeywordFlag": 1,
+          "SmaCommandNameFlag": 0
+        },
+        {
+          "Start": 740,
+          "Length": 4,
+          "Text": "this",
+          "SmaTokenKind": "Identifier",
+          "SmaKeywordFlag": 0,
+          "SmaCommandNameFlag": 1
+        },
+        {
+          "Start": 746,
+          "Length": 4,
+          "Text": "this",
+          "SmaTokenKind": "Identifier",
+          "SmaKeywordFlag": 0,
+          "SmaCommandNameFlag": 0
+        },
+        {
+          "Start": 752,
+          "Length": 2,
+          "Text": "va",
+          "SmaTokenKind": "Identifier",
+          "SmaKeywordFlag": 0,
+          "SmaCommandNameFlag": 0
+        },
+        {
+          "Start": 765,
+          "Length": 6,
+          "Text": "return",
+          "SmaTokenKind": "Return",
+          "SmaKeywordFlag": 1,
+          "SmaCommandNameFlag": 0
+        },
+        {
+          "Start": 772,
+          "Length": 4,
+          "Text": "this",
+          "SmaTokenKind": "Identifier",
+          "SmaKeywordFlag": 0,
+          "SmaCommandNameFlag": 1
+        },
+        {
+          "Start": 789,
+          "Length": 3,
+          "Text": "sub",
+          "SmaTokenKind": "Identifier",
+          "SmaKeywordFlag": 0,
+          "SmaCommandNameFlag": 1
+        },
+        {
+          "Start": 793,
+          "Length": 2,
+          "Text": "va",
+          "SmaTokenKind": "Identifier",
+          "SmaKeywordFlag": 0,
+          "SmaCommandNameFlag": 1
+        },
+        {
+          "Start": 797,
+          "Length": 2,
+          "Text": "vb",
+          "SmaTokenKind": "Identifier",
+          "SmaKeywordFlag": 0,
+          "SmaCommandNameFlag": 0
+        },
+        {
+          "Start": 811,
+          "Length": 2,
+          "Text": "if",
+          "SmaTokenKind": "If",
+          "SmaKeywordFlag": 1,
+          "SmaCommandNameFlag": 0
+        },
+        {
+          "Start": 815,
+          "Length": 2,
+          "Text": "vb",
+          "SmaTokenKind": "Identifier",
+          "SmaKeywordFlag": 0,
+          "SmaCommandNameFlag": 1
+        },
+        {
+          "Start": 837,
+          "Length": 4,
+          "Text": "this",
+          "SmaTokenKind": "Identifier",
+          "SmaKeywordFlag": 0,
+          "SmaCommandNameFlag": 1
+        },
+        {
+          "Start": 843,
+          "Length": 2,
+          "Text": "va",
+          "SmaTokenKind": "Identifier",
+          "SmaKeywordFlag": 0,
+          "SmaCommandNameFlag": 0
+        },
+        {
+          "Start": 847,
+          "Length": 2,
+          "Text": "vb",
+          "SmaTokenKind": "Identifier",
+          "SmaKeywordFlag": 0,
+          "SmaCommandNameFlag": 0
+        },
+        {
+          "Start": 860,
+          "Length": 4,
+          "Text": "else",
+          "SmaTokenKind": "Else",
+          "SmaKeywordFlag": 1,
+          "SmaCommandNameFlag": 0
+        },
+        {
+          "Start": 883,
+          "Length": 4,
+          "Text": "this",
+          "SmaTokenKind": "Identifier",
+          "SmaKeywordFlag": 0,
+          "SmaCommandNameFlag": 1
+        },
+        {
+          "Start": 889,
+          "Length": 4,
+          "Text": "this",
+          "SmaTokenKind": "Identifier",
+          "SmaKeywordFlag": 0,
+          "SmaCommandNameFlag": 0
+        },
+        {
+          "Start": 895,
+          "Length": 2,
+          "Text": "va",
+          "SmaTokenKind": "Identifier",
+          "SmaKeywordFlag": 0,
+          "SmaCommandNameFlag": 0
+        },
+        {
+          "Start": 908,
+          "Length": 6,
+          "Text": "return",
+          "SmaTokenKind": "Return",
+          "SmaKeywordFlag": 1,
+          "SmaCommandNameFlag": 0
+        },
+        {
+          "Start": 915,
+          "Length": 4,
+          "Text": "this",
+          "SmaTokenKind": "Identifier",
+          "SmaKeywordFlag": 0,
+          "SmaCommandNameFlag": 1
+        },
+        {
+          "Start": 932,
+          "Length": 8,
+          "Text": "multiply",
+          "SmaTokenKind": "Identifier",
+          "SmaKeywordFlag": 0,
+          "SmaCommandNameFlag": 1
+        },
+        {
+          "Start": 941,
+          "Length": 1,
+          "Text": "v",
+          "SmaTokenKind": "Identifier",
+          "SmaKeywordFlag": 0,
+          "SmaCommandNameFlag": 1
+        },
+        {
+          "Start": 954,
+          "Length": 2,
+          "Text": "if",
+          "SmaTokenKind": "If",
+          "SmaKeywordFlag": 1,
+          "SmaCommandNameFlag": 0
+        },
+        {
+          "Start": 986,
+          "Length": 4,
+          "Text": "this",
+          "SmaTokenKind": "Identifier",
+          "SmaKeywordFlag": 0,
+          "SmaCommandNameFlag": 1
+        },
+        {
+          "Start": 992,
+          "Length": 4,
+          "Text": "this",
+          "SmaTokenKind": "Identifier",
+          "SmaKeywordFlag": 0,
+          "SmaCommandNameFlag": 0
+        },
+        {
+          "Start": 998,
+          "Length": 1,
+          "Text": "v",
+          "SmaTokenKind": "Identifier",
+          "SmaKeywordFlag": 0,
+          "SmaCommandNameFlag": 0
+        },
+        {
+          "Start": 1010,
+          "Length": 4,
+          "Text": "else",
+          "SmaTokenKind": "Else",
+          "SmaKeywordFlag": 1,
+          "SmaCommandNameFlag": 0
+        },
+        {
+          "Start": 1030,
+          "Length": 4,
+          "Text": "this",
+          "SmaTokenKind": "Identifier",
+          "SmaKeywordFlag": 0,
+          "SmaCommandNameFlag": 1
+        },
+        {
+          "Start": 1036,
+          "Length": 4,
+          "Text": "this",
+          "SmaTokenKind": "Identifier",
+          "SmaKeywordFlag": 0,
+          "SmaCommandNameFlag": 0
+        },
+        {
+          "Start": 1042,
+          "Length": 1,
+          "Text": "v",
+          "SmaTokenKind": "Identifier",
+          "SmaKeywordFlag": 0,
+          "SmaCommandNameFlag": 0
+        },
+        {
+          "Start": 1054,
+          "Length": 6,
+          "Text": "return",
+          "SmaTokenKind": "Return",
+          "SmaKeywordFlag": 1,
+          "SmaCommandNameFlag": 0
+        },
+        {
+          "Start": 1061,
+          "Length": 4,
+          "Text": "this",
+          "SmaTokenKind": "Identifier",
+          "SmaKeywordFlag": 0,
+          "SmaCommandNameFlag": 1
+        },
+        {
+          "Start": 1078,
+          "Length": 6,
+          "Text": "divide",
+          "SmaTokenKind": "Identifier",
+          "SmaKeywordFlag": 0,
+          "SmaCommandNameFlag": 1
+        },
+        {
+          "Start": 1085,
+          "Length": 1,
+          "Text": "v",
+          "SmaTokenKind": "Identifier",
+          "SmaKeywordFlag": 0,
+          "SmaCommandNameFlag": 1
+        },
+        {
+          "Start": 1098,
+          "Length": 2,
+          "Text": "if",
+          "SmaTokenKind": "If",
+          "SmaKeywordFlag": 1,
+          "SmaCommandNameFlag": 0
+        },
+        {
+          "Start": 1128,
+          "Length": 4,
+          "Text": "this",
+          "SmaTokenKind": "Identifier",
+          "SmaKeywordFlag": 0,
+          "SmaCommandNameFlag": 1
+        },
+        {
+          "Start": 1134,
+          "Length": 4,
+          "Text": "this",
+          "SmaTokenKind": "Identifier",
+          "SmaKeywordFlag": 0,
+          "SmaCommandNameFlag": 0
+        },
+        {
+          "Start": 1140,
+          "Length": 1,
+          "Text": "v",
+          "SmaTokenKind": "Identifier",
+          "SmaKeywordFlag": 0,
+          "SmaCommandNameFlag": 0
+        },
+        {
+          "Start": 1152,
+          "Length": 4,
+          "Text": "else",
+          "SmaTokenKind": "Else",
+          "SmaKeywordFlag": 1,
+          "SmaCommandNameFlag": 0
+        },
+        {
+          "Start": 1172,
+          "Length": 4,
+          "Text": "this",
+          "SmaTokenKind": "Identifier",
+          "SmaKeywordFlag": 0,
+          "SmaCommandNameFlag": 1
+        },
+        {
+          "Start": 1178,
+          "Length": 4,
+          "Text": "this",
+          "SmaTokenKind": "Identifier",
+          "SmaKeywordFlag": 0,
+          "SmaCommandNameFlag": 0
+        },
+        {
+          "Start": 1188,
+          "Length": 1,
+          "Text": "v",
+          "SmaTokenKind": "Identifier",
+          "SmaKeywordFlag": 0,
+          "SmaCommandNameFlag": 0
+        },
+        {
+          "Start": 1200,
+          "Length": 6,
+          "Text": "return",
+          "SmaTokenKind": "Return",
+          "SmaKeywordFlag": 1,
+          "SmaCommandNameFlag": 0
+        },
+        {
+          "Start": 1207,
+          "Length": 4,
+          "Text": "this",
+          "SmaTokenKind": "Identifier",
+          "SmaKeywordFlag": 0,
+          "SmaCommandNameFlag": 1
+        },
+        {
+          "Start": 1224,
+          "Length": 7,
+          "Text": "inverse",
+          "SmaTokenKind": "Identifier",
+          "SmaKeywordFlag": 0,
+          "SmaCommandNameFlag": 1
+        },
+        {
+          "Start": 1232,
+          "Length": 1,
+          "Text": "v",
+          "SmaTokenKind": "Identifier",
+          "SmaKeywordFlag": 0,
+          "SmaCommandNameFlag": 1
+        },
+        {
+          "Start": 1236,
+          "Length": 4,
+          "Text": "this",
+          "SmaTokenKind": "Identifier",
+          "SmaKeywordFlag": 0,
+          "SmaCommandNameFlag": 0
+        },
+        {
+          "Start": 1269,
+          "Length": 4,
+          "Text": "this",
+          "SmaTokenKind": "Identifier",
+          "SmaKeywordFlag": 0,
+          "SmaCommandNameFlag": 1
+        },
+        {
+          "Start": 1275,
+          "Length": 1,
+          "Text": "v",
+          "SmaTokenKind": "Identifier",
+          "SmaKeywordFlag": 0,
+          "SmaCommandNameFlag": 0
+        },
+        {
+          "Start": 1287,
+          "Length": 6,
+          "Text": "return",
+          "SmaTokenKind": "Return",
+          "SmaKeywordFlag": 1,
+          "SmaCommandNameFlag": 0
+        },
+        {
+          "Start": 1294,
+          "Length": 4,
+          "Text": "this",
+          "SmaTokenKind": "Identifier",
+          "SmaKeywordFlag": 0,
+          "SmaCommandNameFlag": 1
+        }
+      ]
+    },
+    {
+      "Path": "fixtures/ogl/math/Mat4.js",
+      "Sha256": "C091A2283BC334E19E17501F33158BA407AE0D3703AC589C15D636EF1BFEFCA6",
+      "TokenCount": 1219,
+      "ErrorIds": [
+        "MissingArgument",
+        "ExpectedExpression",
+        "ExpectedExpression",
+        "ExpectedExpression",
+        "ExpectedExpression",
+        "MissingArgument",
+        "MissingStatementBlock",
+        "MissingArgument",
+        "MissingArgument",
+        "MissingArgument",
+        "MissingArgument",
+        "MissingArgument",
+        "MissingArgument",
+        "MissingArgument",
+        "MissingArgument",
+        "MissingStatementBlock",
+        "MissingArgument",
+        "MissingArgument",
+        "MissingArgument",
+        "MissingStatementBlock",
+        "MissingArgument",
+        "MissingArgument",
+        "MissingArgument",
+        "MissingArgument",
+        "MissingStatementBlockAfterElse",
+        "MissingArgument",
+        "MissingArgument",
+        "ExpectedExpression",
+        "MissingArgument",
+        "MissingArgument",
+        "MissingArgument",
+        "MissingArgument",
+        "MissingArgument",
+        "MissingArgument",
+        "MissingArgument",
+        "MissingArgument",
+        "MissingArgument",
+        "MissingArgument",
+        "MissingArgument",
+        "MissingArgument",
+        "MissingArgument",
+        "MissingArgument",
+        "ExpectedExpression",
+        "MissingArgument",
+        "MissingArgument",
+        "ExpectedExpression",
+        "MissingArgument",
+        "InvalidLeftHandSide"
+      ],
+      "StatementTypes": [
+        "PipelineAst",
+        "PipelineAst"
+      ],
+      "Units": [
+        {
+          "Start": 0,
+          "Length": 6,
+          "Text": "import",
+          "SmaTokenKind": "Identifier",
+          "SmaKeywordFlag": 0,
+          "SmaCommandNameFlag": 1
+        },
+        {
+          "Start": 9,
+          "Length": 2,
+          "Text": "as",
+          "SmaTokenKind": "Identifier",
+          "SmaKeywordFlag": 0,
+          "SmaCommandNameFlag": 0
+        },
+        {
+          "Start": 12,
+          "Length": 8,
+          "Text": "Mat4Func",
+          "SmaTokenKind": "Identifier",
+          "SmaKeywordFlag": 0,
+          "SmaCommandNameFlag": 0
+        },
+        {
+          "Start": 21,
+          "Length": 4,
+          "Text": "from",
+          "SmaTokenKind": "Generic",
+          "SmaKeywordFlag": 0,
+          "SmaCommandNameFlag": 0
+        },
+        {
+          "Start": 54,
+          "Length": 6,
+          "Text": "export",
+          "SmaTokenKind": "Identifier",
+          "SmaKeywordFlag": 0,
+          "SmaCommandNameFlag": 1
+        },
+        {
+          "Start": 61,
+          "Length": 5,
+          "Text": "class",
+          "SmaTokenKind": "Generic",
+          "SmaKeywordFlag": 0,
+          "SmaCommandNameFlag": 0
+        },
+        {
+          "Start": 67,
+          "Length": 4,
+          "Text": "Mat4",
+          "SmaTokenKind": "Identifier",
+          "SmaKeywordFlag": 0,
+          "SmaCommandNameFlag": 0
+        },
+        {
+          "Start": 72,
+          "Length": 7,
+          "Text": "extends",
+          "SmaTokenKind": "Identifier",
+          "SmaKeywordFlag": 0,
+          "SmaCommandNameFlag": 0
+        },
+        {
+          "Start": 80,
+          "Length": 5,
+          "Text": "Array",
+          "SmaTokenKind": "Identifier",
+          "SmaKeywordFlag": 0,
+          "SmaCommandNameFlag": 0
+        },
+        {
+          "Start": 92,
+          "Length": 11,
+          "Text": "constructor",
+          "SmaTokenKind": "Identifier",
+          "SmaKeywordFlag": 0,
+          "SmaCommandNameFlag": 1
+        },
+        {
+          "Start": 113,
+          "Length": 3,
+          "Text": "m00",
+          "SmaTokenKind": "Identifier",
+          "SmaKeywordFlag": 0,
+          "SmaCommandNameFlag": 1
+        },
+        {
+          "Start": 130,
+          "Length": 3,
+          "Text": "m01",
+          "SmaTokenKind": "Identifier",
+          "SmaKeywordFlag": 0,
+          "SmaCommandNameFlag": 0
+        },
+        {
+          "Start": 147,
+          "Length": 3,
+          "Text": "m02",
+          "SmaTokenKind": "Identifier",
+          "SmaKeywordFlag": 0,
+          "SmaCommandNameFlag": 0
+        },
+        {
+          "Start": 164,
+          "Length": 3,
+          "Text": "m03",
+          "SmaTokenKind": "Identifier",
+          "SmaKeywordFlag": 0,
+          "SmaCommandNameFlag": 0
+        },
+        {
+          "Start": 181,
+          "Length": 3,
+          "Text": "m10",
+          "SmaTokenKind": "Identifier",
+          "SmaKeywordFlag": 0,
+          "SmaCommandNameFlag": 0
+        },
+        {
+          "Start": 198,
+          "Length": 3,
+          "Text": "m11",
+          "SmaTokenKind": "Identifier",
+          "SmaKeywordFlag": 0,
+          "SmaCommandNameFlag": 0
+        },
+        {
+          "Start": 215,
+          "Length": 3,
+          "Text": "m12",
+          "SmaTokenKind": "Identifier",
+          "SmaKeywordFlag": 0,
+          "SmaCommandNameFlag": 0
+        },
+        {
+          "Start": 232,
+          "Length": 3,
+          "Text": "m13",
+          "SmaTokenKind": "Identifier",
+          "SmaKeywordFlag": 0,
+          "SmaCommandNameFlag": 0
+        },
+        {
+          "Start": 249,
+          "Length": 3,
+          "Text": "m20",
+          "SmaTokenKind": "Identifier",
+          "SmaKeywordFlag": 0,
+          "SmaCommandNameFlag": 0
+        },
+        {
+          "Start": 266,
+          "Length": 3,
+          "Text": "m21",
+          "SmaTokenKind": "Identifier",
+          "SmaKeywordFlag": 0,
+          "SmaCommandNameFlag": 0
+        },
+        {
+          "Start": 283,
+          "Length": 3,
+          "Text": "m22",
+          "SmaTokenKind": "Identifier",
+          "SmaKeywordFlag": 0,
+          "SmaCommandNameFlag": 0
+        },
+        {
+          "Start": 300,
+          "Length": 3,
+          "Text": "m23",
+          "SmaTokenKind": "Identifier",
+          "SmaKeywordFlag": 0,
+          "SmaCommandNameFlag": 0
+        },
+        {
+          "Start": 317,
+          "Length": 3,
+          "Text": "m30",
+          "SmaTokenKind": "Identifier",
+          "SmaKeywordFlag": 0,
+          "SmaCommandNameFlag": 0
+        },
+        {
+          "Start": 334,
+          "Length": 3,
+          "Text": "m31",
+          "SmaTokenKind": "Identifier",
+          "SmaKeywordFlag": 0,
+          "SmaCommandNameFlag": 0
+        },
+        {
+          "Start": 351,
+          "Length": 3,
+          "Text": "m32",
+          "SmaTokenKind": "Identifier",
+          "SmaKeywordFlag": 0,
+          "SmaCommandNameFlag": 0
+        },
+        {
+          "Start": 368,
+          "Length": 3,
+          "Text": "m33",
+          "SmaTokenKind": "Identifier",
+          "SmaKeywordFlag": 0,
+          "SmaCommandNameFlag": 0
+        },
+        {
+          "Start": 392,
+          "Length": 5,
+          "Text": "super",
+          "SmaTokenKind": "Identifier",
+          "SmaKeywordFlag": 0,
+          "SmaCommandNameFlag": 1
+        },
+        {
+          "Start": 398,
+          "Length": 3,
+          "Text": "m00",
+          "SmaTokenKind": "Identifier",
+          "SmaKeywordFlag": 0,
+          "SmaCommandNameFlag": 1
+        },
+        {
+          "Start": 403,
+          "Length": 3,
+          "Text": "m01",
+          "SmaTokenKind": "Identifier",
+          "SmaKeywordFlag": 0,
+          "SmaCommandNameFlag": 0
+        },
+        {
+          "Start": 408,
+          "Length": 3,
+          "Text": "m02",
+          "SmaTokenKind": "Identifier",
+          "SmaKeywordFlag": 0,
+          "SmaCommandNameFlag": 0
+        },
+        {
+          "Start": 413,
+          "Length": 3,
+          "Text": "m03",
+          "SmaTokenKind": "Identifier",
+          "SmaKeywordFlag": 0,
+          "SmaCommandNameFlag": 0
+        },
+        {
+          "Start": 418,
+          "Length": 3,
+          "Text": "m10",
+          "SmaTokenKind": "Identifier",
+          "SmaKeywordFlag": 0,
+          "SmaCommandNameFlag": 0
+        },
+        {
+          "Start": 423,
+          "Length": 3,
+          "Text": "m11",
+          "SmaTokenKind": "Identifier",
+          "SmaKeywordFlag": 0,
+          "SmaCommandNameFlag": 0
+        },
+        {
+          "Start": 428,
+          "Length": 3,
+          "Text": "m12",
+          "SmaTokenKind": "Identifier",
+          "SmaKeywordFlag": 0,
+          "SmaCommandNameFlag": 0
+        },
+        {
+          "Start": 433,
+          "Length": 3,
+          "Text": "m13",
+          "SmaTokenKind": "Identifier",
+          "SmaKeywordFlag": 0,
+          "SmaCommandNameFlag": 0
+        },
+        {
+          "Start": 438,
+          "Length": 3,
+          "Text": "m20",
+          "SmaTokenKind": "Identifier",
+          "SmaKeywordFlag": 0,
+          "SmaCommandNameFlag": 0
+        },
+        {
+          "Start": 443,
+          "Length": 3,
+          "Text": "m21",
+          "SmaTokenKind": "Identifier",
+          "SmaKeywordFlag": 0,
+          "SmaCommandNameFlag": 0
+        },
+        {
+          "Start": 448,
+          "Length": 3,
+          "Text": "m22",
+          "SmaTokenKind": "Identifier",
+          "SmaKeywordFlag": 0,
+          "SmaCommandNameFlag": 0
+        },
+        {
+          "Start": 453,
+          "Length": 3,
+          "Text": "m23",
+          "SmaTokenKind": "Identifier",
+          "SmaKeywordFlag": 0,
+          "SmaCommandNameFlag": 0
+        },
+        {
+          "Start": 458,
+          "Length": 3,
+          "Text": "m30",
+          "SmaTokenKind": "Identifier",
+          "SmaKeywordFlag": 0,
+          "SmaCommandNameFlag": 0
+        },
+        {
+          "Start": 463,
+          "Length": 3,
+          "Text": "m31",
+          "SmaTokenKind": "Identifier",
+          "SmaKeywordFlag": 0,
+          "SmaCommandNameFlag": 0
+        },
+        {
+          "Start": 468,
+          "Length": 3,
+          "Text": "m32",
+          "SmaTokenKind": "Identifier",
+          "SmaKeywordFlag": 0,
+          "SmaCommandNameFlag": 0
+        },
+        {
+          "Start": 473,
+          "Length": 3,
+          "Text": "m33",
+          "SmaTokenKind": "Identifier",
+          "SmaKeywordFlag": 0,
+          "SmaCommandNameFlag": 0
+        },
+        {
+          "Start": 487,
+          "Length": 6,
+          "Text": "return",
+          "SmaTokenKind": "Return",
+          "SmaKeywordFlag": 1,
+          "SmaCommandNameFlag": 0
+        },
+        {
+          "Start": 494,
+          "Length": 4,
+          "Text": "this",
+          "SmaTokenKind": "Identifier",
+          "SmaKeywordFlag": 0,
+          "SmaCommandNameFlag": 1
+        },
+        {
+          "Start": 511,
+          "Length": 3,
+          "Text": "get",
+          "SmaTokenKind": "Identifier",
+          "SmaKeywordFlag": 0,
+          "SmaCommandNameFlag": 1
+        },
+        {
+          "Start": 515,
+          "Length": 1,
+          "Text": "x",
+          "SmaTokenKind": "Identifier",
+          "SmaKeywordFlag": 0,
+          "SmaCommandNameFlag": 0
+        },
+        {
+          "Start": 529,
+          "Length": 6,
+          "Text": "return",
+          "SmaTokenKind": "Return",
+          "SmaKeywordFlag": 1,
+          "SmaCommandNameFlag": 0
+        },
+        {
+          "Start": 557,
+          "Length": 3,
+          "Text": "get",
+          "SmaTokenKind": "Identifier",
+          "SmaKeywordFlag": 0,
+          "SmaCommandNameFlag": 1
+        },
+        {
+          "Start": 561,
+          "Length": 1,
+          "Text": "y",
+          "SmaTokenKind": "Identifier",
+          "SmaKeywordFlag": 0,
+          "SmaCommandNameFlag": 0
+        },
+        {
+          "Start": 575,
+          "Length": 6,
+          "Text": "return",
+          "SmaTokenKind": "Return",
+          "SmaKeywordFlag": 1,
+          "SmaCommandNameFlag": 0
+        },
+        {
+          "Start": 603,
+          "Length": 3,
+          "Text": "get",
+          "SmaTokenKind": "Identifier",
+          "SmaKeywordFlag": 0,
+          "SmaCommandNameFlag": 1
+        },
+        {
+          "Start": 607,
+          "Length": 1,
+          "Text": "z",
+          "SmaTokenKind": "Identifier",
+          "SmaKeywordFlag": 0,
+          "SmaCommandNameFlag": 0
+        },
+        {
+          "Start": 621,
+          "Length": 6,
+          "Text": "return",
+          "SmaTokenKind": "Return",
+          "SmaKeywordFlag": 1,
+          "SmaCommandNameFlag": 0
+        },
+        {
+          "Start": 649,
+          "Length": 3,
+          "Text": "get",
+          "SmaTokenKind": "Identifier",
+          "SmaKeywordFlag": 0,
+          "SmaCommandNameFlag": 1
+        },
+        {
+          "Start": 653,
+          "Length": 1,
+          "Text": "w",
+          "SmaTokenKind": "Identifier",
+          "SmaKeywordFlag": 0,
+          "SmaCommandNameFlag": 0
+        },
+        {
+          "Start": 667,
+          "Length": 6,
+          "Text": "return",
+          "SmaTokenKind": "Return",
+          "SmaKeywordFlag": 1,
+          "SmaCommandNameFlag": 0
+        },
+        {
+          "Start": 695,
+          "Length": 3,
+          "Text": "set",
+          "SmaTokenKind": "Identifier",
+          "SmaKeywordFlag": 0,
+          "SmaCommandNameFlag": 1
+        },
+        {
+          "Start": 699,
+          "Length": 1,
+          "Text": "x",
+          "SmaTokenKind": "Identifier",
+          "SmaKeywordFlag": 0,
+          "SmaCommandNameFlag": 0
+        },
+        {
+          "Start": 701,
+          "Length": 1,
+          "Text": "v",
+          "SmaTokenKind": "Identifier",
+          "SmaKeywordFlag": 0,
+          "SmaCommandNameFlag": 1
+        },
+        {
+          "Start": 725,
+          "Length": 1,
+          "Text": "v",
+          "SmaTokenKind": "Identifier",
+          "SmaKeywordFlag": 0,
+          "SmaCommandNameFlag": 0
+        },
+        {
+          "Start": 739,
+          "Length": 3,
+          "Text": "set",
+          "SmaTokenKind": "Identifier",
+          "SmaKeywordFlag": 0,
+          "SmaCommandNameFlag": 1
+        },
+        {
+          "Start": 743,
+          "Length": 1,
+          "Text": "y",
+          "SmaTokenKind": "Identifier",
+          "SmaKeywordFlag": 0,
+          "SmaCommandNameFlag": 0
+        },
+        {
+          "Start": 745,
+          "Length": 1,
+          "Text": "v",
+          "SmaTokenKind": "Identifier",
+          "SmaKeywordFlag": 0,
+          "SmaCommandNameFlag": 1
+        },
+        {
+          "Start": 769,
+          "Length": 1,
+          "Text": "v",
+          "SmaTokenKind": "Identifier",
+          "SmaKeywordFlag": 0,
+          "SmaCommandNameFlag": 0
+        },
+        {
+          "Start": 783,
+          "Length": 3,
+          "Text": "set",
+          "SmaTokenKind": "Identifier",
+          "SmaKeywordFlag": 0,
+          "SmaCommandNameFlag": 1
+        },
+        {
+          "Start": 787,
+          "Length": 1,
+          "Text": "z",
+          "SmaTokenKind": "Identifier",
+          "SmaKeywordFlag": 0,
+          "SmaCommandNameFlag": 0
+        },
+        {
+          "Start": 789,
+          "Length": 1,
+          "Text": "v",
+          "SmaTokenKind": "Identifier",
+          "SmaKeywordFlag": 0,
+          "SmaCommandNameFlag": 1
+        },
+        {
+          "Start": 813,
+          "Length": 1,
+          "Text": "v",
+          "SmaTokenKind": "Identifier",
+          "SmaKeywordFlag": 0,
+          "SmaCommandNameFlag": 0
+        },
+        {
+          "Start": 827,
+          "Length": 3,
+          "Text": "set",
+          "SmaTokenKind": "Identifier",
+          "SmaKeywordFlag": 0,
+          "SmaCommandNameFlag": 1
+        },
+        {
+          "Start": 831,
+          "Length": 1,
+          "Text": "w",
+          "SmaTokenKind": "Identifier",
+          "SmaKeywordFlag": 0,
+          "SmaCommandNameFlag": 0
+        },
+        {
+          "Start": 833,
+          "Length": 1,
+          "Text": "v",
+          "SmaTokenKind": "Identifier",
+          "SmaKeywordFlag": 0,
+          "SmaCommandNameFlag": 1
+        },
+        {
+          "Start": 857,
+          "Length": 1,
+          "Text": "v",
+          "SmaTokenKind": "Identifier",
+          "SmaKeywordFlag": 0,
+          "SmaCommandNameFlag": 0
+        },
+        {
+          "Start": 871,
+          "Length": 3,
+          "Text": "set",
+          "SmaTokenKind": "Identifier",
+          "SmaKeywordFlag": 0,
+          "SmaCommandNameFlag": 1
+        },
+        {
+          "Start": 875,
+          "Length": 3,
+          "Text": "m00",
+          "SmaTokenKind": "Identifier",
+          "SmaKeywordFlag": 0,
+          "SmaCommandNameFlag": 1
+        },
+        {
+          "Start": 880,
+          "Length": 3,
+          "Text": "m01",
+          "SmaTokenKind": "Identifier",
+          "SmaKeywordFlag": 0,
+          "SmaCommandNameFlag": 0
+        },
+        {
+          "Start": 885,
+          "Length": 3,
+          "Text": "m02",
+          "SmaTokenKind": "Identifier",
+          "SmaKeywordFlag": 0,
+          "SmaCommandNameFlag": 0
+        },
+        {
+          "Start": 890,
+          "Length": 3,
+          "Text": "m03",
+          "SmaTokenKind": "Identifier",
+          "SmaKeywordFlag": 0,
+          "SmaCommandNameFlag": 0
+        },
+        {
+          "Start": 895,
+          "Length": 3,
+          "Text": "m10",
+          "SmaTokenKind": "Identifier",
+          "SmaKeywordFlag": 0,
+          "SmaCommandNameFlag": 0
+        },
+        {
+          "Start": 900,
+          "Length": 3,
+          "Text": "m11",
+          "SmaTokenKind": "Identifier",
+          "SmaKeywordFlag": 0,
+          "SmaCommandNameFlag": 0
+        },
+        {
+          "Start": 905,
+          "Length": 3,
+          "Text": "m12",
+          "SmaTokenKind": "Identifier",
+          "SmaKeywordFlag": 0,
+          "SmaCommandNameFlag": 0
+        },
+        {
+          "Start": 910,
+          "Length": 3,
+          "Text": "m13",
+          "SmaTokenKind": "Identifier",
+          "SmaKeywordFlag": 0,
+          "SmaCommandNameFlag": 0
+        },
+        {
+          "Start": 915,
+          "Length": 3,
+          "Text": "m20",
+          "SmaTokenKind": "Identifier",
+          "SmaKeywordFlag": 0,
+          "SmaCommandNameFlag": 0
+        },
+        {
+          "Start": 920,
+          "Length": 3,
+          "Text": "m21",
+          "SmaTokenKind": "Identifier",
+          "SmaKeywordFlag": 0,
+          "SmaCommandNameFlag": 0
+        },
+        {
+          "Start": 925,
+          "Length": 3,
+          "Text": "m22",
+          "SmaTokenKind": "Identifier",
+          "SmaKeywordFlag": 0,
+          "SmaCommandNameFlag": 0
+        },
+        {
+          "Start": 930,
+          "Length": 3,
+          "Text": "m23",
+          "SmaTokenKind": "Identifier",
+          "SmaKeywordFlag": 0,
+          "SmaCommandNameFlag": 0
+        },
+        {
+          "Start": 935,
+          "Length": 3,
+          "Text": "m30",
+          "SmaTokenKind": "Identifier",
+          "SmaKeywordFlag": 0,
+          "SmaCommandNameFlag": 0
+        },
+        {
+          "Start": 940,
+          "Length": 3,
+          "Text": "m31",
+          "SmaTokenKind": "Identifier",
+          "SmaKeywordFlag": 0,
+          "SmaCommandNameFlag": 0
+        },
+        {
+          "Start": 945,
+          "Length": 3,
+          "Text": "m32",
+          "SmaTokenKind": "Identifier",
+          "SmaKeywordFlag": 0,
+          "SmaCommandNameFlag": 0
+        },
+        {
+          "Start": 950,
+          "Length": 3,
+          "Text": "m33",
+          "SmaTokenKind": "Identifier",
+          "SmaKeywordFlag": 0,
+          "SmaCommandNameFlag": 0
+        },
+        {
+          "Start": 965,
+          "Length": 2,
+          "Text": "if",
+          "SmaTokenKind": "If",
+          "SmaKeywordFlag": 1,
+          "SmaCommandNameFlag": 0
+        },
+        {
+          "Start": 981,
+          "Length": 6,
+          "Text": "return",
+          "SmaTokenKind": "Return",
+          "SmaKeywordFlag": 1,
+          "SmaCommandNameFlag": 0
+        },
+        {
+          "Start": 998,
+          "Length": 3,
+          "Text": "m00",
+          "SmaTokenKind": "Identifier",
+          "SmaKeywordFlag": 0,
+          "SmaCommandNameFlag": 1
+        },
+        {
+          "Start": 1025,
+          "Length": 4,
+          "Text": "this",
+          "SmaTokenKind": "Identifier",
+          "SmaKeywordFlag": 0,
+          "SmaCommandNameFlag": 1
+        },
+        {
+          "Start": 1031,
+          "Length": 3,
+          "Text": "m00",
+          "SmaTokenKind": "Identifier",
+          "SmaKeywordFlag": 0,
+          "SmaCommandNameFlag": 0
+        },
+        {
+          "Start": 1036,
+          "Length": 3,
+          "Text": "m01",
+          "SmaTokenKind": "Identifier",
+          "SmaKeywordFlag": 0,
+          "SmaCommandNameFlag": 0
+        },
+        {
+          "Start": 1041,
+          "Length": 3,
+          "Text": "m02",
+          "SmaTokenKind": "Identifier",
+          "SmaKeywordFlag": 0,
+          "SmaCommandNameFlag": 0
+        },
+        {
+          "Start": 1046,
+          "Length": 3,
+          "Text": "m03",
+          "SmaTokenKind": "Identifier",
+          "SmaKeywordFlag": 0,
+          "SmaCommandNameFlag": 0
+        },
+        {
+          "Start": 1051,
+          "Length": 3,
+          "Text": "m10",
+          "SmaTokenKind": "Identifier",
+          "SmaKeywordFlag": 0,
+          "SmaCommandNameFlag": 0
+        },
+        {
+          "Start": 1056,
+          "Length": 3,
+          "Text": "m11",
+          "SmaTokenKind": "Identifier",
+          "SmaKeywordFlag": 0,
+          "SmaCommandNameFlag": 0
+        },
+        {
+          "Start": 1061,
+          "Length": 3,
+          "Text": "m12",
+          "SmaTokenKind": "Identifier",
+          "SmaKeywordFlag": 0,
+          "SmaCommandNameFlag": 0
+        },
+        {
+          "Start": 1066,
+          "Length": 3,
+          "Text": "m13",
+          "SmaTokenKind": "Identifier",
+          "SmaKeywordFlag": 0,
+          "SmaCommandNameFlag": 0
+        },
+        {
+          "Start": 1071,
+          "Length": 3,
+          "Text": "m20",
+          "SmaTokenKind": "Identifier",
+          "SmaKeywordFlag": 0,
+          "SmaCommandNameFlag": 0
+        },
+        {
+          "Start": 1076,
+          "Length": 3,
+          "Text": "m21",
+          "SmaTokenKind": "Identifier",
+          "SmaKeywordFlag": 0,
+          "SmaCommandNameFlag": 0
+        },
+        {
+          "Start": 1081,
+          "Length": 3,
+          "Text": "m22",
+          "SmaTokenKind": "Identifier",
+          "SmaKeywordFlag": 0,
+          "SmaCommandNameFlag": 0
+        },
+        {
+          "Start": 1086,
+          "Length": 3,
+          "Text": "m23",
+          "SmaTokenKind": "Identifier",
+          "SmaKeywordFlag": 0,
+          "SmaCommandNameFlag": 0
+        },
+        {
+          "Start": 1091,
+          "Length": 3,
+          "Text": "m30",
+          "SmaTokenKind": "Identifier",
+          "SmaKeywordFlag": 0,
+          "SmaCommandNameFlag": 0
+        },
+        {
+          "Start": 1096,
+          "Length": 3,
+          "Text": "m31",
+          "SmaTokenKind": "Identifier",
+          "SmaKeywordFlag": 0,
+          "SmaCommandNameFlag": 0
+        },
+        {
+          "Start": 1101,
+          "Length": 3,
+          "Text": "m32",
+          "SmaTokenKind": "Identifier",
+          "SmaKeywordFlag": 0,
+          "SmaCommandNameFlag": 0
+        },
+        {
+          "Start": 1106,
+          "Length": 3,
+          "Text": "m33",
+          "SmaTokenKind": "Identifier",
+          "SmaKeywordFlag": 0,
+          "SmaCommandNameFlag": 0
+        },
+        {
+          "Start": 1120,
+          "Length": 6,
+          "Text": "return",
+          "SmaTokenKind": "Return",
+          "SmaKeywordFlag": 1,
+          "SmaCommandNameFlag": 0
+        },
+        {
+          "Start": 1127,
+          "Length": 4,
+          "Text": "this",
+          "SmaTokenKind": "Identifier",
+          "SmaKeywordFlag": 0,
+          "SmaCommandNameFlag": 1
+        },
+        {
+          "Start": 1144,
+          "Length": 9,
+          "Text": "translate",
+          "SmaTokenKind": "Identifier",
+          "SmaKeywordFlag": 0,
+          "SmaCommandNameFlag": 1
+        },
+        {
+          "Start": 1154,
+          "Length": 1,
+          "Text": "v",
+          "SmaTokenKind": "Identifier",
+          "SmaKeywordFlag": 0,
+          "SmaCommandNameFlag": 1
+        },
+        {
+          "Start": 1157,
+          "Length": 1,
+          "Text": "m",
+          "SmaTokenKind": "Identifier",
+          "SmaKeywordFlag": 0,
+          "SmaCommandNameFlag": 0
+        },
+        {
+          "Start": 1161,
+          "Length": 4,
+          "Text": "this",
+          "SmaTokenKind": "Identifier",
+          "SmaKeywordFlag": 0,
+          "SmaCommandNameFlag": 0
+        },
+        {
+          "Start": 1196,
+          "Length": 4,
+          "Text": "this",
+          "SmaTokenKind": "Identifier",
+          "SmaKeywordFlag": 0,
+          "SmaCommandNameFlag": 1
+        },
+        {
+          "Start": 1202,
+          "Length": 1,
+          "Text": "m",
+          "SmaTokenKind": "Identifier",
+          "SmaKeywordFlag": 0,
+          "SmaCommandNameFlag": 0
+        },
+        {
+          "Start": 1205,
+          "Length": 1,
+          "Text": "v",
+          "SmaTokenKind": "Identifier",
+          "SmaKeywordFlag": 0,
+          "SmaCommandNameFlag": 0
+        },
+        {
+          "Start": 1217,
+          "Length": 6,
+          "Text": "return",
+          "SmaTokenKind": "Return",
+          "SmaKeywordFlag": 1,
+          "SmaCommandNameFlag": 0
+        },
+        {
+          "Start": 1224,
+          "Length": 4,
+          "Text": "this",
+          "SmaTokenKind": "Identifier",
+          "SmaKeywordFlag": 0,
+          "SmaCommandNameFlag": 1
+        },
+        {
+          "Start": 1241,
+          "Length": 6,
+          "Text": "rotate",
+          "SmaTokenKind": "Identifier",
+          "SmaKeywordFlag": 0,
+          "SmaCommandNameFlag": 1
+        },
+        {
+          "Start": 1248,
+          "Length": 1,
+          "Text": "v",
+          "SmaTokenKind": "Identifier",
+          "SmaKeywordFlag": 0,
+          "SmaCommandNameFlag": 1
+        },
+        {
+          "Start": 1251,
+          "Length": 4,
+          "Text": "axis",
+          "SmaTokenKind": "Identifier",
+          "SmaKeywordFlag": 0,
+          "SmaCommandNameFlag": 0
+        },
+        {
+          "Start": 1257,
+          "Length": 1,
+          "Text": "m",
+          "SmaTokenKind": "Identifier",
+          "SmaKeywordFlag": 0,
+          "SmaCommandNameFlag": 0
+        },
+        {
+          "Start": 1261,
+          "Length": 4,
+          "Text": "this",
+          "SmaTokenKind": "Identifier",
+          "SmaKeywordFlag": 0,
+          "SmaCommandNameFlag": 0
+        },
+        {
+          "Start": 1293,
+          "Length": 4,
+          "Text": "this",
+          "SmaTokenKind": "Identifier",
+          "SmaKeywordFlag": 0,
+          "SmaCommandNameFlag": 1
+        },
+        {
+          "Start": 1299,
+          "Length": 1,
+          "Text": "m",
+          "SmaTokenKind": "Identifier",
+          "SmaKeywordFlag": 0,
+          "SmaCommandNameFlag": 0
+        },
+        {
+          "Start": 1302,
+          "Length": 1,
+          "Text": "v",
+          "SmaTokenKind": "Identifier",
+          "SmaKeywordFlag": 0,
+          "SmaCommandNameFlag": 0
+        },
+        {
+          "Start": 1305,
+          "Length": 4,
+          "Text": "axis",
+          "SmaTokenKind": "Identifier",
+          "SmaKeywordFlag": 0,
+          "SmaCommandNameFlag": 0
+        },
+        {
+          "Start": 1320,
+          "Length": 6,
+          "Text": "return",
+          "SmaTokenKind": "Return",
+          "SmaKeywordFlag": 1,
+          "SmaCommandNameFlag": 0
+        },
+        {
+          "Start": 1327,
+          "Length": 4,
+          "Text": "this",
+          "SmaTokenKind": "Identifier",
+          "SmaKeywordFlag": 0,
+          "SmaCommandNameFlag": 1
+        },
+        {
+          "Start": 1344,
+          "Length": 5,
+          "Text": "scale",
+          "SmaTokenKind": "Identifier",
+          "SmaKeywordFlag": 0,
+          "SmaCommandNameFlag": 1
+        },
+        {
+          "Start": 1350,
+          "Length": 1,
+          "Text": "v",
+          "SmaTokenKind": "Identifier",
+          "SmaKeywordFlag": 0,
+          "SmaCommandNameFlag": 1
+        },
+        {
+          "Start": 1353,
+          "Length": 1,
+          "Text": "m",
+          "SmaTokenKind": "Identifier",
+          "SmaKeywordFlag": 0,
+          "SmaCommandNameFlag": 0
+        },
+        {
+          "Start": 1357,
+          "Length": 4,
+          "Text": "this",
+          "SmaTokenKind": "Identifier",
+          "SmaKeywordFlag": 0,
+          "SmaCommandNameFlag": 0
+        },
+        {
+          "Start": 1388,
+          "Length": 4,
+          "Text": "this",
+          "SmaTokenKind": "Identifier",
+          "SmaKeywordFlag": 0,
+          "SmaCommandNameFlag": 1
+        },
+        {
+          "Start": 1394,
+          "Length": 1,
+          "Text": "m",
+          "SmaTokenKind": "Identifier",
+          "SmaKeywordFlag": 0,
+          "SmaCommandNameFlag": 0
+        },
+        {
+          "Start": 1397,
+          "Length": 6,
+          "Text": "typeof",
+          "SmaTokenKind": "Identifier",
+          "SmaKeywordFlag": 0,
+          "SmaCommandNameFlag": 0
+        },
+        {
+          "Start": 1404,
+          "Length": 1,
+          "Text": "v",
+          "SmaTokenKind": "Identifier",
+          "SmaKeywordFlag": 0,
+          "SmaCommandNameFlag": 0
+        },
+        {
+          "Start": 1425,
+          "Length": 1,
+          "Text": "v",
+          "SmaTokenKind": "Identifier",
+          "SmaKeywordFlag": 0,
+          "SmaCommandNameFlag": 0
+        },
+        {
+          "Start": 1433,
+          "Length": 1,
+          "Text": "v",
+          "SmaTokenKind": "Identifier",
+          "SmaKeywordFlag": 0,
+          "SmaCommandNameFlag": 0
+        },
+        {
+          "Start": 1445,
+          "Length": 6,
+          "Text": "return",
+          "SmaTokenKind": "Return",
+          "SmaKeywordFlag": 1,
+          "SmaCommandNameFlag": 0
+        },
+        {
+          "Start": 1452,
+          "Length": 4,
+          "Text": "this",
+          "SmaTokenKind": "Identifier",
+          "SmaKeywordFlag": 0,
+          "SmaCommandNameFlag": 1
+        },
+        {
+          "Start": 1469,
+          "Length": 3,
+          "Text": "add",
+          "SmaTokenKind": "Identifier",
+          "SmaKeywordFlag": 0,
+          "SmaCommandNameFlag": 1
+        },
+        {
+          "Start": 1473,
+          "Length": 2,
+          "Text": "ma",
+          "SmaTokenKind": "Identifier",
+          "SmaKeywordFlag": 0,
+          "SmaCommandNameFlag": 1
+        },
+        {
+          "Start": 1477,
+          "Length": 2,
+          "Text": "mb",
+          "SmaTokenKind": "Identifier",
+          "SmaKeywordFlag": 0,
+          "SmaCommandNameFlag": 0
+        },
+        {
+          "Start": 1491,
+          "Length": 2,
+          "Text": "if",
+          "SmaTokenKind": "If",
+          "SmaKeywordFlag": 1,
+          "SmaCommandNameFlag": 0
+        },
+        {
+          "Start": 1495,
+          "Length": 2,
+          "Text": "mb",
+          "SmaTokenKind": "Identifier",
+          "SmaKeywordFlag": 0,
+          "SmaCommandNameFlag": 1
+        },
+        {
+          "Start": 1512,
+          "Length": 4,
+          "Text": "this",
+          "SmaTokenKind": "Identifier",
+          "SmaKeywordFlag": 0,
+          "SmaCommandNameFlag": 1
+        },
+        {
+          "Start": 1518,
+          "Length": 2,
+          "Text": "ma",
+          "SmaTokenKind": "Identifier",
+          "SmaKeywordFlag": 0,
+          "SmaCommandNameFlag": 0
+        },
+        {
+          "Start": 1522,
+          "Length": 2,
+          "Text": "mb",
+          "SmaTokenKind": "Identifier",
+          "SmaKeywordFlag": 0,
+          "SmaCommandNameFlag": 0
+        },
+        {
+          "Start": 1535,
+          "Length": 4,
+          "Text": "else",
+          "SmaTokenKind": "Else",
+          "SmaKeywordFlag": 1,
+          "SmaCommandNameFlag": 0
+        },
+        {
+          "Start": 1553,
+          "Length": 4,
+          "Text": "this",
+          "SmaTokenKind": "Identifier",
+          "SmaKeywordFlag": 0,
+          "SmaCommandNameFlag": 1
+        },
+        {
+          "Start": 1559,
+          "Length": 4,
+          "Text": "this",
+          "SmaTokenKind": "Identifier",
+          "SmaKeywordFlag": 0,
+          "SmaCommandNameFlag": 0
+        },
+        {
+          "Start": 1565,
+          "Length": 2,
+          "Text": "ma",
+          "SmaTokenKind": "Identifier",
+          "SmaKeywordFlag": 0,
+          "SmaCommandNameFlag": 0
+        },
+        {
+          "Start": 1578,
+          "Length": 6,
+          "Text": "return",
+          "SmaTokenKind": "Return",
+          "SmaKeywordFlag": 1,
+          "SmaCommandNameFlag": 0
+        },
+        {
+          "Start": 1585,
+          "Length": 4,
+          "Text": "this",
+          "SmaTokenKind": "Identifier",
+          "SmaKeywordFlag": 0,
+          "SmaCommandNameFlag": 1
+        },
+        {
+          "Start": 1602,
+          "Length": 3,
+          "Text": "sub",
+          "SmaTokenKind": "Identifier",
+          "SmaKeywordFlag": 0,
+          "SmaCommandNameFlag": 1
+        },
+        {
+          "Start": 1606,
+          "Length": 2,
+          "Text": "ma",
+          "SmaTokenKind": "Identifier",
+          "SmaKeywordFlag": 0,
+          "SmaCommandNameFlag": 1
+        },
+        {
+          "Start": 1610,
+          "Length": 2,
+          "Text": "mb",
+          "SmaTokenKind": "Identifier",
+          "SmaKeywordFlag": 0,
+          "SmaCommandNameFlag": 0
+        },
+        {
+          "Start": 1624,
+          "Length": 2,
+          "Text": "if",
+          "SmaTokenKind": "If",
+          "SmaKeywordFlag": 1,
+          "SmaCommandNameFlag": 0
+        },
+        {
+          "Start": 1628,
+          "Length": 2,
+          "Text": "mb",
+          "SmaTokenKind": "Identifier",
+          "SmaKeywordFlag": 0,
+          "SmaCommandNameFlag": 1
+        },
+        {
+          "Start": 1650,
+          "Length": 4,
+          "Text": "this",
+          "SmaTokenKind": "Identifier",
+          "SmaKeywordFlag": 0,
+          "SmaCommandNameFlag": 1
+        },
+        {
+          "Start": 1656,
+          "Length": 2,
+          "Text": "ma",
+          "SmaTokenKind": "Identifier",
+          "SmaKeywordFlag": 0,
+          "SmaCommandNameFlag": 0
+        },
+        {
+          "Start": 1660,
+          "Length": 2,
+          "Text": "mb",
+          "SmaTokenKind": "Identifier",
+          "SmaKeywordFlag": 0,
+          "SmaCommandNameFlag": 0
+        },
+        {
+          "Start": 1673,
+          "Length": 4,
+          "Text": "else",
+          "SmaTokenKind": "Else",
+          "SmaKeywordFlag": 1,
+          "SmaCommandNameFlag": 0
+        },
+        {
+          "Start": 1696,
+          "Length": 4,
+          "Text": "this",
+          "SmaTokenKind": "Identifier",
+          "SmaKeywordFlag": 0,
+          "SmaCommandNameFlag": 1
+        },
+        {
+          "Start": 1702,
+          "Length": 4,
+          "Text": "this",
+          "SmaTokenKind": "Identifier",
+          "SmaKeywordFlag": 0,
+          "SmaCommandNameFlag": 0
+        },
+        {
+          "Start": 1708,
+          "Length": 2,
+          "Text": "ma",
+          "SmaTokenKind": "Identifier",
+          "SmaKeywordFlag": 0,
+          "SmaCommandNameFlag": 0
+        },
+        {
+          "Start": 1721,
+          "Length": 6,
+          "Text": "return",
+          "SmaTokenKind": "Return",
+          "SmaKeywordFlag": 1,
+          "SmaCommandNameFlag": 0
+        },
+        {
+          "Start": 1728,
+          "Length": 4,
+          "Text": "this",
+          "SmaTokenKind": "Identifier",
+          "SmaKeywordFlag": 0,
+          "SmaCommandNameFlag": 1
+        },
+        {
+          "Start": 1745,
+          "Length": 8,
+          "Text": "multiply",
+          "SmaTokenKind": "Identifier",
+          "SmaKeywordFlag": 0,
+          "SmaCommandNameFlag": 1
+        },
+        {
+          "Start": 1754,
+          "Length": 2,
+          "Text": "ma",
+          "SmaTokenKind": "Identifier",
+          "SmaKeywordFlag": 0,
+          "SmaCommandNameFlag": 1
+        },
+        {
+          "Start": 1758,
+          "Length": 2,
+          "Text": "mb",
+          "SmaTokenKind": "Identifier",
+          "SmaKeywordFlag": 0,
+          "SmaCommandNameFlag": 0
+        },
+        {
+          "Start": 1772,
+          "Length": 2,
+          "Text": "if",
+          "SmaTokenKind": "If",
+          "SmaKeywordFlag": 1,
+          "SmaCommandNameFlag": 0
+        },
+        {
+          "Start": 1826,
+          "Length": 4,
+          "Text": "this",
+          "SmaTokenKind": "Identifier",
+          "SmaKeywordFlag": 0,
+          "SmaCommandNameFlag": 1
+        },
+        {
+          "Start": 1832,
+          "Length": 4,
+          "Text": "this",
+          "SmaTokenKind": "Identifier",
+          "SmaKeywordFlag": 0,
+          "SmaCommandNameFlag": 0
+        },
+        {
+          "Start": 1838,
+          "Length": 2,
+          "Text": "ma",
+          "SmaTokenKind": "Identifier",
+          "SmaKeywordFlag": 0,
+          "SmaCommandNameFlag": 0
+        },
+        {
+          "Start": 1853,
+          "Length": 4,
+          "Text": "else",
+          "SmaTokenKind": "Else",
+          "SmaKeywordFlag": 1,
+          "SmaCommandNameFlag": 0
+        },
+        {
+          "Start": 1858,
+          "Length": 2,
+          "Text": "if",
+          "SmaTokenKind": "If",
+          "SmaKeywordFlag": 1,
+          "SmaCommandNameFlag": 0
+        },
+        {
+          "Start": 1862,
+          "Length": 2,
+          "Text": "mb",
+          "SmaTokenKind": "Identifier",
+          "SmaKeywordFlag": 0,
+          "SmaCommandNameFlag": 1
+        },
+        {
+          "Start": 1898,
+          "Length": 4,
+          "Text": "this",
+          "SmaTokenKind": "Identifier",
+          "SmaKeywordFlag": 0,
+          "SmaCommandNameFlag": 1
+        },
+        {
+          "Start": 1904,
+          "Length": 2,
+          "Text": "ma",
+          "SmaTokenKind": "Identifier",
+          "SmaKeywordFlag": 0,
+          "SmaCommandNameFlag": 0
+        },
+        {
+          "Start": 1908,
+          "Length": 2,
+          "Text": "mb",
+          "SmaTokenKind": "Identifier",
+          "SmaKeywordFlag": 0,
+          "SmaCommandNameFlag": 0
+        },
+        {
+          "Start": 1923,
+          "Length": 4,
+          "Text": "else",
+          "SmaTokenKind": "Else",
+          "SmaKeywordFlag": 1,
+          "SmaCommandNameFlag": 0
+        },
+        {
+          "Start": 1960,
+          "Length": 4,
+          "Text": "this",
+          "SmaTokenKind": "Identifier",
+          "SmaKeywordFlag": 0,
+          "SmaCommandNameFlag": 1
+        },
+        {
+          "Start": 1966,
+          "Length": 4,
+          "Text": "this",
+          "SmaTokenKind": "Identifier",
+          "SmaKeywordFlag": 0,
+          "SmaCommandNameFlag": 0
+        },
+        {
+          "Start": 1972,
+          "Length": 2,
+          "Text": "ma",
+          "SmaTokenKind": "Identifier",
+          "SmaKeywordFlag": 0,
+          "SmaCommandNameFlag": 0
+        },
+        {
+          "Start": 1995,
+          "Length": 6,
+          "Text": "return",
+          "SmaTokenKind": "Return",
+          "SmaKeywordFlag": 1,
+          "SmaCommandNameFlag": 0
+        },
+        {
+          "Start": 2002,
+          "Length": 4,
+          "Text": "this",
+          "SmaTokenKind": "Identifier",
+          "SmaKeywordFlag": 0,
+          "SmaCommandNameFlag": 1
+        },
+        {
+          "Start": 2019,
+          "Length": 8,
+          "Text": "identity",
+          "SmaTokenKind": "Identifier",
+          "SmaKeywordFlag": 0,
+          "SmaCommandNameFlag": 1
+        },
+        {
+          "Start": 2058,
+          "Length": 4,
+          "Text": "this",
+          "SmaTokenKind": "Identifier",
+          "SmaKeywordFlag": 0,
+          "SmaCommandNameFlag": 1
+        },
+        {
+          "Start": 2073,
+          "Length": 6,
+          "Text": "return",
+          "SmaTokenKind": "Return",
+          "SmaKeywordFlag": 1,
+          "SmaCommandNameFlag": 0
+        },
+        {
+          "Start": 2080,
+          "Length": 4,
+          "Text": "this",
+          "SmaTokenKind": "Identifier",
+          "SmaKeywordFlag": 0,
+          "SmaCommandNameFlag": 1
+        },
+        {
+          "Start": 2097,
+          "Length": 4,
+          "Text": "copy",
+          "SmaTokenKind": "Identifier",
+          "SmaKeywordFlag": 0,
+          "SmaCommandNameFlag": 1
+        },
+        {
+          "Start": 2102,
+          "Length": 1,
+          "Text": "m",
+          "SmaTokenKind": "Identifier",
+          "SmaKeywordFlag": 0,
+          "SmaCommandNameFlag": 1
+        },
+        {
+          "Start": 2129,
+          "Length": 4,
+          "Text": "this",
+          "SmaTokenKind": "Identifier",
+          "SmaKeywordFlag": 0,
+          "SmaCommandNameFlag": 1
+        },
+        {
+          "Start": 2135,
+          "Length": 1,
+          "Text": "m",
+          "SmaTokenKind": "Identifier",
+          "SmaKeywordFlag": 0,
+          "SmaCommandNameFlag": 0
+        },
+        {
+          "Start": 2147,
+          "Length": 6,
+          "Text": "return",
+          "SmaTokenKind": "Return",
+          "SmaKeywordFlag": 1,
+          "SmaCommandNameFlag": 0
+        },
+        {
+          "Start": 2154,
+          "Length": 4,
+          "Text": "this",
+          "SmaTokenKind": "Identifier",
+          "SmaKeywordFlag": 0,
+          "SmaCommandNameFlag": 1
+        },
+        {
+          "Start": 2171,
+          "Length": 15,
+          "Text": "fromPerspective",
+          "SmaTokenKind": "Identifier",
+          "SmaKeywordFlag": 0,
+          "SmaCommandNameFlag": 1
+        },
+        {
+          "Start": 2189,
+          "Length": 3,
+          "Text": "fov",
+          "SmaTokenKind": "Identifier",
+          "SmaKeywordFlag": 0,
+          "SmaCommandNameFlag": 1
+        },
+        {
+          "Start": 2194,
+          "Length": 6,
+          "Text": "aspect",
+          "SmaTokenKind": "Identifier",
+          "SmaKeywordFlag": 0,
+          "SmaCommandNameFlag": 0
+        },
+        {
+          "Start": 2202,
+          "Length": 4,
+          "Text": "near",
+          "SmaTokenKind": "Identifier",
+          "SmaKeywordFlag": 0,
+          "SmaCommandNameFlag": 0
+        },
+        {
+          "Start": 2208,
+          "Length": 3,
+          "Text": "far",
+          "SmaTokenKind": "Identifier",
+          "SmaKeywordFlag": 0,
+          "SmaCommandNameFlag": 0
+        },
+        {
+          "Start": 2251,
+          "Length": 4,
+          "Text": "this",
+          "SmaTokenKind": "Identifier",
+          "SmaKeywordFlag": 0,
+          "SmaCommandNameFlag": 1
+        },
+        {
+          "Start": 2257,
+          "Length": 3,
+          "Text": "fov",
+          "SmaTokenKind": "Identifier",
+          "SmaKeywordFlag": 0,
+          "SmaCommandNameFlag": 0
+        },
+        {
+          "Start": 2262,
+          "Length": 6,
+          "Text": "aspect",
+          "SmaTokenKind": "Identifier",
+          "SmaKeywordFlag": 0,
+          "SmaCommandNameFlag": 0
+        },
+        {
+          "Start": 2270,
+          "Length": 4,
+          "Text": "near",
+          "SmaTokenKind": "Identifier",
+          "SmaKeywordFlag": 0,
+          "SmaCommandNameFlag": 0
+        },
+        {
+          "Start": 2276,
+          "Length": 3,
+          "Text": "far",
+          "SmaTokenKind": "Identifier",
+          "SmaKeywordFlag": 0,
+          "SmaCommandNameFlag": 0
+        },
+        {
+          "Start": 2290,
+          "Length": 6,
+          "Text": "return",
+          "SmaTokenKind": "Return",
+          "SmaKeywordFlag": 1,
+          "SmaCommandNameFlag": 0
+        },
+        {
+          "Start": 2297,
+          "Length": 4,
+          "Text": "this",
+          "SmaTokenKind": "Identifier",
+          "SmaKeywordFlag": 0,
+          "SmaCommandNameFlag": 1
+        },
+        {
+          "Start": 2314,
+          "Length": 14,
+          "Text": "fromOrthogonal",
+          "SmaTokenKind": "Identifier",
+          "SmaKeywordFlag": 0,
+          "SmaCommandNameFlag": 1
+        },
+        {
+          "Start": 2331,
+          "Length": 4,
+          "Text": "left",
+          "SmaTokenKind": "Identifier",
+          "SmaKeywordFlag": 0,
+          "SmaCommandNameFlag": 1
+        },
+        {
+          "Start": 2337,
+          "Length": 5,
+          "Text": "right",
+          "SmaTokenKind": "Identifier",
+          "SmaKeywordFlag": 0,
+          "SmaCommandNameFlag": 0
+        },
+        {
+          "Start": 2344,
+          "Length": 6,
+          "Text": "bottom",
+          "SmaTokenKind": "Identifier",
+          "SmaKeywordFlag": 0,
+          "SmaCommandNameFlag": 0
+        },
+        {
+          "Start": 2352,
+          "Length": 3,
+          "Text": "top",
+          "SmaTokenKind": "Identifier",
+          "SmaKeywordFlag": 0,
+          "SmaCommandNameFlag": 0
+        },
+        {
+          "Start": 2357,
+          "Length": 4,
+          "Text": "near",
+          "SmaTokenKind": "Identifier",
+          "SmaKeywordFlag": 0,
+          "SmaCommandNameFlag": 0
+        },
+        {
+          "Start": 2363,
+          "Length": 3,
+          "Text": "far",
+          "SmaTokenKind": "Identifier",
+          "SmaKeywordFlag": 0,
+          "SmaCommandNameFlag": 0
+        },
+        {
+          "Start": 2395,
+          "Length": 4,
+          "Text": "this",
+          "SmaTokenKind": "Identifier",
+          "SmaKeywordFlag": 0,
+          "SmaCommandNameFlag": 1
+        },
+        {
+          "Start": 2401,
+          "Length": 4,
+          "Text": "left",
+          "SmaTokenKind": "Identifier",
+          "SmaKeywordFlag": 0,
+          "SmaCommandNameFlag": 0
+        },
+        {
+          "Start": 2407,
+          "Length": 5,
+          "Text": "right",
+          "SmaTokenKind": "Identifier",
+          "SmaKeywordFlag": 0,
+          "SmaCommandNameFlag": 0
+        },
+        {
+          "Start": 2414,
+          "Length": 6,
+          "Text": "bottom",
+          "SmaTokenKind": "Identifier",
+          "SmaKeywordFlag": 0,
+          "SmaCommandNameFlag": 0
+        },
+        {
+          "Start": 2422,
+          "Length": 3,
+          "Text": "top",
+          "SmaTokenKind": "Identifier",
+          "SmaKeywordFlag": 0,
+          "SmaCommandNameFlag": 0
+        },
+        {
+          "Start": 2427,
+          "Length": 4,
+          "Text": "near",
+          "SmaTokenKind": "Identifier",
+          "SmaKeywordFlag": 0,
+          "SmaCommandNameFlag": 0
+        },
+        {
+          "Start": 2433,
+          "Length": 3,
+          "Text": "far",
+          "SmaTokenKind": "Identifier",
+          "SmaKeywordFlag": 0,
+          "SmaCommandNameFlag": 0
+        },
+        {
+          "Start": 2447,
+          "Length": 6,
+          "Text": "return",
+          "SmaTokenKind": "Return",
+          "SmaKeywordFlag": 1,
+          "SmaCommandNameFlag": 0
+        },
+        {
+          "Start": 2454,
+          "Length": 4,
+          "Text": "this",
+          "SmaTokenKind": "Identifier",
+          "SmaKeywordFlag": 0,
+          "SmaCommandNameFlag": 1
+        },
+        {
+          "Start": 2471,
+          "Length": 14,
+          "Text": "fromQuaternion",
+          "SmaTokenKind": "Identifier",
+          "SmaKeywordFlag": 0,
+          "SmaCommandNameFlag": 1
+        },
+        {
+          "Start": 2486,
+          "Length": 1,
+          "Text": "q",
+          "SmaTokenKind": "Identifier",
+          "SmaKeywordFlag": 0,
+          "SmaCommandNameFlag": 1
+        },
+        {
+          "Start": 2517,
+          "Length": 4,
+          "Text": "this",
+          "SmaTokenKind": "Identifier",
+          "SmaKeywordFlag": 0,
+          "SmaCommandNameFlag": 1
+        },
+        {
+          "Start": 2523,
+          "Length": 1,
+          "Text": "q",
+          "SmaTokenKind": "Identifier",
+          "SmaKeywordFlag": 0,
+          "SmaCommandNameFlag": 0
+        },
+        {
+          "Start": 2535,
+          "Length": 6,
+          "Text": "return",
+          "SmaTokenKind": "Return",
+          "SmaKeywordFlag": 1,
+          "SmaCommandNameFlag": 0
+        },
+        {
+          "Start": 2542,
+          "Length": 4,
+          "Text": "this",
+          "SmaTokenKind": "Identifier",
+          "SmaKeywordFlag": 0,
+          "SmaCommandNameFlag": 1
+        },
+        {
+          "Start": 2559,
+          "Length": 11,
+          "Text": "setPosition",
+          "SmaTokenKind": "Identifier",
+          "SmaKeywordFlag": 0,
+          "SmaCommandNameFlag": 1
+        },
+        {
+          "Start": 2571,
+          "Length": 1,
+          "Text": "v",
+          "SmaTokenKind": "Identifier",
+          "SmaKeywordFlag": 0,
+          "SmaCommandNameFlag": 1
+        },
+        {
+          "Start": 2653,
+          "Length": 6,
+          "Text": "return",
+          "SmaTokenKind": "Return",
+          "SmaKeywordFlag": 1,
+          "SmaCommandNameFlag": 0
+        },
+        {
+          "Start": 2660,
+          "Length": 4,
+          "Text": "this",
+          "SmaTokenKind": "Identifier",
+          "SmaKeywordFlag": 0,
+          "SmaCommandNameFlag": 1
+        },
+        {
+          "Start": 2677,
+          "Length": 7,
+          "Text": "inverse",
+          "SmaTokenKind": "Identifier",
+          "SmaKeywordFlag": 0,
+          "SmaCommandNameFlag": 1
+        },
+        {
+          "Start": 2685,
+          "Length": 1,
+          "Text": "m",
+          "SmaTokenKind": "Identifier",
+          "SmaKeywordFlag": 0,
+          "SmaCommandNameFlag": 1
+        },
+        {
+          "Start": 2689,
+          "Length": 4,
+          "Text": "this",
+          "SmaTokenKind": "Identifier",
+          "SmaKeywordFlag": 0,
+          "SmaCommandNameFlag": 0
+        },
+        {
+          "Start": 2721,
+          "Length": 4,
+          "Text": "this",
+          "SmaTokenKind": "Identifier",
+          "SmaKeywordFlag": 0,
+          "SmaCommandNameFlag": 1
+        },
+        {
+          "Start": 2727,
+          "Length": 1,
+          "Text": "m",
+          "SmaTokenKind": "Identifier",
+          "SmaKeywordFlag": 0,
+          "SmaCommandNameFlag": 0
+        },
+        {
+          "Start": 2739,
+          "Length": 6,
+          "Text": "return",
+          "SmaTokenKind": "Return",
+          "SmaKeywordFlag": 1,
+          "SmaCommandNameFlag": 0
+        },
+        {
+          "Start": 2746,
+          "Length": 4,
+          "Text": "this",
+          "SmaTokenKind": "Identifier",
+          "SmaKeywordFlag": 0,
+          "SmaCommandNameFlag": 1
+        },
+        {
+          "Start": 2763,
+          "Length": 7,
+          "Text": "compose",
+          "SmaTokenKind": "Identifier",
+          "SmaKeywordFlag": 0,
+          "SmaCommandNameFlag": 1
+        },
+        {
+          "Start": 2771,
+          "Length": 1,
+          "Text": "q",
+          "SmaTokenKind": "Identifier",
+          "SmaKeywordFlag": 0,
+          "SmaCommandNameFlag": 1
+        },
+        {
+          "Start": 2774,
+          "Length": 3,
+          "Text": "pos",
+          "SmaTokenKind": "Identifier",
+          "SmaKeywordFlag": 0,
+          "SmaCommandNameFlag": 0
+        },
+        {
+          "Start": 2779,
+          "Length": 5,
+          "Text": "scale",
+          "SmaTokenKind": "Identifier",
+          "SmaKeywordFlag": 0,
+          "SmaCommandNameFlag": 0
+        },
+        {
+          "Start": 2813,
+          "Length": 4,
+          "Text": "this",
+          "SmaTokenKind": "Identifier",
+          "SmaKeywordFlag": 0,
+          "SmaCommandNameFlag": 1
+        },
+        {
+          "Start": 2819,
+          "Length": 1,
+          "Text": "q",
+          "SmaTokenKind": "Identifier",
+          "SmaKeywordFlag": 0,
+          "SmaCommandNameFlag": 0
+        },
+        {
+          "Start": 2822,
+          "Length": 3,
+          "Text": "pos",
+          "SmaTokenKind": "Identifier",
+          "SmaKeywordFlag": 0,
+          "SmaCommandNameFlag": 0
+        },
+        {
+          "Start": 2827,
+          "Length": 5,
+          "Text": "scale",
+          "SmaTokenKind": "Identifier",
+          "SmaKeywordFlag": 0,
+          "SmaCommandNameFlag": 0
+        },
+        {
+          "Start": 2843,
+          "Length": 6,
+          "Text": "return",
+          "SmaTokenKind": "Return",
+          "SmaKeywordFlag": 1,
+          "SmaCommandNameFlag": 0
+        },
+        {
+          "Start": 2850,
+          "Length": 4,
+          "Text": "this",
+          "SmaTokenKind": "Identifier",
+          "SmaKeywordFlag": 0,
+          "SmaCommandNameFlag": 1
+        },
+        {
+          "Start": 2867,
+          "Length": 9,
+          "Text": "decompose",
+          "SmaTokenKind": "Identifier",
+          "SmaKeywordFlag": 0,
+          "SmaCommandNameFlag": 1
+        },
+        {
+          "Start": 2877,
+          "Length": 1,
+          "Text": "q",
+          "SmaTokenKind": "Identifier",
+          "SmaKeywordFlag": 0,
+          "SmaCommandNameFlag": 1
+        },
+        {
+          "Start": 2880,
+          "Length": 3,
+          "Text": "pos",
+          "SmaTokenKind": "Identifier",
+          "SmaKeywordFlag": 0,
+          "SmaCommandNameFlag": 0
+        },
+        {
+          "Start": 2885,
+          "Length": 5,
+          "Text": "scale",
+          "SmaTokenKind": "Identifier",
+          "SmaKeywordFlag": 0,
+          "SmaCommandNameFlag": 0
+        },
+        {
+          "Start": 2921,
+          "Length": 4,
+          "Text": "this",
+          "SmaTokenKind": "Identifier",
+          "SmaKeywordFlag": 0,
+          "SmaCommandNameFlag": 1
+        },
+        {
+          "Start": 2927,
+          "Length": 1,
+          "Text": "q",
+          "SmaTokenKind": "Identifier",
+          "SmaKeywordFlag": 0,
+          "SmaCommandNameFlag": 0
+        },
+        {
+          "Start": 2930,
+          "Length": 3,
+          "Text": "pos",
+          "SmaTokenKind": "Identifier",
+          "SmaKeywordFlag": 0,
+          "SmaCommandNameFlag": 0
+        },
+        {
+          "Start": 2935,
+          "Length": 5,
+          "Text": "scale",
+          "SmaTokenKind": "Identifier",
+          "SmaKeywordFlag": 0,
+          "SmaCommandNameFlag": 0
+        },
+        {
+          "Start": 2951,
+          "Length": 6,
+          "Text": "return",
+          "SmaTokenKind": "Return",
+          "SmaKeywordFlag": 1,
+          "SmaCommandNameFlag": 0
+        },
+        {
+          "Start": 2958,
+          "Length": 4,
+          "Text": "this",
+          "SmaTokenKind": "Identifier",
+          "SmaKeywordFlag": 0,
+          "SmaCommandNameFlag": 1
+        },
+        {
+          "Start": 2975,
+          "Length": 11,
+          "Text": "getRotation",
+          "SmaTokenKind": "Identifier",
+          "SmaKeywordFlag": 0,
+          "SmaCommandNameFlag": 1
+        },
+        {
+          "Start": 2987,
+          "Length": 1,
+          "Text": "q",
+          "SmaTokenKind": "Identifier",
+          "SmaKeywordFlag": 0,
+          "SmaCommandNameFlag": 1
+        },
+        {
+          "Start": 3021,
+          "Length": 1,
+          "Text": "q",
+          "SmaTokenKind": "Identifier",
+          "SmaKeywordFlag": 0,
+          "SmaCommandNameFlag": 1
+        },
+        {
+          "Start": 3024,
+          "Length": 4,
+          "Text": "this",
+          "SmaTokenKind": "Identifier",
+          "SmaKeywordFlag": 0,
+          "SmaCommandNameFlag": 0
+        },
+        {
+          "Start": 3039,
+          "Length": 6,
+          "Text": "return",
+          "SmaTokenKind": "Return",
+          "SmaKeywordFlag": 1,
+          "SmaCommandNameFlag": 0
+        },
+        {
+          "Start": 3046,
+          "Length": 4,
+          "Text": "this",
+          "SmaTokenKind": "Identifier",
+          "SmaKeywordFlag": 0,
+          "SmaCommandNameFlag": 1
+        },
+        {
+          "Start": 3063,
+          "Length": 14,
+          "Text": "getTranslation",
+          "SmaTokenKind": "Identifier",
+          "SmaKeywordFlag": 0,
+          "SmaCommandNameFlag": 1
+        },
+        {
+          "Start": 3078,
+          "Length": 3,
+          "Text": "pos",
+          "SmaTokenKind": "Identifier",
+          "SmaKeywordFlag": 0,
+          "SmaCommandNameFlag": 1
+        },
+        {
+          "Start": 3117,
+          "Length": 3,
+          "Text": "pos",
+          "SmaTokenKind": "Identifier",
+          "SmaKeywordFlag": 0,
+          "SmaCommandNameFlag": 1
+        },
+        {
+          "Start": 3122,
+          "Length": 4,
+          "Text": "this",
+          "SmaTokenKind": "Identifier",
+          "SmaKeywordFlag": 0,
+          "SmaCommandNameFlag": 0
+        },
+        {
+          "Start": 3137,
+          "Length": 6,
+          "Text": "return",
+          "SmaTokenKind": "Return",
+          "SmaKeywordFlag": 1,
+          "SmaCommandNameFlag": 0
+        },
+        {
+          "Start": 3144,
+          "Length": 4,
+          "Text": "this",
+          "SmaTokenKind": "Identifier",
+          "SmaKeywordFlag": 0,
+          "SmaCommandNameFlag": 1
+        },
+        {
+          "Start": 3161,
+          "Length": 10,
+          "Text": "getScaling",
+          "SmaTokenKind": "Identifier",
+          "SmaKeywordFlag": 0,
+          "SmaCommandNameFlag": 1
+        },
+        {
+          "Start": 3172,
+          "Length": 5,
+          "Text": "scale",
+          "SmaTokenKind": "Identifier",
+          "SmaKeywordFlag": 0,
+          "SmaCommandNameFlag": 1
+        },
+        {
+          "Start": 3209,
+          "Length": 5,
+          "Text": "scale",
+          "SmaTokenKind": "Identifier",
+          "SmaKeywordFlag": 0,
+          "SmaCommandNameFlag": 1
+        },
+        {
+          "Start": 3216,
+          "Length": 4,
+          "Text": "this",
+          "SmaTokenKind": "Identifier",
+          "SmaKeywordFlag": 0,
+          "SmaCommandNameFlag": 0
+        },
+        {
+          "Start": 3231,
+          "Length": 6,
+          "Text": "return",
+          "SmaTokenKind": "Return",
+          "SmaKeywordFlag": 1,
+          "SmaCommandNameFlag": 0
+        },
+        {
+          "Start": 3238,
+          "Length": 4,
+          "Text": "this",
+          "SmaTokenKind": "Identifier",
+          "SmaKeywordFlag": 0,
+          "SmaCommandNameFlag": 1
+        },
+        {
+          "Start": 3255,
+          "Length": 17,
+          "Text": "getMaxScaleOnAxis",
+          "SmaTokenKind": "Identifier",
+          "SmaKeywordFlag": 0,
+          "SmaCommandNameFlag": 1
+        },
+        {
+          "Start": 3285,
+          "Length": 6,
+          "Text": "return",
+          "SmaTokenKind": "Return",
+          "SmaKeywordFlag": 1,
+          "SmaCommandNameFlag": 0
+        },
+        {
+          "Start": 3319,
+          "Length": 4,
+          "Text": "this",
+          "SmaTokenKind": "Identifier",
+          "SmaKeywordFlag": 0,
+          "SmaCommandNameFlag": 1
+        },
+        {
+          "Start": 3337,
+          "Length": 6,
+          "Text": "lookAt",
+          "SmaTokenKind": "Identifier",
+          "SmaKeywordFlag": 0,
+          "SmaCommandNameFlag": 1
+        },
+        {
+          "Start": 3344,
+          "Length": 3,
+          "Text": "eye",
+          "SmaTokenKind": "Identifier",
+          "SmaKeywordFlag": 0,
+          "SmaCommandNameFlag": 1
+        },
+        {
+          "Start": 3349,
+          "Length": 6,
+          "Text": "target",
+          "SmaTokenKind": "Identifier",
+          "SmaKeywordFlag": 0,
+          "SmaCommandNameFlag": 0
+        },
+        {
+          "Start": 3357,
+          "Length": 2,
+          "Text": "up",
+          "SmaTokenKind": "Identifier",
+          "SmaKeywordFlag": 0,
+          "SmaCommandNameFlag": 0
+        },
+        {
+          "Start": 3389,
+          "Length": 4,
+          "Text": "this",
+          "SmaTokenKind": "Identifier",
+          "SmaKeywordFlag": 0,
+          "SmaCommandNameFlag": 1
+        },
+        {
+          "Start": 3395,
+          "Length": 3,
+          "Text": "eye",
+          "SmaTokenKind": "Identifier",
+          "SmaKeywordFlag": 0,
+          "SmaCommandNameFlag": 0
+        },
+        {
+          "Start": 3400,
+          "Length": 6,
+          "Text": "target",
+          "SmaTokenKind": "Identifier",
+          "SmaKeywordFlag": 0,
+          "SmaCommandNameFlag": 0
+        },
+        {
+          "Start": 3408,
+          "Length": 2,
+          "Text": "up",
+          "SmaTokenKind": "Identifier",
+          "SmaKeywordFlag": 0,
+          "SmaCommandNameFlag": 0
+        },
+        {
+          "Start": 3421,
+          "Length": 6,
+          "Text": "return",
+          "SmaTokenKind": "Return",
+          "SmaKeywordFlag": 1,
+          "SmaCommandNameFlag": 0
+        },
+        {
+          "Start": 3428,
+          "Length": 4,
+          "Text": "this",
+          "SmaTokenKind": "Identifier",
+          "SmaKeywordFlag": 0,
+          "SmaCommandNameFlag": 1
+        },
+        {
+          "Start": 3445,
+          "Length": 11,
+          "Text": "determinant",
+          "SmaTokenKind": "Identifier",
+          "SmaKeywordFlag": 0,
+          "SmaCommandNameFlag": 1
+        },
+        {
+          "Start": 3469,
+          "Length": 6,
+          "Text": "return",
+          "SmaTokenKind": "Return",
+          "SmaKeywordFlag": 1,
+          "SmaCommandNameFlag": 0
+        },
+        {
+          "Start": 3497,
+          "Length": 4,
+          "Text": "this",
+          "SmaTokenKind": "Identifier",
+          "SmaKeywordFlag": 0,
+          "SmaCommandNameFlag": 1
+        },
+        {
+          "Start": 3515,
+          "Length": 9,
+          "Text": "fromArray",
+          "SmaTokenKind": "Identifier",
+          "SmaKeywordFlag": 0,
+          "SmaCommandNameFlag": 1
+        },
+        {
+          "Start": 3525,
+          "Length": 1,
+          "Text": "a",
+          "SmaTokenKind": "Identifier",
+          "SmaKeywordFlag": 0,
+          "SmaCommandNameFlag": 1
+        },
+        {
+          "Start": 3528,
+          "Length": 1,
+          "Text": "o",
+          "SmaTokenKind": "Identifier",
+          "SmaKeywordFlag": 0,
+          "SmaCommandNameFlag": 0
+        },
+        {
+          "Start": 4001,
+          "Length": 6,
+          "Text": "return",
+          "SmaTokenKind": "Return",
+          "SmaKeywordFlag": 1,
+          "SmaCommandNameFlag": 0
+        },
+        {
+          "Start": 4008,
+          "Length": 4,
+          "Text": "this",
+          "SmaTokenKind": "Identifier",
+          "SmaKeywordFlag": 0,
+          "SmaCommandNameFlag": 1
+        },
+        {
+          "Start": 4025,
+          "Length": 7,
+          "Text": "toArray",
+          "SmaTokenKind": "Identifier",
+          "SmaKeywordFlag": 0,
+          "SmaCommandNameFlag": 1
+        },
+        {
+          "Start": 4033,
+          "Length": 1,
+          "Text": "a",
+          "SmaTokenKind": "Identifier",
+          "SmaKeywordFlag": 0,
+          "SmaCommandNameFlag": 1
+        },
+        {
+          "Start": 4041,
+          "Length": 1,
+          "Text": "o",
+          "SmaTokenKind": "Identifier",
+          "SmaKeywordFlag": 0,
+          "SmaCommandNameFlag": 0
+        },
+        {
+          "Start": 4514,
+          "Length": 6,
+          "Text": "return",
+          "SmaTokenKind": "Return",
+          "SmaKeywordFlag": 1,
+          "SmaCommandNameFlag": 0
+        },
+        {
+          "Start": 4521,
+          "Length": 1,
+          "Text": "a",
+          "SmaTokenKind": "Identifier",
+          "SmaKeywordFlag": 0,
+          "SmaCommandNameFlag": 1
+        }
+      ]
+    }
+  ]
+}
