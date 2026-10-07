@@ -1,0 +1,13 @@
+=== TRAIN 500 BASELINE MEASUREMENT ===
+Total Sentences: 500
+Passing Sentences (0 errors): 428
+Failing Sentences (>=1 error): 72
+Total Parse Errors: 77
+
+ErrorId Breakdown:
+  MissingArgument: 27
+  TerminatorExpectedAtEndOfString: 42
+  MissingEndParenthesisInExpression: 4
+  MissingOpenParenthesisAfterKeyword: 2
+  MissingOpenParenthesisInIfStatement: 1
+  UnexpectedToken: 1

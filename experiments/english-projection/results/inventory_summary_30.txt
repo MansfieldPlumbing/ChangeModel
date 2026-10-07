@@ -1,0 +1,42 @@
+=== INVENTORY SUMMARY (SENTENCES 0..29) ===
+Total Sentences: 30
+Sentences with Parse Errors: 6 / 30
+Total Parse Errors: 7
+Reserved-Word Collision Count: 2
+Punctuation Occurrences: 82
+Boundary Disagreements vs spaCy: 160
+
+Unique Reserved Collisions:
+  Word='In' -> Kind=In (spaCy POS=ADP, Dep=prep)
+
+Punctuation -> AST Node Types:
+  Punct '.':
+    -> StringConstantExpressionAst (parent: CommandAst)
+    -> ScriptBlockAst (parent: None)
+  Punct '(':
+    -> ParenExpressionAst (parent: CommandAst)
+    -> ParenExpressionAst (parent: ArrayLiteralAst)
+  Punct ')':
+    -> ParenExpressionAst (parent: CommandAst)
+    -> ParenExpressionAst (parent: ArrayLiteralAst)
+  Punct ',':
+    -> ArrayLiteralAst (parent: CommandAst)
+    -> ScriptBlockAst (parent: None)
+    -> StringConstantExpressionAst (parent: CommandAst)
+  Punct '"':
+    -> ScriptBlockAst (parent: None)
+  Punct '-':
+    -> StringConstantExpressionAst (parent: CommandAst)
+    -> CommandParameterAst (parent: CommandAst)
+    -> ScriptBlockAst (parent: None)
+    -> StringConstantExpressionAst (parent: ArrayLiteralAst)
+  Punct ''':
+    -> StringConstantExpressionAst (parent: CommandAst)
+    -> ScriptBlockAst (parent: None)
+  Punct ';':
+    -> ScriptBlockAst (parent: None)
+
+Boundary Disagreement Categories:
+  TerminalPunctuationGlued: 134
+  WordFusedWithNeighbor: 17
+  PunctuationAbsorbedIntoWord: 9

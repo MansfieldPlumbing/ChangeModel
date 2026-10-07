@@ -1,0 +1,22 @@
+=== HELD-OUT EVAL 200 SINGLE-PASS VERIFICATION ===
+Total Sentences: 200
+Lossless Reversibility Verified: True (100% bit-for-bit)
+
+BASELINE EVAL 200:
+  Errors: 37
+  Failing Sentences: 30 / 200 (Pass rate: 85%)
+  Useful AST Score: 2397
+
+FROZEN PROJECTION EVAL 200:
+  Config: pre=slash|apos=modifier|hash=fullwidth|semi=fullwidth|term=space|hyph=unicode|quot=guillemets
+  Errors: 8
+  Failing Sentences: 2 / 200 (Pass rate: 99%)
+  Useful AST Score: 3205
+
+ERROR REDUCTION: 37 errors -> 8 errors
+FAILURE REDUCTION: 30 failing -> 2 failing
+
+REMAINING ERROR BREAKDOWN:
+  UnexpectedToken: 4
+  MissingEndParenthesisInExpression: 3
+  MissingExpression: 1

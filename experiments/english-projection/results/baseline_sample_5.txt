@@ -1,0 +1,307 @@
+================================================================================
+SENTENCE 0: Smith uses his name as a base for building abstract imagery.
+LENGTH: 60
+--- spaCy REFERENCE TOKENS ---
+  spaCy: 0	0..5	Smith	PROPN	nsubj
+  spaCy: 1	6..10	uses	VERB	ROOT
+  spaCy: 2	11..14	his	PRON	poss
+  spaCy: 3	15..19	name	NOUN	dobj
+  spaCy: 4	20..22	as	ADP	prep
+  spaCy: 5	23..24	a	DET	det
+  spaCy: 6	25..29	base	NOUN	pobj
+  spaCy: 7	30..33	for	ADP	prep
+  spaCy: 8	34..42	building	VERB	pcomp
+  spaCy: 9	43..51	abstract	ADJ	amod
+  spaCy: 10	52..59	imagery	NOUN	dobj
+  spaCy: 11	59..60	.	PUNCT	punct
+--- SMA PARSE ERRORS: 0 ---
+--- SMA TOKENS: 12 ---
+  SMA Token: [0..5] Kind=Identifier Text='Smith'
+  SMA Token: [6..10] Kind=Identifier Text='uses'
+  SMA Token: [11..14] Kind=Identifier Text='his'
+  SMA Token: [15..19] Kind=Identifier Text='name'
+  SMA Token: [20..22] Kind=Identifier Text='as'
+  SMA Token: [23..24] Kind=Identifier Text='a'
+  SMA Token: [25..29] Kind=Generic Text='base'
+  SMA Token: [30..33] Kind=Generic Text='for'
+  SMA Token: [34..42] Kind=Identifier Text='building'
+  SMA Token: [43..51] Kind=Identifier Text='abstract'
+  SMA Token: [52..60] Kind=Generic Text='imagery.'
+  SMA Token: [61..61] Kind=EndOfInput Text=''
+--- SMA AST HIERARCHY ---
+|- ScriptBlockAst [0..60]: 'Smith uses his name as a base for bui...'
+  |- NamedBlockAst [0..60]: 'Smith uses his name as a base for bui...'
+    |- PipelineAst [0..60]: 'Smith uses his name as a base for bui...'
+      |- CommandAst [0..60]: 'Smith uses his name as a base for bui...'
+        |- StringConstantExpressionAst [0..5]: 'Smith'
+        |- StringConstantExpressionAst [6..10]: 'uses'
+        |- StringConstantExpressionAst [11..14]: 'his'
+        |- StringConstantExpressionAst [15..19]: 'name'
+        |- StringConstantExpressionAst [20..22]: 'as'
+        |- StringConstantExpressionAst [23..24]: 'a'
+        |- StringConstantExpressionAst [25..29]: 'base'
+        |- StringConstantExpressionAst [30..33]: 'for'
+        |- StringConstantExpressionAst [34..42]: 'building'
+        |- StringConstantExpressionAst [43..51]: 'abstract'
+        |- StringConstantExpressionAst [52..60]: 'imagery.'
+
+================================================================================
+SENTENCE 1: The Group intended to promote Welsh radical and abstract modern art (and successfully did so into the 21st century).
+LENGTH: 116
+--- spaCy REFERENCE TOKENS ---
+  spaCy: 0	0..3	The	DET	det
+  spaCy: 1	4..9	Group	PROPN	nsubj
+  spaCy: 2	10..18	intended	VERB	ROOT
+  spaCy: 3	19..21	to	PART	aux
+  spaCy: 4	22..29	promote	VERB	xcomp
+  spaCy: 5	30..35	Welsh	PROPN	nmod
+  spaCy: 6	36..43	radical	ADJ	amod
+  spaCy: 7	44..47	and	CCONJ	cc
+  spaCy: 8	48..56	abstract	ADJ	conj
+  spaCy: 9	57..63	modern	ADJ	amod
+  spaCy: 10	64..67	art	NOUN	dobj
+  spaCy: 11	68..69	(	PUNCT	punct
+  spaCy: 12	69..72	and	CCONJ	cc
+  spaCy: 13	73..85	successfully	ADV	advmod
+  spaCy: 14	86..89	did	VERB	conj
+  spaCy: 15	90..92	so	ADV	advmod
+  spaCy: 16	93..97	into	ADP	prep
+  spaCy: 17	98..101	the	DET	det
+  spaCy: 18	102..106	21st	ADJ	amod
+  spaCy: 19	107..114	century	NOUN	pobj
+  spaCy: 20	114..115	)	PUNCT	punct
+  spaCy: 21	115..116	.	PUNCT	punct
+--- SMA PARSE ERRORS: 0 ---
+--- SMA TOKENS: 23 ---
+  SMA Token: [0..3] Kind=Identifier Text='The'
+  SMA Token: [4..9] Kind=Identifier Text='Group'
+  SMA Token: [10..18] Kind=Identifier Text='intended'
+  SMA Token: [19..21] Kind=Identifier Text='to'
+  SMA Token: [22..29] Kind=Identifier Text='promote'
+  SMA Token: [30..35] Kind=Identifier Text='Welsh'
+  SMA Token: [36..43] Kind=Identifier Text='radical'
+  SMA Token: [44..47] Kind=Identifier Text='and'
+  SMA Token: [48..56] Kind=Identifier Text='abstract'
+  SMA Token: [57..63] Kind=Identifier Text='modern'
+  SMA Token: [64..67] Kind=Identifier Text='art'
+  SMA Token: [68..69] Kind=LParen Text='('
+  SMA Token: [69..72] Kind=Identifier Text='and'
+  SMA Token: [73..85] Kind=Identifier Text='successfully'
+  SMA Token: [86..89] Kind=Identifier Text='did'
+  SMA Token: [90..92] Kind=Identifier Text='so'
+  SMA Token: [93..97] Kind=Identifier Text='into'
+  SMA Token: [98..101] Kind=Identifier Text='the'
+  SMA Token: [102..106] Kind=Generic Text='21st'
+  SMA Token: [107..114] Kind=Identifier Text='century'
+  SMA Token: [114..115] Kind=RParen Text=')'
+  SMA Token: [115..116] Kind=Generic Text='.'
+  SMA Token: [117..117] Kind=EndOfInput Text=''
+--- SMA AST HIERARCHY ---
+|- ScriptBlockAst [0..116]: 'The Group intended to promote Welsh r...'
+  |- NamedBlockAst [0..116]: 'The Group intended to promote Welsh r...'
+    |- PipelineAst [0..116]: 'The Group intended to promote Welsh r...'
+      |- CommandAst [0..116]: 'The Group intended to promote Welsh r...'
+        |- StringConstantExpressionAst [0..3]: 'The'
+        |- StringConstantExpressionAst [4..9]: 'Group'
+        |- StringConstantExpressionAst [10..18]: 'intended'
+        |- StringConstantExpressionAst [19..21]: 'to'
+        |- StringConstantExpressionAst [22..29]: 'promote'
+        |- StringConstantExpressionAst [30..35]: 'Welsh'
+        |- StringConstantExpressionAst [36..43]: 'radical'
+        |- StringConstantExpressionAst [44..47]: 'and'
+        |- StringConstantExpressionAst [48..56]: 'abstract'
+        |- StringConstantExpressionAst [57..63]: 'modern'
+        |- StringConstantExpressionAst [64..67]: 'art'
+        |- ParenExpressionAst [68..115]: '(and successfully did so into the 21s...'
+          |- PipelineAst [69..114]: 'and successfully did so into the 21st...'
+            |- CommandAst [69..114]: 'and successfully did so into the 21st...'
+              |- StringConstantExpressionAst [69..72]: 'and'
+              |- StringConstantExpressionAst [73..85]: 'successfully'
+              |- StringConstantExpressionAst [86..89]: 'did'
+              |- StringConstantExpressionAst [90..92]: 'so'
+              |- StringConstantExpressionAst [93..97]: 'into'
+              |- StringConstantExpressionAst [98..101]: 'the'
+              |- StringConstantExpressionAst [102..106]: '21st'
+              |- StringConstantExpressionAst [107..114]: 'century'
+        |- StringConstantExpressionAst [115..116]: '.'
+
+================================================================================
+SENTENCE 2: Both stances are verbalized with the same abstract vocabulary.
+LENGTH: 62
+--- spaCy REFERENCE TOKENS ---
+  spaCy: 0	0..4	Both	DET	det
+  spaCy: 1	5..12	stances	NOUN	nsubjpass
+  spaCy: 2	13..16	are	AUX	auxpass
+  spaCy: 3	17..27	verbalized	VERB	ROOT
+  spaCy: 4	28..32	with	ADP	prep
+  spaCy: 5	33..36	the	DET	det
+  spaCy: 6	37..41	same	ADJ	amod
+  spaCy: 7	42..50	abstract	ADJ	amod
+  spaCy: 8	51..61	vocabulary	NOUN	pobj
+  spaCy: 9	61..62	.	PUNCT	punct
+--- SMA PARSE ERRORS: 0 ---
+--- SMA TOKENS: 10 ---
+  SMA Token: [0..4] Kind=Identifier Text='Both'
+  SMA Token: [5..12] Kind=Identifier Text='stances'
+  SMA Token: [13..16] Kind=Identifier Text='are'
+  SMA Token: [17..27] Kind=Identifier Text='verbalized'
+  SMA Token: [28..32] Kind=Identifier Text='with'
+  SMA Token: [33..36] Kind=Identifier Text='the'
+  SMA Token: [37..41] Kind=Identifier Text='same'
+  SMA Token: [42..50] Kind=Identifier Text='abstract'
+  SMA Token: [51..62] Kind=Generic Text='vocabulary.'
+  SMA Token: [63..63] Kind=EndOfInput Text=''
+--- SMA AST HIERARCHY ---
+|- ScriptBlockAst [0..62]: 'Both stances are verbalized with the ...'
+  |- NamedBlockAst [0..62]: 'Both stances are verbalized with the ...'
+    |- PipelineAst [0..62]: 'Both stances are verbalized with the ...'
+      |- CommandAst [0..62]: 'Both stances are verbalized with the ...'
+        |- StringConstantExpressionAst [0..4]: 'Both'
+        |- StringConstantExpressionAst [5..12]: 'stances'
+        |- StringConstantExpressionAst [13..16]: 'are'
+        |- StringConstantExpressionAst [17..27]: 'verbalized'
+        |- StringConstantExpressionAst [28..32]: 'with'
+        |- StringConstantExpressionAst [33..36]: 'the'
+        |- StringConstantExpressionAst [37..41]: 'same'
+        |- StringConstantExpressionAst [42..50]: 'abstract'
+        |- StringConstantExpressionAst [51..62]: 'vocabulary.'
+
+================================================================================
+SENTENCE 3: In later years he became less prolific, and unsuccessfully attempted to establish himself as an abstract artist.
+LENGTH: 112
+--- spaCy REFERENCE TOKENS ---
+  spaCy: 0	0..2	In	ADP	prep
+  spaCy: 1	3..8	later	ADJ	amod
+  spaCy: 2	9..14	years	NOUN	pobj
+  spaCy: 3	15..17	he	PRON	nsubj
+  spaCy: 4	18..24	became	VERB	ROOT
+  spaCy: 5	25..29	less	ADV	advmod
+  spaCy: 6	30..38	prolific	ADJ	acomp
+  spaCy: 7	38..39	,	PUNCT	punct
+  spaCy: 8	40..43	and	CCONJ	cc
+  spaCy: 9	44..58	unsuccessfully	ADV	advmod
+  spaCy: 10	59..68	attempted	VERB	conj
+  spaCy: 11	69..71	to	PART	aux
+  spaCy: 12	72..81	establish	VERB	xcomp
+  spaCy: 13	82..89	himself	PRON	dobj
+  spaCy: 14	90..92	as	ADP	prep
+  spaCy: 15	93..95	an	DET	det
+  spaCy: 16	96..104	abstract	ADJ	amod
+  spaCy: 17	105..111	artist	NOUN	pobj
+  spaCy: 18	111..112	.	PUNCT	punct
+--- SMA PARSE ERRORS: 0 ---
+--- SMA TOKENS: 19 ---
+  SMA Token: [0..2] Kind=In Text='In'
+  SMA Token: [3..8] Kind=Identifier Text='later'
+  SMA Token: [9..14] Kind=Identifier Text='years'
+  SMA Token: [15..17] Kind=Identifier Text='he'
+  SMA Token: [18..24] Kind=Identifier Text='became'
+  SMA Token: [25..29] Kind=Identifier Text='less'
+  SMA Token: [30..38] Kind=Identifier Text='prolific'
+  SMA Token: [38..39] Kind=Comma Text=','
+  SMA Token: [40..43] Kind=Identifier Text='and'
+  SMA Token: [44..58] Kind=Identifier Text='unsuccessfully'
+  SMA Token: [59..68] Kind=Identifier Text='attempted'
+  SMA Token: [69..71] Kind=Identifier Text='to'
+  SMA Token: [72..81] Kind=Identifier Text='establish'
+  SMA Token: [82..89] Kind=Identifier Text='himself'
+  SMA Token: [90..92] Kind=Identifier Text='as'
+  SMA Token: [93..95] Kind=Identifier Text='an'
+  SMA Token: [96..104] Kind=Identifier Text='abstract'
+  SMA Token: [105..112] Kind=Generic Text='artist.'
+  SMA Token: [113..113] Kind=EndOfInput Text=''
+--- SMA AST HIERARCHY ---
+|- ScriptBlockAst [0..112]: 'In later years he became less prolifi...'
+  |- NamedBlockAst [0..112]: 'In later years he became less prolifi...'
+    |- PipelineAst [0..112]: 'In later years he became less prolifi...'
+      |- CommandAst [0..112]: 'In later years he became less prolifi...'
+        |- StringConstantExpressionAst [0..2]: 'In'
+        |- StringConstantExpressionAst [3..8]: 'later'
+        |- StringConstantExpressionAst [9..14]: 'years'
+        |- StringConstantExpressionAst [15..17]: 'he'
+        |- StringConstantExpressionAst [18..24]: 'became'
+        |- StringConstantExpressionAst [25..29]: 'less'
+        |- ArrayLiteralAst [30..43]: 'prolific, and'
+          |- StringConstantExpressionAst [30..38]: 'prolific'
+          |- StringConstantExpressionAst [40..43]: 'and'
+        |- StringConstantExpressionAst [44..58]: 'unsuccessfully'
+        |- StringConstantExpressionAst [59..68]: 'attempted'
+        |- StringConstantExpressionAst [69..71]: 'to'
+        |- StringConstantExpressionAst [72..81]: 'establish'
+        |- StringConstantExpressionAst [82..89]: 'himself'
+        |- StringConstantExpressionAst [90..92]: 'as'
+        |- StringConstantExpressionAst [93..95]: 'an'
+        |- StringConstantExpressionAst [96..104]: 'abstract'
+        |- StringConstantExpressionAst [105..112]: 'artist.'
+
+================================================================================
+SENTENCE 4: As a sculptor, Ruud Kuijer became famous for his abstract sculptures in which he often incorporated recognisable shapes.
+LENGTH: 120
+--- spaCy REFERENCE TOKENS ---
+  spaCy: 0	0..2	As	ADP	prep
+  spaCy: 1	3..4	a	DET	det
+  spaCy: 2	5..13	sculptor	NOUN	pobj
+  spaCy: 3	13..14	,	PUNCT	punct
+  spaCy: 4	15..19	Ruud	PROPN	compound
+  spaCy: 5	20..26	Kuijer	PROPN	nsubj
+  spaCy: 6	27..33	became	VERB	ROOT
+  spaCy: 7	34..40	famous	ADJ	acomp
+  spaCy: 8	41..44	for	ADP	prep
+  spaCy: 9	45..48	his	PRON	poss
+  spaCy: 10	49..57	abstract	ADJ	amod
+  spaCy: 11	58..68	sculptures	NOUN	pobj
+  spaCy: 12	69..71	in	ADP	prep
+  spaCy: 13	72..77	which	PRON	pobj
+  spaCy: 14	78..80	he	PRON	nsubj
+  spaCy: 15	81..86	often	ADV	advmod
+  spaCy: 16	87..99	incorporated	VERB	relcl
+  spaCy: 17	100..112	recognisable	ADJ	amod
+  spaCy: 18	113..119	shapes	NOUN	dobj
+  spaCy: 19	119..120	.	PUNCT	punct
+--- SMA PARSE ERRORS: 0 ---
+--- SMA TOKENS: 20 ---
+  SMA Token: [0..2] Kind=Identifier Text='As'
+  SMA Token: [3..4] Kind=Identifier Text='a'
+  SMA Token: [5..13] Kind=Identifier Text='sculptor'
+  SMA Token: [13..14] Kind=Comma Text=','
+  SMA Token: [15..19] Kind=Identifier Text='Ruud'
+  SMA Token: [20..26] Kind=Identifier Text='Kuijer'
+  SMA Token: [27..33] Kind=Identifier Text='became'
+  SMA Token: [34..40] Kind=Identifier Text='famous'
+  SMA Token: [41..44] Kind=Generic Text='for'
+  SMA Token: [45..48] Kind=Identifier Text='his'
+  SMA Token: [49..57] Kind=Identifier Text='abstract'
+  SMA Token: [58..68] Kind=Identifier Text='sculptures'
+  SMA Token: [69..71] Kind=Generic Text='in'
+  SMA Token: [72..77] Kind=Identifier Text='which'
+  SMA Token: [78..80] Kind=Identifier Text='he'
+  SMA Token: [81..86] Kind=Identifier Text='often'
+  SMA Token: [87..99] Kind=Identifier Text='incorporated'
+  SMA Token: [100..112] Kind=Identifier Text='recognisable'
+  SMA Token: [113..120] Kind=Generic Text='shapes.'
+  SMA Token: [121..121] Kind=EndOfInput Text=''
+--- SMA AST HIERARCHY ---
+|- ScriptBlockAst [0..120]: 'As a sculptor, Ruud Kuijer became fam...'
+  |- NamedBlockAst [0..120]: 'As a sculptor, Ruud Kuijer became fam...'
+    |- PipelineAst [0..120]: 'As a sculptor, Ruud Kuijer became fam...'
+      |- CommandAst [0..120]: 'As a sculptor, Ruud Kuijer became fam...'
+        |- StringConstantExpressionAst [0..2]: 'As'
+        |- StringConstantExpressionAst [3..4]: 'a'
+        |- ArrayLiteralAst [5..19]: 'sculptor, Ruud'
+          |- StringConstantExpressionAst [5..13]: 'sculptor'
+          |- StringConstantExpressionAst [15..19]: 'Ruud'
+        |- StringConstantExpressionAst [20..26]: 'Kuijer'
+        |- StringConstantExpressionAst [27..33]: 'became'
+        |- StringConstantExpressionAst [34..40]: 'famous'
+        |- StringConstantExpressionAst [41..44]: 'for'
+        |- StringConstantExpressionAst [45..48]: 'his'
+        |- StringConstantExpressionAst [49..57]: 'abstract'
+        |- StringConstantExpressionAst [58..68]: 'sculptures'
+        |- StringConstantExpressionAst [69..71]: 'in'
+        |- StringConstantExpressionAst [72..77]: 'which'
+        |- StringConstantExpressionAst [78..80]: 'he'
+        |- StringConstantExpressionAst [81..86]: 'often'
+        |- StringConstantExpressionAst [87..99]: 'incorporated'
+        |- StringConstantExpressionAst [100..112]: 'recognisable'
+        |- StringConstantExpressionAst [113..120]: 'shapes.'
+

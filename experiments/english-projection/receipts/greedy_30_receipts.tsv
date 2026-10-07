@@ -1,0 +1,13 @@
+step	mutation_tested	score_before	score_after	status	config_key
+0	baseline	N/A	Errors=7 FailSent=6 UsefulAST=338 BoundDiff=115 Muts=0	accepted	pre=none|apos=none|hash=none|semi=none|term=none|hyph=none|quot=none
+1	Apos=modifier	Errors=7 FailSent=6 UsefulAST=338 BoundDiff=115 Muts=0	Errors=4 FailSent=4 UsefulAST=377 BoundDiff=79 Muts=1	accepted	pre=none|apos=modifier|hash=none|semi=none|term=none|hyph=none|quot=none
+2	Prefix=qmark	Errors=4 FailSent=4 UsefulAST=377 BoundDiff=79 Muts=1	Errors=1 FailSent=1 UsefulAST=405 BoundDiff=79 Muts=2	accepted	pre=qmark|apos=modifier|hash=none|semi=none|term=none|hyph=none|quot=none
+3	Hyphen=unicode	Errors=1 FailSent=1 UsefulAST=405 BoundDiff=79 Muts=2	Errors=0 FailSent=0 UsefulAST=404 BoundDiff=80 Muts=3	accepted	pre=qmark|apos=modifier|hash=none|semi=none|term=none|hyph=unicode|quot=none
+4	Quote=guillemets	Errors=0 FailSent=0 UsefulAST=404 BoundDiff=80 Muts=3	Errors=0 FailSent=0 UsefulAST=432 BoundDiff=80 Muts=4	accepted	pre=qmark|apos=modifier|hash=none|semi=none|term=none|hyph=unicode|quot=guillemets
+5	Term=space	Errors=0 FailSent=0 UsefulAST=432 BoundDiff=80 Muts=4	Errors=0 FailSent=0 UsefulAST=459 BoundDiff=56 Muts=5	accepted	pre=qmark|apos=modifier|hash=none|semi=none|term=space|hyph=unicode|quot=guillemets
+6	Semi=fullwidth	Errors=0 FailSent=0 UsefulAST=459 BoundDiff=56 Muts=5	Errors=0 FailSent=0 UsefulAST=460 BoundDiff=57 Muts=6	accepted	pre=qmark|apos=modifier|hash=none|semi=fullwidth|term=space|hyph=unicode|quot=guillemets
+7	Prefix=slash	Errors=0 FailSent=0 UsefulAST=460 BoundDiff=57 Muts=6	Errors=0 FailSent=0 UsefulAST=460 BoundDiff=57 Muts=6	neutral	pre=slash|apos=modifier|hash=none|semi=fullwidth|term=space|hyph=unicode|quot=guillemets
+8	Prefix=qmark	Errors=0 FailSent=0 UsefulAST=460 BoundDiff=57 Muts=6	Errors=0 FailSent=0 UsefulAST=460 BoundDiff=57 Muts=6	neutral	pre=qmark|apos=modifier|hash=none|semi=fullwidth|term=space|hyph=unicode|quot=guillemets
+9	Prefix=slash	Errors=0 FailSent=0 UsefulAST=460 BoundDiff=57 Muts=6	Errors=0 FailSent=0 UsefulAST=460 BoundDiff=57 Muts=6	neutral	pre=slash|apos=modifier|hash=none|semi=fullwidth|term=space|hyph=unicode|quot=guillemets
+10	Prefix=qmark	Errors=0 FailSent=0 UsefulAST=460 BoundDiff=57 Muts=6	Errors=0 FailSent=0 UsefulAST=460 BoundDiff=57 Muts=6	neutral	pre=qmark|apos=modifier|hash=none|semi=fullwidth|term=space|hyph=unicode|quot=guillemets
+11	Prefix=slash	Errors=0 FailSent=0 UsefulAST=460 BoundDiff=57 Muts=6	Errors=0 FailSent=0 UsefulAST=460 BoundDiff=57 Muts=6	neutral	pre=slash|apos=modifier|hash=none|semi=fullwidth|term=space|hyph=unicode|quot=guillemets

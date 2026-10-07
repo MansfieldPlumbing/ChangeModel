@@ -1,0 +1,12 @@
+[  29.4s] UD EWT r2.18 b7711cce01cdd4f5fcc0a8199b8a50d951b16c0c: train 80, dev 50 finite clauses
+[  30.8s] Stage 0: equivalence failures 0, inverse failures 0, source collisions 0
+[  35.3s] Baseline train: parse=0 rev=0 rel=353 [root=79 subj=80 obj=76 prepMiss=118/118 prepFalse=0] rules=0
+[  47.1s] step 1 keep +V:of -> parse=0 rev=0 rel=347 [root=79 subj=74 obj=76 prepMiss=118/118 prepFalse=0] rules=1  (evals 38)
+[  55.4s] step 2 keep +V:that -> parse=0 rev=0 rel=346 [root=79 subj=73 obj=76 prepMiss=118/118 prepFalse=0] rules=2  (evals 74)
+[  64.4s] step 3 keep +S:ize -> parse=0 rev=0 rel=345 [root=78 subj=73 obj=76 prepMiss=118/118 prepFalse=0] rules=3  (evals 110)
+[  67.9s] Stopped: evaluation budget after 120 evaluations
+[  68.9s] Incremental score equals full rescore
+[  68.9s] Frozen train: parse=0 rev=0 rel=345 [root=78 subj=73 obj=76 prepMiss=118/118 prepFalse=0] rules=3
+[  68.9s] Frozen rules: V:of,that|S:ize|P:
+[  69.7s] Dev baseline: parse=0 rev=0 rel=235 [root=50 subj=50 obj=49 prepMiss=86/86 prepFalse=0] rules=0
+[  69.7s] Dev frozen:   parse=0 rev=0 rel=228 [root=50 subj=43 obj=49 prepMiss=86/86 prepFalse=0] rules=3

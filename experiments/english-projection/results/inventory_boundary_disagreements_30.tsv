@@ -1,0 +1,161 @@
+sentence_id	spacy_text	spacy_span	spacy_pos	sma_span	sma_text	sma_kind	diff_category
+0	imagery	52..59	NOUN	52..60	imagery.	Generic	TerminalPunctuationGlued
+0	.	59..60	PUNCT	52..60	imagery.	Generic	TerminalPunctuationGlued
+2	vocabulary	51..61	NOUN	51..62	vocabulary.	Generic	TerminalPunctuationGlued
+2	.	61..62	PUNCT	51..62	vocabulary.	Generic	TerminalPunctuationGlued
+3	artist	105..111	NOUN	105..112	artist.	Generic	TerminalPunctuationGlued
+3	.	111..112	PUNCT	105..112	artist.	Generic	TerminalPunctuationGlued
+4	shapes	113..119	NOUN	113..120	shapes.	Generic	TerminalPunctuationGlued
+4	.	119..120	PUNCT	113..120	shapes.	Generic	TerminalPunctuationGlued
+6	abstract	76..84	ADJ	76..85	abstract.	Generic	TerminalPunctuationGlued
+6	.	84..85	PUNCT	76..85	abstract.	Generic	TerminalPunctuationGlued
+7	structures	74..84	NOUN	74..85	structures.	Generic	TerminalPunctuationGlued
+7	.	84..85	PUNCT	74..85	structures.	Generic	TerminalPunctuationGlued
+8	years	98..103	NOUN	98..104	years.	Generic	TerminalPunctuationGlued
+8	.	103..104	PUNCT	98..104	years.	Generic	TerminalPunctuationGlued
+9	The	0..3	DET	0..89	"The ""Abstract factory pattern"" instead is a method to build collections of factories."	StringExpandable	TerminalPunctuationGlued
+9	""""	4..5	PUNCT	0..89	"The ""Abstract factory pattern"" instead is a method to build collections of factories."	StringExpandable	TerminalPunctuationGlued
+9	Abstract	5..13	ADJ	0..89	"The ""Abstract factory pattern"" instead is a method to build collections of factories."	StringExpandable	TerminalPunctuationGlued
+9	factory	14..21	NOUN	0..89	"The ""Abstract factory pattern"" instead is a method to build collections of factories."	StringExpandable	TerminalPunctuationGlued
+9	pattern	22..29	NOUN	0..89	"The ""Abstract factory pattern"" instead is a method to build collections of factories."	StringExpandable	TerminalPunctuationGlued
+9	""""	29..30	PUNCT	0..89	"The ""Abstract factory pattern"" instead is a method to build collections of factories."	StringExpandable	TerminalPunctuationGlued
+9	instead	31..38	ADV	0..89	"The ""Abstract factory pattern"" instead is a method to build collections of factories."	StringExpandable	TerminalPunctuationGlued
+9	is	39..41	AUX	0..89	"The ""Abstract factory pattern"" instead is a method to build collections of factories."	StringExpandable	TerminalPunctuationGlued
+9	a	42..43	DET	0..89	"The ""Abstract factory pattern"" instead is a method to build collections of factories."	StringExpandable	TerminalPunctuationGlued
+9	method	44..50	NOUN	0..89	"The ""Abstract factory pattern"" instead is a method to build collections of factories."	StringExpandable	TerminalPunctuationGlued
+9	to	51..53	PART	0..89	"The ""Abstract factory pattern"" instead is a method to build collections of factories."	StringExpandable	TerminalPunctuationGlued
+9	build	54..59	VERB	0..89	"The ""Abstract factory pattern"" instead is a method to build collections of factories."	StringExpandable	TerminalPunctuationGlued
+9	collections	60..71	NOUN	0..89	"The ""Abstract factory pattern"" instead is a method to build collections of factories."	StringExpandable	TerminalPunctuationGlued
+9	of	72..74	ADP	0..89	"The ""Abstract factory pattern"" instead is a method to build collections of factories."	StringExpandable	TerminalPunctuationGlued
+9	factories	75..84	NOUN	0..89	"The ""Abstract factory pattern"" instead is a method to build collections of factories."	StringExpandable	TerminalPunctuationGlued
+9	.	84..85	PUNCT	0..89	"The ""Abstract factory pattern"" instead is a method to build collections of factories."	StringExpandable	TerminalPunctuationGlued
+10	unchanged	89..98	ADJ	89..99	unchanged.	Generic	TerminalPunctuationGlued
+10	.	98..99	PUNCT	89..99	unchanged.	Generic	TerminalPunctuationGlued
+11	painting	60..68	NOUN	60..69	painting.	Generic	TerminalPunctuationGlued
+11	.	68..69	PUNCT	60..69	painting.	Generic	TerminalPunctuationGlued
+12	theory	102..108	NOUN	102..109	theory.	Generic	TerminalPunctuationGlued
+12	.	108..109	PUNCT	102..109	theory.	Generic	TerminalPunctuationGlued
+13	i	4..5	NOUN	4..11	i-stems	Generic	WordFusedWithNeighbor
+13	-	5..6	PUNCT	4..11	i-stems	Generic	PunctuationAbsorbedIntoWord
+13	stems	6..11	NOUN	4..11	i-stems	Generic	WordFusedWithNeighbor
+14	transposed	102..112	VERB	102..113	transposed.	Generic	TerminalPunctuationGlued
+14	.	112..113	PUNCT	102..113	transposed.	Generic	TerminalPunctuationGlued
+15	In	0..2	ADP	0..125	"In Paris during the 1920s, Moffat collaborated with Man Ray, producing portraits and abstract photograms or ""rayographs""."	StringExpandable	TerminalPunctuationGlued
+15	Paris	3..8	PROPN	0..125	"In Paris during the 1920s, Moffat collaborated with Man Ray, producing portraits and abstract photograms or ""rayographs""."	StringExpandable	TerminalPunctuationGlued
+15	during	9..15	ADP	0..125	"In Paris during the 1920s, Moffat collaborated with Man Ray, producing portraits and abstract photograms or ""rayographs""."	StringExpandable	TerminalPunctuationGlued
+15	the	16..19	DET	0..125	"In Paris during the 1920s, Moffat collaborated with Man Ray, producing portraits and abstract photograms or ""rayographs""."	StringExpandable	TerminalPunctuationGlued
+15	1920s	20..25	NOUN	0..125	"In Paris during the 1920s, Moffat collaborated with Man Ray, producing portraits and abstract photograms or ""rayographs""."	StringExpandable	TerminalPunctuationGlued
+15	,	25..26	PUNCT	0..125	"In Paris during the 1920s, Moffat collaborated with Man Ray, producing portraits and abstract photograms or ""rayographs""."	StringExpandable	TerminalPunctuationGlued
+15	Moffat	27..33	PROPN	0..125	"In Paris during the 1920s, Moffat collaborated with Man Ray, producing portraits and abstract photograms or ""rayographs""."	StringExpandable	TerminalPunctuationGlued
+15	collaborated	34..46	VERB	0..125	"In Paris during the 1920s, Moffat collaborated with Man Ray, producing portraits and abstract photograms or ""rayographs""."	StringExpandable	TerminalPunctuationGlued
+15	with	47..51	ADP	0..125	"In Paris during the 1920s, Moffat collaborated with Man Ray, producing portraits and abstract photograms or ""rayographs""."	StringExpandable	TerminalPunctuationGlued
+15	Man	52..55	PROPN	0..125	"In Paris during the 1920s, Moffat collaborated with Man Ray, producing portraits and abstract photograms or ""rayographs""."	StringExpandable	TerminalPunctuationGlued
+15	Ray	56..59	PROPN	0..125	"In Paris during the 1920s, Moffat collaborated with Man Ray, producing portraits and abstract photograms or ""rayographs""."	StringExpandable	TerminalPunctuationGlued
+15	,	59..60	PUNCT	0..125	"In Paris during the 1920s, Moffat collaborated with Man Ray, producing portraits and abstract photograms or ""rayographs""."	StringExpandable	TerminalPunctuationGlued
+15	producing	61..70	VERB	0..125	"In Paris during the 1920s, Moffat collaborated with Man Ray, producing portraits and abstract photograms or ""rayographs""."	StringExpandable	TerminalPunctuationGlued
+15	portraits	71..80	NOUN	0..125	"In Paris during the 1920s, Moffat collaborated with Man Ray, producing portraits and abstract photograms or ""rayographs""."	StringExpandable	TerminalPunctuationGlued
+15	and	81..84	CCONJ	0..125	"In Paris during the 1920s, Moffat collaborated with Man Ray, producing portraits and abstract photograms or ""rayographs""."	StringExpandable	TerminalPunctuationGlued
+15	abstract	85..93	ADJ	0..125	"In Paris during the 1920s, Moffat collaborated with Man Ray, producing portraits and abstract photograms or ""rayographs""."	StringExpandable	TerminalPunctuationGlued
+15	photograms	94..104	NOUN	0..125	"In Paris during the 1920s, Moffat collaborated with Man Ray, producing portraits and abstract photograms or ""rayographs""."	StringExpandable	TerminalPunctuationGlued
+15	or	105..107	CCONJ	0..125	"In Paris during the 1920s, Moffat collaborated with Man Ray, producing portraits and abstract photograms or ""rayographs""."	StringExpandable	TerminalPunctuationGlued
+15	""""	108..109	PUNCT	0..125	"In Paris during the 1920s, Moffat collaborated with Man Ray, producing portraits and abstract photograms or ""rayographs""."	StringExpandable	TerminalPunctuationGlued
+15	rayographs	109..119	NOUN	0..125	"In Paris during the 1920s, Moffat collaborated with Man Ray, producing portraits and abstract photograms or ""rayographs""."	StringExpandable	TerminalPunctuationGlued
+15	""""	119..120	PUNCT	0..125	"In Paris during the 1920s, Moffat collaborated with Man Ray, producing portraits and abstract photograms or ""rayographs""."	StringExpandable	TerminalPunctuationGlued
+15	.	120..121	PUNCT	0..125	"In Paris during the 1920s, Moffat collaborated with Man Ray, producing portraits and abstract photograms or ""rayographs""."	StringExpandable	TerminalPunctuationGlued
+16	Siddhartha	8..18	PROPN	8..92	Siddhartha's insights into old age, sickness and death were abstract considerations.	Generic	TerminalPunctuationGlued
+16	's	18..20	PART	8..92	Siddhartha's insights into old age, sickness and death were abstract considerations.	Generic	TerminalPunctuationGlued
+16	insights	21..29	NOUN	8..92	Siddhartha's insights into old age, sickness and death were abstract considerations.	Generic	TerminalPunctuationGlued
+16	into	30..34	ADP	8..92	Siddhartha's insights into old age, sickness and death were abstract considerations.	Generic	TerminalPunctuationGlued
+16	old	35..38	ADJ	8..92	Siddhartha's insights into old age, sickness and death were abstract considerations.	Generic	TerminalPunctuationGlued
+16	age	39..42	NOUN	8..92	Siddhartha's insights into old age, sickness and death were abstract considerations.	Generic	TerminalPunctuationGlued
+16	,	42..43	PUNCT	8..92	Siddhartha's insights into old age, sickness and death were abstract considerations.	Generic	TerminalPunctuationGlued
+16	sickness	44..52	NOUN	8..92	Siddhartha's insights into old age, sickness and death were abstract considerations.	Generic	TerminalPunctuationGlued
+16	and	53..56	CCONJ	8..92	Siddhartha's insights into old age, sickness and death were abstract considerations.	Generic	TerminalPunctuationGlued
+16	death	57..62	NOUN	8..92	Siddhartha's insights into old age, sickness and death were abstract considerations.	Generic	TerminalPunctuationGlued
+16	were	63..67	AUX	8..92	Siddhartha's insights into old age, sickness and death were abstract considerations.	Generic	TerminalPunctuationGlued
+16	abstract	68..76	ADJ	8..92	Siddhartha's insights into old age, sickness and death were abstract considerations.	Generic	TerminalPunctuationGlued
+16	considerations	77..91	NOUN	8..92	Siddhartha's insights into old age, sickness and death were abstract considerations.	Generic	TerminalPunctuationGlued
+16	.	91..92	PUNCT	8..92	Siddhartha's insights into old age, sickness and death were abstract considerations.	Generic	TerminalPunctuationGlued
+17	two	11..14	NUM	11..21	two-player	Generic	WordFusedWithNeighbor
+17	-	14..15	PUNCT	11..21	two-player	Generic	PunctuationAbsorbedIntoWord
+17	player	15..21	NOUN	11..21	two-player	Generic	WordFusedWithNeighbor
+17	game	46..50	NOUN	46..51	game.	Generic	TerminalPunctuationGlued
+17	.	50..51	PUNCT	46..51	game.	Generic	TerminalPunctuationGlued
+18	Whitehead	0..9	PROPN	0..87	Whitehead's lemma is a technical result in abstract algebra used in algebraic K-theory.	Generic	TerminalPunctuationGlued
+18	's	9..11	PART	0..87	Whitehead's lemma is a technical result in abstract algebra used in algebraic K-theory.	Generic	TerminalPunctuationGlued
+18	lemma	12..17	NOUN	0..87	Whitehead's lemma is a technical result in abstract algebra used in algebraic K-theory.	Generic	TerminalPunctuationGlued
+18	is	18..20	AUX	0..87	Whitehead's lemma is a technical result in abstract algebra used in algebraic K-theory.	Generic	TerminalPunctuationGlued
+18	a	21..22	DET	0..87	Whitehead's lemma is a technical result in abstract algebra used in algebraic K-theory.	Generic	TerminalPunctuationGlued
+18	technical	23..32	ADJ	0..87	Whitehead's lemma is a technical result in abstract algebra used in algebraic K-theory.	Generic	TerminalPunctuationGlued
+18	result	33..39	NOUN	0..87	Whitehead's lemma is a technical result in abstract algebra used in algebraic K-theory.	Generic	TerminalPunctuationGlued
+18	in	40..42	ADP	0..87	Whitehead's lemma is a technical result in abstract algebra used in algebraic K-theory.	Generic	TerminalPunctuationGlued
+18	abstract	43..51	ADJ	0..87	Whitehead's lemma is a technical result in abstract algebra used in algebraic K-theory.	Generic	TerminalPunctuationGlued
+18	algebra	52..59	NOUN	0..87	Whitehead's lemma is a technical result in abstract algebra used in algebraic K-theory.	Generic	TerminalPunctuationGlued
+18	used	60..64	VERB	0..87	Whitehead's lemma is a technical result in abstract algebra used in algebraic K-theory.	Generic	TerminalPunctuationGlued
+18	in	65..67	ADP	0..87	Whitehead's lemma is a technical result in abstract algebra used in algebraic K-theory.	Generic	TerminalPunctuationGlued
+18	algebraic	68..77	ADJ	0..87	Whitehead's lemma is a technical result in abstract algebra used in algebraic K-theory.	Generic	TerminalPunctuationGlued
+18	K	78..79	PROPN	0..87	Whitehead's lemma is a technical result in abstract algebra used in algebraic K-theory.	Generic	TerminalPunctuationGlued
+18	-	79..80	PUNCT	0..87	Whitehead's lemma is a technical result in abstract algebra used in algebraic K-theory.	Generic	TerminalPunctuationGlued
+18	theory	80..86	NOUN	0..87	Whitehead's lemma is a technical result in abstract algebra used in algebraic K-theory.	Generic	TerminalPunctuationGlued
+18	.	86..87	PUNCT	0..87	Whitehead's lemma is a technical result in abstract algebra used in algebraic K-theory.	Generic	TerminalPunctuationGlued
+19	large	52..57	ADJ	52..63	large-scale	Generic	WordFusedWithNeighbor
+19	-	57..58	PUNCT	52..63	large-scale	Generic	PunctuationAbsorbedIntoWord
+19	scale	58..63	NOUN	52..63	large-scale	Generic	WordFusedWithNeighbor
+19	canvas	94..100	NOUN	94..101	canvas.	Generic	TerminalPunctuationGlued
+19	.	100..101	PUNCT	94..101	canvas.	Generic	TerminalPunctuationGlued
+20	trampoline	77..87	NOUN	77..92	trampoline-like	Generic	WordFusedWithNeighbor
+20	-	87..88	PUNCT	77..92	trampoline-like	Generic	PunctuationAbsorbedIntoWord
+20	like	88..92	ADJ	77..92	trampoline-like	Generic	WordFusedWithNeighbor
+20	platforms	93..102	NOUN	93..103	platforms.	Generic	TerminalPunctuationGlued
+20	.	102..103	PUNCT	93..103	platforms.	Generic	TerminalPunctuationGlued
+21	Tumarkin	0..8	PROPN	0..101	Tumarkin's sculpture still dealt with it, but began to express it in a variety of more abstract ways.	Generic	TerminalPunctuationGlued
+21	's	8..10	PART	0..101	Tumarkin's sculpture still dealt with it, but began to express it in a variety of more abstract ways.	Generic	TerminalPunctuationGlued
+21	sculpture	11..20	NOUN	0..101	Tumarkin's sculpture still dealt with it, but began to express it in a variety of more abstract ways.	Generic	TerminalPunctuationGlued
+21	still	21..26	ADV	0..101	Tumarkin's sculpture still dealt with it, but began to express it in a variety of more abstract ways.	Generic	TerminalPunctuationGlued
+21	dealt	27..32	VERB	0..101	Tumarkin's sculpture still dealt with it, but began to express it in a variety of more abstract ways.	Generic	TerminalPunctuationGlued
+21	with	33..37	ADP	0..101	Tumarkin's sculpture still dealt with it, but began to express it in a variety of more abstract ways.	Generic	TerminalPunctuationGlued
+21	it	38..40	PRON	0..101	Tumarkin's sculpture still dealt with it, but began to express it in a variety of more abstract ways.	Generic	TerminalPunctuationGlued
+21	,	40..41	PUNCT	0..101	Tumarkin's sculpture still dealt with it, but began to express it in a variety of more abstract ways.	Generic	TerminalPunctuationGlued
+21	but	42..45	CCONJ	0..101	Tumarkin's sculpture still dealt with it, but began to express it in a variety of more abstract ways.	Generic	TerminalPunctuationGlued
+21	began	46..51	VERB	0..101	Tumarkin's sculpture still dealt with it, but began to express it in a variety of more abstract ways.	Generic	TerminalPunctuationGlued
+21	to	52..54	PART	0..101	Tumarkin's sculpture still dealt with it, but began to express it in a variety of more abstract ways.	Generic	TerminalPunctuationGlued
+21	express	55..62	VERB	0..101	Tumarkin's sculpture still dealt with it, but began to express it in a variety of more abstract ways.	Generic	TerminalPunctuationGlued
+21	it	63..65	PRON	0..101	Tumarkin's sculpture still dealt with it, but began to express it in a variety of more abstract ways.	Generic	TerminalPunctuationGlued
+21	in	66..68	ADP	0..101	Tumarkin's sculpture still dealt with it, but began to express it in a variety of more abstract ways.	Generic	TerminalPunctuationGlued
+21	a	69..70	DET	0..101	Tumarkin's sculpture still dealt with it, but began to express it in a variety of more abstract ways.	Generic	TerminalPunctuationGlued
+21	variety	71..78	NOUN	0..101	Tumarkin's sculpture still dealt with it, but began to express it in a variety of more abstract ways.	Generic	TerminalPunctuationGlued
+21	of	79..81	ADP	0..101	Tumarkin's sculpture still dealt with it, but began to express it in a variety of more abstract ways.	Generic	TerminalPunctuationGlued
+21	more	82..86	ADJ	0..101	Tumarkin's sculpture still dealt with it, but began to express it in a variety of more abstract ways.	Generic	TerminalPunctuationGlued
+21	abstract	87..95	ADJ	0..101	Tumarkin's sculpture still dealt with it, but began to express it in a variety of more abstract ways.	Generic	TerminalPunctuationGlued
+21	ways	96..100	NOUN	0..101	Tumarkin's sculpture still dealt with it, but began to express it in a variety of more abstract ways.	Generic	TerminalPunctuationGlued
+21	.	100..101	PUNCT	0..101	Tumarkin's sculpture still dealt with it, but began to express it in a variety of more abstract ways.	Generic	TerminalPunctuationGlued
+22	plane	71..76	NOUN	71..77	plane.	Generic	TerminalPunctuationGlued
+22	.	76..77	PUNCT	71..77	plane.	Generic	TerminalPunctuationGlued
+23	tic	8..11	ADJ	8..19	tic-tac-toe	Generic	WordFusedWithNeighbor
+23	-	11..12	PUNCT	8..19	tic-tac-toe	Generic	PunctuationAbsorbedIntoWord
+23	tac	12..15	NOUN	8..19	tic-tac-toe	Generic	WordFusedWithNeighbor
+23	-	15..16	PUNCT	8..19	tic-tac-toe	Generic	PunctuationAbsorbedIntoWord
+23	toe	16..19	NOUN	8..19	tic-tac-toe	Generic	WordFusedWithNeighbor
+23	research	117..125	NOUN	117..126	research.	Generic	TerminalPunctuationGlued
+23	.	125..126	PUNCT	117..126	research.	Generic	TerminalPunctuationGlued
+24	two	15..18	NUM	15..25	two-player	Generic	WordFusedWithNeighbor
+24	-	18..19	PUNCT	15..25	two-player	Generic	PunctuationAbsorbedIntoWord
+24	player	19..25	NOUN	15..25	two-player	Generic	WordFusedWithNeighbor
+24	Tibet	60..65	PROPN	60..66	Tibet.	Generic	TerminalPunctuationGlued
+24	.	65..66	PUNCT	60..66	Tibet.	Generic	TerminalPunctuationGlued
+25	Self	0..4	NOUN	0..14	Self-awareness	Generic	WordFusedWithNeighbor
+25	-	4..5	PUNCT	0..14	Self-awareness	Generic	PunctuationAbsorbedIntoWord
+25	awareness	5..14	NOUN	0..14	Self-awareness	Generic	WordFusedWithNeighbor
+25	thinking	48..56	NOUN	48..57	thinking.	Generic	TerminalPunctuationGlued
+25	.	56..57	PUNCT	48..57	thinking.	Generic	TerminalPunctuationGlued
+26	art	103..106	NOUN	103..107	art.	Generic	TerminalPunctuationGlued
+26	.	106..107	PUNCT	103..107	art.	Generic	TerminalPunctuationGlued
+27	systems	83..90	NOUN	83..91	systems.	Generic	TerminalPunctuationGlued
+27	.	90..91	PUNCT	83..91	systems.	Generic	TerminalPunctuationGlued
+28	Etude	21..26	PROPN	21..31	Etude-Bach	Generic	WordFusedWithNeighbor
+28	-	26..27	PUNCT	21..31	Etude-Bach	Generic	PunctuationAbsorbedIntoWord
+28	Bach	27..31	PROPN	21..31	Etude-Bach	Generic	WordFusedWithNeighbor
+28	ballet	52..58	NOUN	52..59	ballet.	Generic	TerminalPunctuationGlued
+28	.	58..59	PUNCT	52..59	ballet.	Generic	TerminalPunctuationGlued
+29	time	132..136	NOUN	132..137	time.	Generic	TerminalPunctuationGlued
+29	.	136..137	PUNCT	132..137	time.	Generic	TerminalPunctuationGlued
