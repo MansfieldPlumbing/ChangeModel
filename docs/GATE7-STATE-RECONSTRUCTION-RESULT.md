@@ -26,8 +26,13 @@ The mutation journal survives process death and reconstructs deterministically:
   `sec-keywords-and-reserved-words`, `sec-identifiers-static-semantics-early-errors`)?
   The authority is Node v22.22.2's parser (`vm.Script`) on a probe built from the
   token text. The specimen is never edited or executed.
-- **Specimen Set**: `evidence/js2ps-ogl-lexical.json`, SHA-256
-  `0F8579250E5D9C31BAC80E6FD10E83A1AAE29975576E94B57659A0D7EB39452C`.
+- **Specimen Set**: `evidence/js2ps-ogl-lexical.psd1`, SHA-256
+  `853EBF4A298850988E13A70D26DF987EBD4DD0EBBC6E46ACFA87E074FC6ED69B`, a restricted
+  PowerShell data file converted from the JS2PS `tools/Export-LexicalEvidence.ps1` export,
+  SHA-256
+  `0F8579250E5D9C31BAC80E6FD10E83A1AAE29975576E94B57659A0D7EB39452C`. The conversion renames
+  `Oracle` to `Reference` and `OracleOutcomes` to `ReferenceOutcomes`; all 3897 values compared
+  equal, and the live SMA tokenization reproduces the recorded tokenization digest.
 
 ## What Was Learned
 
@@ -55,10 +60,10 @@ The mutation journal survives process death and reconstructs deterministically:
 
 | State / Artifact | SHA-256 Digest |
 | :--- | :--- |
-| S0 Runtime State (fresh process, both runs) | `79D1D4D158B397B7C0041C898DE66FA4A2BF62D05EAC3F2B592D0E9C396FBADA` |
-| S1 Runtime State (learned, and replayed in a fresh process) | `69A80AF5D57099776C238FCC13488208F70FEBDC130F05CF28F32B5ABA659A4F` |
+| S0 Runtime State (fresh process, both runs) | `5DDD45381D087F21728D7ED308F8C7A938B832ACF7EC0A9A5B1DC4C3CE99322E` |
+| S1 Runtime State (learned, and replayed in a fresh process) | `7920C88C2EC9B452C6FADFE23B0F1D25B2531A15343C6AFD1C41D45B94910410` |
 | S0 SMA Tokenization | `53A634898A52FBC8BE2892AA6AD9013F3F3E34EF74F536DFD30856A6A87B432E` |
-| Mutation Journal (`mutation-journal.psd1`) | `0A26A9BBF9BEEC387CFE8FB9A1D019B7727485D2C1505E62573A2A3F7E5F6223` |
+| Mutation Journal (`mutation-journal.psd1`) | `DE90939C921CB9533313ABB49CAE7A31DF75D38A9A0EC0416B21FB430932DCD5` |
 
 The runtime state digest covers:
 - The PowerShell version and SMA module version ID;
@@ -67,10 +72,19 @@ The runtime state digest covers:
 - SMA's tokenization of all three specimens;
 - The reference model outcomes.
 
+These digests were measured on SMA module version ID `485b5159-b70a-4c43-9af7-f97ea827ff75`.
+The earlier record (S0 `79D1D4D1...`) differs only in that module version ID
+(`ecba0531-bc70-4f8d-b8bb-aa470dca0f76`) and in the digest line labels renamed since
+(`perception=` to `tokenization=`, `oracle=` to `reference=`): recomputing with the earlier
+ID and labels over the current tokenization digest (`53A63489...`) and reference digest
+(`B8C7071D...`) reproduces `79D1D4D1...`.
+
 ## Gate Checks
 
 The two phases ran in separate `pwsh` processes, and each check passed:
-- The replay process read identical journal bytes;
+- The `.psd1` mutation journal is the only state that crosses processes; the replay process
+  runs every check on live objects and reports through its exit code;
+- The journal is bound to this evidence file and JS2PS commit;
 - Fresh S0 equals learned S0;
 - S1 state digest, tokenization digest, and LINQ availability were reconstructed;
 - SMA tokenization differs between S0 and S1;
@@ -99,4 +113,4 @@ $env:JS2PS_ROOT = '<JS2PS checkout at 485044d>'
 pwsh -NoProfile -File tests/Gate7-StateReconstruction.ps1
 ```
 
-Generated mutation journals and receipts are redirected to `$env:LOCALAPPDATA\Build\PSPerception\gate7\` by default and are not committed.
+Generated mutation journals are redirected to `$env:LOCALAPPDATA\Build\PSPerception\gate7\` by default and are not committed.

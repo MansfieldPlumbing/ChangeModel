@@ -90,7 +90,8 @@ function Get-TokenizationDigest {
 
 function Get-ReferenceDigest {
     param([Parameter(Mandatory)] $Evidence)
-    $lines = foreach ($p in ($Evidence.ReferenceOutcomes.PSObject.Properties | Sort-Object Name -CaseSensitive)) { $p.Name + '=' + $p.Value }
+    $outcomes = $Evidence.ReferenceOutcomes
+    $lines = foreach ($name in ($outcomes.Keys | Sort-Object -CaseSensitive)) { $name + '=' + $outcomes[$name] }
     Get-Sha256Hex ((@($Evidence.Reference.Id, $Evidence.Reference.AuthorityVersion) + @($lines)) -join "`n")
 }
 
