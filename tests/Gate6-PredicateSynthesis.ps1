@@ -137,7 +137,7 @@ if ($heldOutUnseenKeys -ne 0 -or $heldOutError -ne 0 -or $heldOutCorrect -ne $he
 }
 
 # Step 5, 6, 7: Materialize into live PowerShell ETS, test pre-compiled ScriptBlock, and prove reversibility
-$syntheticTypeName = "ChangeModel.Predicate.SemanticMutation.$([math]::Abs($winningPred.Name.GetHashCode()))"
+$syntheticTypeName = "Dev.MansfieldPlumbing.PowerShell.Perception.Predicate.SemanticMutation.$([math]::Abs($winningPred.Name.GetHashCode()))"
 
 $deltaPreserving = $trainingDataset[0].CanonicalBefore
 $deltaBreaking   = $trainingDataset[5].CanonicalBefore

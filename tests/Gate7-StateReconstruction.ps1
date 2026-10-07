@@ -2,7 +2,7 @@
 param(
     [string] $Js2psRoot = $env:JS2PS_ROOT,
     [string] $Evidence = (Join-Path $PSScriptRoot '../evidence/js2ps-ogl-lexical.json'),
-    [string] $OutDir = $(if ($env:LOCALAPPDATA) { Join-Path $env:LOCALAPPDATA 'Build\ChangeModel\gate7' } else { Join-Path $PSScriptRoot '../build/gate7' })
+    [string] $OutDir = $(if ($env:LOCALAPPDATA) { Join-Path $env:LOCALAPPDATA 'Build\PSPerception\gate7' } else { Join-Path $PSScriptRoot '../build/gate7' })
 )
 
 # Gate 7: a representational delta learned from real JS2PS evidence survives process death.

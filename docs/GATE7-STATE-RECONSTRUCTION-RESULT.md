@@ -1,6 +1,6 @@
 # Gate 7 Result: VIABLE (Bounded State Reconstruction)
 
-Question: Can ChangeModel carry a compact, inspectable, replayable history of
+Question: Can PSPerception carry a compact, inspectable, replayable history of
 representational growth, derived from real JS2PS evidence, and use upstream SMA
 machinery to reconstruct the same runtime tokenizer state after process death?
 
@@ -36,7 +36,7 @@ The mutation journal survives process death and reconstructs deterministically:
    outcomes. The exhaustive baseline produces 176 contradictions on the 180 training
    units. SMA tokenizes `export`, `import`, `const`, `let`, `new` and `super` identically
    to ordinary identifiers.
-2. **Representation Growth**: ChangeModel's `Invoke-RepresentationSearch`
+2. **Representation Growth**: PSPerception's `Invoke-RepresentationSearch`
    adds feature `Text` and achieves 0 contradictions. Exhaustive search
    confirms it: 8 search evaluations against 16 exhaustive combinations.
 3. **Materialization**: The learned distinction (words the reference marks reserved
@@ -99,4 +99,4 @@ $env:JS2PS_ROOT = '<JS2PS checkout at 485044d>'
 pwsh -NoProfile -File tests/Gate7-StateReconstruction.ps1
 ```
 
-Generated mutation journals and receipts are redirected to `$env:LOCALAPPDATA\Build\ChangeModel\gate7\` by default and are not committed.
+Generated mutation journals and receipts are redirected to `$env:LOCALAPPDATA\Build\PSPerception\gate7\` by default and are not committed.

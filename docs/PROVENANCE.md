@@ -18,7 +18,7 @@ Commit: `1481b98f0079f979f658e49a7281024cc754049b`
 
 ### Private SMA Members & Subsystems Accessed
 
-| Source File | Declaring Type | Member | Reason ChangeModel needs it |
+| Source File | Declaring Type | Member | Reason PSPerception needs it |
 | :--- | :--- | :--- | :--- |
 | `src\System.Management.Automation\engine\lang\scriptblock.cs` | `System.Management.Automation.ScriptBlock` | `_scriptBlockData` (Field) | Access to the underlying AST and compiler state for a compiled script block. |
 | `src\System.Management.Automation\engine\parser\Compiler.cs` | `System.Management.Automation.Language.Compiler` | `Compile` (Method) | Triggers internal lowering of the AST into LINQ expressions. |

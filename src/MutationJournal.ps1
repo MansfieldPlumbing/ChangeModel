@@ -164,7 +164,7 @@ function Invoke-MutationJournal {
 }
 
 function New-LexicalObservationRecords {
-    # Transforms lexer observations and reference outcomes into ChangeModel observation records.
+    # Transforms lexer observations and reference outcomes into PSPerception observation records.
     param([Parameter(Mandatory)][object[]] $Observations, [Parameter(Mandatory)] $Outcomes)
     foreach ($obs in $Observations) {
         foreach ($u in $obs.Units) {

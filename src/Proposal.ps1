@@ -26,15 +26,15 @@ function ConvertTo-RepresentationMutation {
     }
 
     if ($InputObject -is [string]) {
-        # Strip code blocks or trailing commentary if LLM outputs markdown
-        $cleaned = $InputObject -replace '```.*', ''
-        $lines = $cleaned -split "`r?`n" | Where-Object { $_.Trim().Length -gt 0 }
+        $lines = $InputObject.Split("`n")
         foreach ($line in $lines) {
-            $trimmed = $line.Trim()
-            if ($trimmed -match '^(AddFeature|RemoveFeature|Combine)\s+(.+)$') {
-                $verb = $matches[1]
-                $argParts = $matches[2] -split '\s+' | ForEach-Object { $_.Trim() } | Where-Object { $_.Length -gt 0 }
-                return [RepresentationMutation]::new($verb, [string[]]$argParts)
+            $trimmed = $line.Trim().Trim("`r")
+            if ($trimmed.StartsWith('```') -or $trimmed.Length -eq 0) { continue }
+            $tokens = $trimmed.Split([char[]]@(' ', "`t"), [System.StringSplitOptions]::RemoveEmptyEntries)
+            if ($tokens.Length -ge 2 -and $tokens[0] -in @('AddFeature', 'RemoveFeature', 'Combine')) {
+                $verb = $tokens[0]
+                $argParts = [string[]]@($tokens[1..($tokens.Length - 1)])
+                return [RepresentationMutation]::new($verb, $argParts)
             }
         }
         throw "Could not parse representation mutation from text: '$InputObject'"
