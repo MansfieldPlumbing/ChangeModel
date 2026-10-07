@@ -3,6 +3,7 @@
 Set-StrictMode -Version Latest
 
 . (Join-Path $PSScriptRoot '..\experiments\english-projection\expB\Projection.ps1')
+. (Join-Path $PSScriptRoot 'Refine.ps1')
 
 class PhonemeResult {
     [string]$OriginalText
@@ -27,6 +28,9 @@ class PhonemizerContext {
     [hashtable]$Gold
     [hashtable]$Silver
     [hashtable]$DecisionModels  # Homograph decision models
+    [object]$RefinementStore
+    [object]$CandidateRepresentation
+    [object]$RefinementResult
     [System.Collections.Generic.HashSet[char]]$KokoroVocab
     [System.Collections.Generic.HashSet[string]]$MultiWords
 
@@ -66,13 +70,45 @@ $script:GlobalContext = $null
 function Initialize-Phonemizer {
     param(
         [string]$GoldPath = (Join-Path $env:LOCALAPPDATA 'Build\PSPerception\inputs\misaki\us_gold.json'),
-        [string]$SilverPath = (Join-Path $env:LOCALAPPDATA 'Build\PSPerception\inputs\misaki\us_silver.json')
+        [string]$SilverPath = (Join-Path $env:LOCALAPPDATA 'Build\PSPerception\inputs\misaki\us_silver.json'),
+        [object[]]$Experience = @(),
+        [PhonemizerContext]$Context = $null
     )
 
-    $ctx = [PhonemizerContext]::new()
-    $ctx.LoadLexicons($GoldPath, $SilverPath)
+    $ctx = if ($null -ne $Context) {$Context} else {[PhonemizerContext]::new()}
+    if ($null -eq $Context) { $ctx.LoadLexicons($GoldPath, $SilverPath) }
     $script:GlobalContext = $ctx
+    if ($Experience.Count -gt 0) {
+        $observations=@(foreach ($row in $Experience) {
+            $result=Get-SmaPhonemes -Text $row.Sentence -Context $ctx
+            $decision=@($result.AmbiguousDecisions | Where-Object { $_.Word.ToLowerInvariant() -ceq $row.Word.ToLowerInvariant() })
+            if ($decision.Count -ne 1) { throw 'Training requires one unambiguous target span.' }
+            if ($row.ExpectedKey -cnotin @('DEFAULT','VERB')) { throw 'Context refinement supports default/verb observations.' }
+            [pscustomobject]@{SpecimenName=$row.SpecimenName;Sentence=$row.Sentence;Word=$row.Word;ExpectedKey=$row.ExpectedKey;CanonicalBefore=$decision[0].CanonicalContext;Action='ChoosePronunciation';ActualDelta=$(if ($row.ExpectedKey -ceq 'VERB') {1} else {0});Justifications=$decision[0].Justifications;ActiveAssumptions=@('projection')}
+        })
+        $judge={param($History,$Rep,$RepVersion) Measure-PhonemizerRepresentation -History $History -Rep $Rep -RepVersion $RepVersion -Context $ctx}.GetNewClosure()
+        $ctx.RefinementResult=Invoke-PerceptRefine -Experience $observations -Store $ctx.RefinementStore -NeutralBudget 0 -MaxIterations 3 -MeasureRepresentation $judge
+        $ctx.RefinementStore=$ctx.RefinementResult.Store
+    }
     $ctx
+}
+
+function Measure-PhonemizerRepresentation {
+    param([array]$History,[object]$Rep,[string]$RepVersion,[PhonemizerContext]$Context)
+    $replay=[Collections.Generic.List[object]]::new();$errors=0
+    $previous=$Context.CandidateRepresentation
+    try {
+        $Context.CandidateRepresentation=$Rep
+        foreach ($row in $History) {
+            $result=Get-SmaPhonemes -Text $row.Sentence -Context $Context
+            $decision=@($result.AmbiguousDecisions | Where-Object { $_.Word.ToLowerInvariant() -ceq $row.Word.ToLowerInvariant() })[0]
+            $expected=$Context.Gold[$row.Word][$row.ExpectedKey]
+            $wrong=[int]($decision.Pronunciation -cne $expected);$errors+=$wrong
+            $represented=$Rep.GetRepresentedState($row.CanonicalBefore)
+            $replay.Add((New-ObservationRecord -RepresentationVersion $RepVersion -CanonicalBefore $row.CanonicalBefore -RepresentedBefore $represented -Action $row.Action -PredictedDelta $(if ($decision.ChosenKey -ceq 'VERB') {1} else {0}) -ActualDelta $row.ActualDelta -PredictionError $wrong -ConditionKey (Get-ConditionKey $represented $row.Action)))
+        }
+    } finally { $Context.CandidateRepresentation=$previous }
+    [pscustomobject]@{Contradictions=0;PredictionError=$errors;RepresentationComplexity=$Rep.Features.Count;ReplayHistory=$replay}
 }
 
 function Get-SmaPhonemes {
@@ -201,6 +237,16 @@ function Get-SmaPhonemes {
             $prevWord = if ($i -gt 0) { $projWords[$i - 1].Text.Trim("',-._/;:!?«»‐—…`"“”()").ToLowerInvariant() } else { '<S>' }
             $nextWord = if ($i + 1 -lt $projWords.Count) { $projWords[$i + 1].Text.Trim("',-._/;:!?«»‐—…`"“”()").ToLowerInvariant() } else { '<E>' }
 
+            $canonicalContext=[pscustomobject]@{
+                AstArrayMembership=[int]($parent -is [System.Management.Automation.Language.ArrayLiteralAst])
+                DeterminerContext=[int]($prevWord -cin @('a','an','the'))
+                InfinitivalVerbContext=[int]($prevWord -ceq 'to' -and $entry.ContainsKey('VERB'))
+            }
+            $justifications=@(
+                [pscustomobject]@{Id='projection';DependsOn=@('predecessor');Relation='Contains';From='ProjectedCommand';To='TargetToken'},
+                [pscustomobject]@{Id='predecessor';DependsOn=@('context');Relation='PrecededBy';From='TargetToken';To='PreviousToken'},
+                [pscustomobject]@{Id='context';DependsOn=@();Relation='TestsApplicability';From='PreviousToken';To='InfinitivalVerbContext'}
+            )
             # If an active refinement / decision model exists, apply it
             if ($decisionModel) {
                 $matched = $false
@@ -226,6 +272,16 @@ function Get-SmaPhonemes {
                 }
             }
 
+            $active=$Context.CandidateRepresentation
+            if ($null -eq $active -and $null -ne $Context.RefinementStore) { $active=$Context.RefinementStore.Current.Representation }
+            if ($null -ne $active) {
+                foreach ($feature in $active.Features) {
+                    $property=$canonicalContext.PSObject.Properties[$feature]
+                    if ($null -ne $property -and $property.Value -eq 1 -and $entry.ContainsKey('VERB')) {
+                        $chosenKey='VERB';$ruleFired=$feature;$firedDelta='RetainedPercept';break
+                    }
+                }
+            }
             $selectedPron = if ($entry.ContainsKey($chosenKey)) { $entry[$chosenKey] } else { $entry['DEFAULT'] }
 
             $decisionRecord = [pscustomobject]@{
@@ -238,6 +294,10 @@ function Get-SmaPhonemes {
                 SmaFeatures    = $smaFeatureList.ToArray()
                 PrevWord       = $prevWord
                 NextWord       = $nextWord
+                SourceStart    = $sourceStart
+                SourceEnd      = $sourceEnd
+                CanonicalContext = $canonicalContext
+                Justifications = $justifications
             }
             $result.AmbiguousDecisions.Add($decisionRecord)
             $result.Provenance.Add("Word '$cleanWord' resolved to key '$chosenKey' via predicate '$ruleFired' (Delta: $firedDelta).")

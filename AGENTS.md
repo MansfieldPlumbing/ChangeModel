@@ -1,5 +1,7 @@
 # PSPerception Agent Guidance & Architectural Baseline
 
+No capability may be marked complete until it is integrated into the canonical execution path and demonstrated there by a behavioral gate. Isolated component completion is "implemented" or "proven locally," not "completed."
+
 > Every capability claim names a gate.  
 > A passing producer/reader pair is not independent evidence.  
 > State unproved work as unproved.  

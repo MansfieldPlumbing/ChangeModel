@@ -23,6 +23,7 @@ Set-StrictMode -Version Latest
 . (Join-Path $PSScriptRoot 'Proposal.ps1')
 . (Join-Path $PSScriptRoot 'Store.ps1')
 . (Join-Path $PSScriptRoot 'Analogy.ps1')
+. (Join-Path $PSScriptRoot 'Expectations.ps1')
 
 function Get-CollidingObservations {
     param(
@@ -172,14 +173,34 @@ function Invoke-PerceptRefine {
         [Representation]$InitialRepresentation = [Representation]::new(@()),
         [PerceptionStore]$Store = $null,
         [int]$NeutralBudget = 2,
-        [int]$MaxIterations = 20
+        [int]$MaxIterations = 20,
+        [scriptblock]$MeasureRepresentation = $null
     )
 
+    $measure=if ($null -ne $MeasureRepresentation) {$MeasureRepresentation} else {'Measure-Representation'}
     $currentRep = $InitialRepresentation
-    $currentMeasure = Measure-Representation -History $Experience -Rep $currentRep -RepVersion "V_Initial"
+    $currentMeasure = & $measure -History $Experience -Rep $currentRep -RepVersion "V_Initial"
 
     if ($null -eq $Store) {
         $Store = New-PerceptionStore -InitialRepresentation $currentRep -InitialDelta $currentMeasure
+    } else {
+        # A new specimen may start with a different projection. Preserve learned
+        # ancestry while recording the caller's baseline using existing mutations.
+        $baseline=$Store.Current.Representation
+        foreach ($feature in @($baseline.Features)) {
+            if ($feature -notin $currentRep.Features) {
+                $reset=[RepresentationMutation]::new('RemoveFeature',@($feature))
+                $baseline=Invoke-ApplyMutation $baseline $reset
+                [void]$Store.RecordTransition($Store.Current,$baseline,@(),@(),$Store.Current.DeltaAfter,$currentMeasure,'kept',$reset)
+            }
+        }
+        foreach ($feature in $currentRep.Features) {
+            if ($feature -notin $baseline.Features) {
+                $reset=[RepresentationMutation]::new('AddFeature',@($feature))
+                $baseline=Invoke-ApplyMutation $baseline $reset
+                [void]$Store.RecordTransition($Store.Current,$baseline,@(),@(),$Store.Current.DeltaAfter,$currentMeasure,'kept',$reset)
+            }
+        }
     }
 
     $remainingNeutralBudget = $NeutralBudget
@@ -196,6 +217,29 @@ function Invoke-PerceptRefine {
     while ($refineIterations -lt $MaxIterations) {
         $refineIterations++
 
+        # Capture predictions before their corresponding outcomes in the replay.
+        # Observation adapters may supply data-only structural justification;
+        # the engine owns expectation construction, attribution, and retrieval.
+        $attributions=[Collections.Generic.List[object]]::new()
+        for ($i=0;$i -lt $Experience.Count;$i++) {
+            $record=$Experience[$i];$prediction=$currentMeasure.ReplayHistory[$i]
+            $claims=@();$dependencies=@()
+            if ($null -ne $record.PSObject.Properties['Justifications']) { $claims=@($record.Justifications) }
+            if ($null -ne $record.PSObject.Properties['ActiveAssumptions']) { $dependencies=@($record.ActiveAssumptions) }
+            $claims+= [pscustomobject]@{Id='/refine/prediction';DependsOn=$dependencies;Relation=$null;From=$null;To=$null}
+            $expected=[Convert]::ToString($prediction.PredictedDelta,[Globalization.CultureInfo]::InvariantCulture)
+            $observed=[Convert]::ToString($prediction.ActualDelta,[Globalization.CultureInfo]::InvariantCulture)
+            $expectation=New-PerceptExpectation -Specimen $record.SpecimenName -RepresentationId $Store.Current.Id -PredictedOutcome $expected -ActiveAssumptions @('/refine/prediction') -Justifications $claims
+            $surprise=Measure-PerceptSurprise $expectation $observed
+            $attribution=Get-SurpriseAttribution $surprise
+            if ($surprise.Mismatch) { $attributions.Add($attribution) }
+            $Store.RecordReceipt((New-PerceptionReceipt -Case ('prediction:'+ $record.SpecimenName) -ReferenceChoice $observed -CandidateChoice $expected -Before $expectation -After $surprise -Outcome $(if ($surprise.Mismatch) {'rejected'} else {'kept'}) -CompiledConsequence $attribution))
+        }
+        $pattern=@()
+        foreach ($attribution in $attributions) {
+            if ($attribution.Pattern.Count -gt 0) { $pattern=$attribution.Pattern;break }
+        }
+
         # Target: zero contradictions and calibrated predictions
         if ($currentMeasure.Contradictions -eq 0 -and $currentMeasure.PredictionError -eq 0) {
             break
@@ -207,7 +251,7 @@ function Invoke-PerceptRefine {
         # Step 2: Classify the delta (wrong value, representation collision, or missing operation)
         $classification = Get-DeltaClassification -Measure $currentMeasure -Collisions $collisions -Experience $Experience
 
-        if ($classification -eq 'wrong value') {
+        if ($classification -eq 'wrong value' -and $null -eq $MeasureRepresentation) {
             # Predictor table values need calibration from observed experience (parametric calibration)
             $Store.RecordReceipt((New-PerceptionReceipt `
                 -Case "refine_iter_$refineIterations" `
@@ -231,7 +275,7 @@ function Invoke-PerceptRefine {
                 [void]$stateStack.Pop()
                 $previousNode = $stateStack.Peek()
                 $currentRep = $previousNode.Representation
-                $currentMeasure = Measure-Representation -History $Experience -Rep $currentRep -RepVersion "V_ChronologicalBacktrack"
+                $currentMeasure = & $measure -History $Experience -Rep $currentRep -RepVersion "V_ChronologicalBacktrack"
                 $Store.Current = $previousNode
                 continue
             }
@@ -246,8 +290,19 @@ function Invoke-PerceptRefine {
         # Step 3: Propose from the store first, then from a fixed percept grammar
         $candidateProposals = [System.Collections.Generic.List[RepresentationMutation]]::new()
 
+        if ($pattern.Count -gt 0) {
+            $retrieved=Get-AnalogicalPerceptProposals -Pattern $pattern -Store $Store -InferRelationBindings
+            foreach ($bound in $retrieved.Proposals) {
+                $candidate=$bound.Mutation
+                if (@($candidate.Arguments | Where-Object { $_ -notin $diffAttrs }).Count -eq 0 -and -not $triedMutationsOnNode[$activeNode.Id].Contains($candidate.ToString())) {
+                    $candidateProposals.Add($candidate)
+                }
+            }
+        }
+
         # 3a. Propose from store first
-        foreach ($node in $Store.AllNodes) {
+        $node=$Store.Current;$nodesVisited=0
+        while ($null -ne $node -and $nodesVisited++ -lt 256) {
             if ($node.Outcome -eq 'kept' -and $node.Proposal) {
                 $propStr = $node.Proposal.ToString()
                 if (-not $triedMutationsOnNode[$activeNode.Id].Contains($propStr)) {
@@ -260,6 +315,7 @@ function Invoke-PerceptRefine {
                     }
                 }
             }
+            $node=if ($node.Parents.Count -gt 0) {$node.Parents[0]} else {$null}
         }
 
         # 3b. Propose from fixed percept grammar
@@ -276,14 +332,15 @@ function Invoke-PerceptRefine {
                 [void]$stateStack.Pop()
                 $previousNode = $stateStack.Peek()
                 $currentRep = $previousNode.Representation
-                $currentMeasure = Measure-Representation -History $Experience -Rep $currentRep -RepVersion "V_ChronologicalBacktrack"
+                $currentMeasure = & $measure -History $Experience -Rep $currentRep -RepVersion "V_ChronologicalBacktrack"
                 $Store.Current = $previousNode
                 continue
             }
             break
         }
 
-        $evidenceIdentity = Get-RefinementEvidenceIdentity -Experience $Experience -Representation $currentRep
+        # Existing rejection identities cover the default judge only.
+        $evidenceIdentity = if ($null -eq $MeasureRepresentation) { Get-RefinementEvidenceIdentity -Experience $Experience -Representation $currentRep } else { '' }
         $proposal = $null
         foreach ($candidate in $candidateProposals) {
             $priorEvidence = Get-PerceptProposalHistory -Mutation $candidate -Store $Store -EvidenceIdentity $evidenceIdentity
@@ -297,6 +354,8 @@ function Invoke-PerceptRefine {
         }
         if ($null -eq $proposal) { continue }
         $proposal.EvidenceIdentity = $evidenceIdentity
+        $proposal.Pattern=@($pattern)
+        $proposal.Evidence=[string[]]@($Experience.SpecimenName)
         [void]$triedMutationsOnNode[$activeNode.Id].Add($proposal.ToString())
 
         # Step 4: Apply reversibly
@@ -309,7 +368,7 @@ function Invoke-PerceptRefine {
         # 2. PredictionError (lower is strictly better)
         # 3. Complexity (lower is strictly better, when Contradictions == 0)
         # Fixed budget of neutral moves
-        $candidateMeasure = Measure-Representation -History $Experience -Rep $candidateRep -RepVersion "V_Candidate"
+        $candidateMeasure = & $measure -History $Experience -Rep $candidateRep -RepVersion "V_Candidate"
         $candidateEvaluations++
 
         $isBetter = $false
@@ -353,7 +412,7 @@ function Invoke-PerceptRefine {
         # Neutral-budget rejection is not evidence of a failed distinction.
         $proposal.ReusableRejection = ($outcome -eq 'rejected' -and -not $isNeutral)
         $perceptsIntroduced = [string[]]@($proposal.Arguments)
-        $contradictionKeys = @($collisions | ForEach-Object { $_.ConditionKey } | Select-Object -Unique)
+        $contradictionKeys = @($collisions | ForEach-Object { $_.ConditionKey } | Select-Object -Unique)+$attributions.ToArray()
 
         $newNode = $Store.RecordTransition(
             $activeNode,
