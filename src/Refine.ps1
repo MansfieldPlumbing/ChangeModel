@@ -187,7 +187,8 @@ function Invoke-PerceptRefine {
     $refineIterations = 0
     $triedMutationsOnNode = @{}
 
-    # Dependency-directed backtracking: stack of active state nodes in provenance graph
+    # Chronological backtracking: stack of kept state nodes in the provenance graph.
+    # A dead end pops the most recent node; it does not trace justifications to a culprit.
     $stateStack = [System.Collections.Generic.Stack[PerceptionProvenanceNode]]::new()
     $stateStack.Push($Store.Current)
 
@@ -224,13 +225,13 @@ function Invoke-PerceptRefine {
         $diffAttrs = Get-DifferingObservationAttributes -Collisions $collisions -CurrentRepresentation $currentRep
 
         if ($diffAttrs.Length -eq 0) {
-            # No differing attributes among colliding observations; backtrack via dependency-directed link
+            # No differing attributes among colliding observations; backtrack chronologically to the previous kept node
             if ($stateStack.Count -gt 1) {
                 [void]$stateStack.Pop()
-                $backtrackNode = $stateStack.Peek()
-                $currentRep = $backtrackNode.Representation
-                $currentMeasure = Measure-Representation -History $Experience -Rep $currentRep -RepVersion "V_Backtrack"
-                $Store.Current = $backtrackNode
+                $previousNode = $stateStack.Peek()
+                $currentRep = $previousNode.Representation
+                $currentMeasure = Measure-Representation -History $Experience -Rep $currentRep -RepVersion "V_ChronologicalBacktrack"
+                $Store.Current = $previousNode
                 continue
             }
             break
@@ -272,10 +273,10 @@ function Invoke-PerceptRefine {
         if ($candidateProposals.Count -eq 0) {
             if ($stateStack.Count -gt 1) {
                 [void]$stateStack.Pop()
-                $backtrackNode = $stateStack.Peek()
-                $currentRep = $backtrackNode.Representation
-                $currentMeasure = Measure-Representation -History $Experience -Rep $currentRep -RepVersion "V_Backtrack"
-                $Store.Current = $backtrackNode
+                $previousNode = $stateStack.Peek()
+                $currentRep = $previousNode.Representation
+                $currentMeasure = Measure-Representation -History $Experience -Rep $currentRep -RepVersion "V_ChronologicalBacktrack"
+                $Store.Current = $previousNode
                 continue
             }
             break

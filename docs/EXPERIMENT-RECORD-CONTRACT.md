@@ -19,7 +19,7 @@ Key invariants:
   - A pairwise preference is not semantic proof.
   - A missing measurement is not zero.
   - A runtime performance cost is not a parse failure.
-- **Steering vs. Retention**: The delta (reference minus candidate) only steers the search; percepts are what the engine keeps. Backtracking is dependency-directed.
+- **Steering vs. Retention**: The delta (reference minus candidate) only steers the search; percepts are what the engine keeps. Backtracking is currently chronological (most recent kept state); dependency-directed backtracking is not implemented.
 
 ---
 

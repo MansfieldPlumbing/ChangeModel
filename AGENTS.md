@@ -10,13 +10,13 @@
 
 ## 1. Authoritative Intent
 
-PSPerception is counterexample-guided percept refinement. It proposes reversible changes, measures each against fixed gates, keeps or reverts, stores every kept and rejected move in a provenance graph, and hands kept percepts to PSLowering to compile into CoreLib-only code. The delta (reference minus candidate) only steers the search; percepts are what it keeps. Don't call the delta a gradient or the backward walk backpropagation. Use "dependency-directed backtracking".
+PSPerception is counterexample-guided percept refinement. It proposes reversible changes, measures each against fixed gates, keeps or reverts, stores every kept and rejected move in a provenance graph, and hands kept percepts to PSLowering to compile into CoreLib-only code. The delta (reference minus candidate) only steers the search; percepts are what it keeps. Don't call the delta a gradient or the backward walk backpropagation. The implemented backward walk is chronological backtracking: at a dead end it returns to the most recent kept state. Dependency-directed backtracking is the intended replacement and is not implemented; don't call the current walk dependency-directed.
 
 - **Traceable Representation Layers**: Authored source, tokens, AST, semantic structure, and runtime behavior remain distinct and traceable.
 - **Error vs. Incapacity**: Distinguish incorrect predictions (parametric error) from a representation incapable of expressing the observed distinction (structural residual / representational insufficiency).
 - **Admitted Structural Search**: Search over structural mutations under deterministic semantic admission.
 - **Provenance Retention**: Preserve provenance and expandable underlying structure across transformations via the in-memory provenance graph (`src/Store.ps1`).
-- **Dependency-Directed Backtracking**: Search is steered by localized deltas and guided by justifying contradictions, avoiding blind chronological backtracking.
+- **Dependency-Directed Backtracking (target)**: Search is steered by localized deltas and, at a dead end, returns to the culprit identified by justifying contradictions rather than to the most recent state. `src/Refine.ps1` currently backtracks chronologically.
 - **Persistent Logical Identity**: Stable structures may eventually become compiled managed regions via PSLowering; the persistent logical structure, not the emitted assembly, owns identity.
 - **Proposal Separation**: Proposers are evaluated against fixed gates; proposals come from the store first, then from a fixed percept grammar.
 

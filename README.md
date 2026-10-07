@@ -10,7 +10,7 @@
 
 ## 1. Executive Summary & Authoritative Intent
 
-PSPerception is counterexample-guided percept refinement. It proposes reversible changes, measures each against fixed gates, keeps or reverts, stores every kept and rejected move in a provenance graph, and hands kept percepts to PSLowering to compile into CoreLib-only code. The delta (reference minus candidate) only steers the search; percepts are what it keeps. Don't call the delta a gradient or the backward walk backpropagation. Use "dependency-directed backtracking".
+PSPerception is counterexample-guided percept refinement. It proposes reversible changes, measures each against fixed gates, keeps or reverts, stores every kept and rejected move in a provenance graph, and hands kept percepts to PSLowering to compile into CoreLib-only code. The delta (reference minus candidate) only steers the search; percepts are what it keeps. Don't call the delta a gradient or the backward walk backpropagation. The implemented backward walk is chronological backtracking: at a dead end it returns to the most recent kept state. Dependency-directed backtracking is the intended replacement and is not implemented; don't call the current walk dependency-directed.
 
 - **Traceable Representation Layers**: Authored source, tokens, AST, semantic structure, and runtime behavior remain distinct and traceable.
 - **Error vs. Incapacity**: It separates **parametric error** ("wrong") from **representational insufficiency** ("not even wrong"):
@@ -18,7 +18,7 @@ PSPerception is counterexample-guided percept refinement. It proposes reversible
   - *Not Even Wrong (Structural Contradiction)*: The representation $\mathcal{R}_0$ projects causally distinct states onto identical coordinate points, producing mutually exclusive transitions from identical feature vectors ($\text{Contradictions} > 0$). No parameter regression, weight adjustment, or statistical scaling can eliminate this error—the model suffers from a **structural residual**. Search over structural mutations discovers missing causal dimensions ($\mathcal{R}_0 \to \mathcal{R}^*$).
 - **Deterministic Semantic Admission**: Structural mutations are explored under deterministic semantic admission rules rather than unrestrained generation.
 - **Provenance Retention**: Provenance and expandable underlying structure are preserved across mutations via the in-memory provenance graph (`src/Store.ps1`).
-- **Dependency-Directed Backtracking**: Search is steered by localized deltas and guided by justifying contradictions, avoiding blind chronological backtracking.
+- **Dependency-Directed Backtracking (target)**: Search is steered by localized deltas and, at a dead end, returns to the culprit identified by justifying contradictions rather than to the most recent state. `src/Refine.ps1` currently backtracks chronologically.
 - **Persistent Logical Identity**: Stable structures may eventually become compiled managed regions via `PSLowering`; the persistent logical structure, not the emitted assembly, owns identity.
 - **Proposal Separation**: Proposers are evaluated against fixed gates; proposals come from the store first, then from a fixed percept grammar.
 
@@ -171,12 +171,13 @@ To maintain strict epistemological rigor, implemented capabilities must be expli
 - Live runtime predicate materialization into PowerShell ETS with callsite invalidation and reversible rollback (Gate 6).
 - Bounded process-death state reconstruction using `.psd1` mutation journals, restoring tokenizer states and rolling back via exact inverses (Gate 7).
 - In-memory provenance graph recording live state transitions, kept and rejected moves, and replay from scratch (`src/Store.ps1`, Gate 8).
-- Counterexample-guided percept refinement loop with attribute differencing pruning at combination depth $\le 2$, strictly ordered lexicographic gates, and dependency-directed backtracking (`src/Refine.ps1`, Gate 8).
+- Counterexample-guided percept refinement loop with attribute differencing pruning at combination depth $\le 2$, strictly ordered lexicographic gates, and chronological backtracking to the most recent kept state (`src/Refine.ps1`, Gate 8).
 - Versioned live receipts exchange contract ([`docs/EXPERIMENT-RECORD-CONTRACT.md`](docs/EXPERIMENT-RECORD-CONTRACT.md)).
 
 ### Remaining Proposals & Unimplemented Work
 - **Autonomous End-to-End Pipeline**: Currently, the refine loop executes on candidate batches; continuous autonomous integration with live compiler streams is future work.
 - **Reflective Tokens & Evolving Grammar**: Modifying token definitions or parsing grammars dynamically at runtime beyond SMA `DynamicKeyword` is unimplemented.
 - **General Structural AST Mutation Search**: Search is currently bounded to feature selection and boolean compositions; arbitrary AST rewriting under semantic admission is unimplemented.
+- **Dependency-Directed Backtracking**: The refine loop backtracks chronologically. Walking recorded justifications back to the culprit assumption (Doyle TMS, de Kleer ATMS) and minimizing the culprit set by subset search (delta debugging) is unimplemented.
 - **Memory-Layout Optimization**: No memory-layout or cache-locality optimization is performed.
 - **Managed-Assembly Promotion via PSLowering**: Compiling stable learned percepts into persisted, managed assembly regions via `PSLowering` is the intended compilation target.
