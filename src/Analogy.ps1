@@ -1,5 +1,68 @@
 Set-StrictMode -Version Latest
 
+function Get-RefinementEvidenceIdentity {
+    param([Parameter(Mandatory)][array]$Experience,[Parameter(Mandatory)][Representation]$Representation)
+    # Cache only bounded primitive observations. Unsupported state disables reuse.
+    if ($Experience.Count -gt 4096 -or $Representation.Features.Count -gt 64) { return '' }
+    $text=[Text.StringBuilder]::new()
+    [void]$text.Append('LexicographicAdmission-v1;')
+    [void]$text.Append($PSVersionTable.PSVersion.ToString()+';')
+    [void]$text.Append([Runtime.InteropServices.RuntimeInformation]::FrameworkDescription+';')
+    [void]$text.Append([System.Management.Automation.PSObject].Assembly.ManifestModule.ModuleVersionId.ToString()+';')
+    [void]$text.Append([object].Assembly.ManifestModule.ModuleVersionId.ToString()+';')
+    [void]$text.Append([Globalization.CultureInfo]::CurrentCulture.Name+';')
+    [void]$text.Append('features:'+ $Representation.Features.Count.ToString()+';')
+    foreach ($feature in $Representation.Features) {
+        if ($feature.Length -gt 4096) { return '' }
+        [void]$text.Append($feature.Length.ToString()+':'+$feature)
+    }
+    [void]$text.Append('records:'+ $Experience.Count.ToString()+';')
+    foreach ($record in $Experience) {
+        $values=[Collections.Generic.List[object]]::new()
+        foreach ($field in @('SpecimenName','Action','ActualDelta')) {
+            $property=$record.PSObject.Properties[$field]
+            $values.Add($field);$values.Add($(if ($null -ne $property) {$property.Value} else {$null}))
+        }
+        $properties=@($record.CanonicalBefore.PSObject.Properties | Sort-Object Name -CaseSensitive)
+        if ($properties.Count -gt 64) { return '' }
+        $values.Add('CanonicalBefore');$values.Add($properties.Count)
+        foreach ($property in $properties) { $values.Add($property.Name);$values.Add($property.Value) }
+        foreach ($value in $values) {
+            $part=if ($null -eq $value) { 'null' }
+                elseif ($value -is [string]) { 'string:'+ $value }
+                elseif ($value -is [int]) { 'int:'+ $value.ToString([Globalization.CultureInfo]::InvariantCulture) }
+                elseif ($value -is [long]) { 'long:'+ $value.ToString([Globalization.CultureInfo]::InvariantCulture) }
+                elseif ($value -is [bool]) { 'bool:'+ $value.ToString() }
+                else { return '' }
+            if ($part.Length -gt 4096 -or $text.Length+$part.Length+16 -gt 1048576) { return '' }
+            [void]$text.Append($part.Length.ToString()+':'+$part)
+        }
+        [void]$text.Append(';record;')
+    }
+    # Include the authored admission/predictor implementation in rejection scope.
+    foreach ($name in @('Refine.ps1','Prediction.ps1','Representation.ps1','Proposal.ps1','ObservationRecord.ps1','Analogy.ps1')) {
+        [void]$text.Append((Get-FileHash -LiteralPath (Join-Path $PSScriptRoot $name) -Algorithm SHA256).Hash)
+    }
+    [Convert]::ToHexString([Security.Cryptography.SHA256]::HashData([Text.Encoding]::UTF8.GetBytes($text.ToString())))
+}
+
+function Get-PerceptProposalHistory {
+    [CmdletBinding()]
+    param([Parameter(Mandatory)][RepresentationMutation]$Mutation,[Parameter(Mandatory)][PerceptionStore]$Store,[string]$EvidenceIdentity,[ValidateRange(1,4096)][int]$NodeBudget=256)
+    $rejections=0;$inspected=0;$sources=[Collections.Generic.List[string]]::new()
+    if (-not $EvidenceIdentity) { return [pscustomobject]@{ReusableRejections=0;NodesInspected=0;SourceNodes=@();Scope='Unavailable';Truncated=$false} }
+    for ($i=$Store.AllNodes.Count-1;$i -ge 0 -and $inspected -lt $NodeBudget;$i--) {
+        $inspected++;$node=$Store.AllNodes[$i]
+        if ($node.Outcome -cne 'rejected' -or $node.Parents.Count -eq 0 -or $node.Parents[0].Id -cne $Store.Current.Id -or $node.Proposal -isnot [RepresentationMutation]) { continue }
+        $prior=$node.Proposal
+        if (-not $prior.ReusableRejection -or $prior.EvidenceIdentity -cne $EvidenceIdentity -or $prior.Verb -cne $Mutation.Verb -or $prior.Arguments.Count -ne $Mutation.Arguments.Count) { continue }
+        $same=$true
+        for ($j=0;$j -lt $prior.Arguments.Count;$j++) { if ($prior.Arguments[$j] -cne $Mutation.Arguments[$j]) { $same=$false;break } }
+        if ($same) { $rejections++;$sources.Add($node.Id) }
+    }
+    [pscustomobject]@{ReusableRejections=$rejections;NodesInspected=$inspected;SourceNodes=$sources.ToArray();Scope='SameRepresentationEvidenceAndAdmission';Truncated=($Store.AllNodes.Count -gt $inspected)}
+}
+
 function Test-PerceptRelationPattern {
     param([object[]]$Pattern)
     if ($Pattern.Count -eq 0 -or $Pattern.Count -gt 8) { throw 'A relation pattern requires one to eight edges.' }

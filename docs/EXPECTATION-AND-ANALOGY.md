@@ -40,6 +40,19 @@ and supporting specimen identities. Store transitions snapshot those fields
 and arguments rather than sharing mutable proposal inputs. Existing feature
 mutation replay remains unchanged.
 
+Rejected proposal evidence can be reused only under the same provenance state,
+bounded primitive observation snapshot, runtime identity, and authored admission
+implementation. `Get-PerceptProposalHistory` compares mutation arguments exactly
+and reports the source rejection nodes. The refinement loop skips a previously
+evaluated strict fitness failure under that scope. Exhausting a neutral-move
+budget is not a reusable rejection. Unsupported observation types disable this
+reuse rather than acquiring an approximate identity. Search counters distinguish
+candidate evaluations from reused rejection evidence.
+
+The gate demonstrates two candidate evaluations becoming one on continuation
+from an actual rejected proposal, with the same final admitted result. This is
+same-context reuse, not held-out analogical search reduction or intuition.
+
 The gate `tests/Gate9-InferenceContracts.ps1` checks these contracts with
 independently specified expected values and graph mappings. Its fixtures
 establish mechanics only. They do not establish phonemizer correctness,

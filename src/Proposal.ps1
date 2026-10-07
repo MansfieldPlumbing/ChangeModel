@@ -3,6 +3,8 @@ class RepresentationMutation {
     [string[]]$Arguments
     [object[]]$Pattern = @()
     [string[]]$Evidence = @()
+    [string]$EvidenceIdentity = ''
+    [bool]$ReusableRejection = $false
 
     RepresentationMutation([string]$verb, [string[]]$arguments) {
         $this.Verb = $verb
@@ -34,6 +36,8 @@ function Copy-RepresentationMutation {
     }
     $copy.Pattern = $pattern.ToArray()
     $copy.Evidence = [string[]]$Mutation.Evidence.Clone()
+    $copy.EvidenceIdentity = $Mutation.EvidenceIdentity
+    $copy.ReusableRejection = $Mutation.ReusableRejection
     return $copy
 }
 

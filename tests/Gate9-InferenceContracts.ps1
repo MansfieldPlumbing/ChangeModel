@@ -54,5 +54,31 @@ Assert-That ((Find-PerceptRoleBinding $ambiguousSource $ambiguousTarget).Status 
 Assert-That ((Find-PerceptRoleBinding $attribution.Pattern $target -BindingBudget 1).Status -ceq 'BudgetExhausted') 'Binding budget was not enforced.'
 $store.Current=$store.Root
 Assert-That ((Get-AnalogicalPerceptProposals $target $store).Proposals.Count -eq 0) 'Abandoned kept branch was retrieved as active knowledge.'
+$experience=@(
+    [pscustomobject]@{SpecimenName='a';CanonicalBefore=[pscustomobject]@{X=5;ANoise=1;Direction=1};Action='Step';ActualDelta=1},
+    [pscustomobject]@{SpecimenName='b';CanonicalBefore=[pscustomobject]@{X=5;ANoise=2;Direction=1};Action='Step';ActualDelta=1},
+    [pscustomobject]@{SpecimenName='c';CanonicalBefore=[pscustomobject]@{X=5;ANoise=1;Direction=-1};Action='Step';ActualDelta=-1},
+    [pscustomobject]@{SpecimenName='d';CanonicalBefore=[pscustomobject]@{X=5;ANoise=2;Direction=-1};Action='Step';ActualDelta=-1}
+)
+$cold=Invoke-PerceptRefine -Experience $experience -InitialRepresentation $initial -MaxIterations 2
+$first=Invoke-PerceptRefine -Experience $experience -InitialRepresentation $initial -MaxIterations 1
+Assert-That ($first.Store.Current.Id -ceq 'state_0' -and $first.CandidateEvaluations -eq 1) 'Fixture did not retain an actual failed proposal.'
+$continued=Invoke-PerceptRefine -Experience $experience -InitialRepresentation $initial -Store $first.Store -MaxIterations 2
+Assert-That ($cold.CandidateEvaluations -eq 2 -and $continued.CandidateEvaluations -eq 1 -and $continued.ReusedRejections -eq 1) 'Experience did not eliminate the repeated failed evaluation.'
+Assert-That ($continued.FinalMeasure.Contradictions -eq $cold.FinalMeasure.Contradictions -and $continued.FinalMeasure.PredictionError -eq $cold.FinalMeasure.PredictionError) 'Proposal reuse changed the admitted result.'
+$failed=$first.Store.GetRejectedTransitions()[0]
+$candidate=[RepresentationMutation]::new('AddFeature',[string[]]@('ANoise'))
+$first.Store.Current=$first.Store.Root
+$identity=Get-RefinementEvidenceIdentity $experience $initial
+Assert-That ((Get-PerceptProposalHistory $candidate $first.Store $identity).ReusableRejections -eq 1) 'Exact rejection evidence was not retrieved.'
+$experience[3].ActualDelta=-2
+$changedIdentity=Get-RefinementEvidenceIdentity $experience $initial
+Assert-That ($identity -cne $changedIdentity -and (Get-PerceptProposalHistory $candidate $first.Store $changedIdentity).ReusableRejections -eq 0) 'Changed outcomes inherited a rejection from another context.'
+$experience[3].ActualDelta=-1
+$failed.Proposal.ReusableRejection=$false
+Assert-That ((Get-PerceptProposalHistory $candidate $first.Store $identity).ReusableRejections -eq 0) 'A neutral-budget rejection was treated as failed knowledge.'
+$experience[0].CanonicalBefore | Add-Member -NotePropertyName Unsupported -NotePropertyValue ([pscustomobject]@{Nested=1})
+Assert-That ((Get-RefinementEvidenceIdentity $experience $initial) -ceq '') 'Unsupported state silently gained a cache identity.'
+'SameContextCandidateEvaluations='+$cold.CandidateEvaluations+' -> '+$continued.CandidateEvaluations
 'GATE_INFERENCE_CONTRACT=PASS; Checks='+$checks
 'Scope=Expectation provenance and relation retrieval; synthetic schema fixtures; no domain correctness claim'

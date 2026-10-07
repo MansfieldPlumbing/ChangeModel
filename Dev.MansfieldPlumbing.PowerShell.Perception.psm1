@@ -23,6 +23,7 @@ Export-ModuleMember -Function @(
     'Get-SurpriseAttribution'
     'Find-PerceptRoleBinding'
     'Get-AnalogicalPerceptProposals'
+    'Get-PerceptProposalHistory'
     'New-PerceptionStore'
     'New-PerceptionReceipt'
     'Invoke-PerceptRefine'

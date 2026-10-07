@@ -22,6 +22,7 @@ Set-StrictMode -Version Latest
 . (Join-Path $PSScriptRoot 'Prediction.ps1')
 . (Join-Path $PSScriptRoot 'Proposal.ps1')
 . (Join-Path $PSScriptRoot 'Store.ps1')
+. (Join-Path $PSScriptRoot 'Analogy.ps1')
 
 function Get-CollidingObservations {
     param(
@@ -186,6 +187,8 @@ function Invoke-PerceptRefine {
     $remainingNeutralBudget = $NeutralBudget
     $refineIterations = 0
     $triedMutationsOnNode = @{}
+    $candidateEvaluations = 0
+    $reusedRejections = 0
 
     # Chronological backtracking: stack of kept state nodes in the provenance graph.
     # A dead end pops the most recent node; it does not trace justifications to a culprit.
@@ -282,7 +285,20 @@ function Invoke-PerceptRefine {
             break
         }
 
-        $proposal = $candidateProposals[0]
+        $evidenceIdentity = Get-RefinementEvidenceIdentity -Experience $Experience -Representation $currentRep
+        $proposal = $null
+        foreach ($candidate in $candidateProposals) {
+            $priorEvidence = Get-PerceptProposalHistory -Mutation $candidate -Store $Store -EvidenceIdentity $evidenceIdentity
+            if ($priorEvidence.ReusableRejections -gt 0) {
+                $reusedRejections++
+                [void]$triedMutationsOnNode[$activeNode.Id].Add($candidate.ToString())
+                continue
+            }
+            $proposal = $candidate
+            break
+        }
+        if ($null -eq $proposal) { continue }
+        $proposal.EvidenceIdentity = $evidenceIdentity
         [void]$triedMutationsOnNode[$activeNode.Id].Add($proposal.ToString())
 
         # Step 4: Apply reversibly
@@ -296,6 +312,7 @@ function Invoke-PerceptRefine {
         # 3. Complexity (lower is strictly better, when Contradictions == 0)
         # Fixed budget of neutral moves
         $candidateMeasure = Measure-Representation -History $Experience -Rep $candidateRep -RepVersion "V_Candidate"
+        $candidateEvaluations++
 
         $isBetter = $false
         $isNeutral = $false
@@ -335,6 +352,8 @@ function Invoke-PerceptRefine {
         }
 
         # Step 7: Record in Store provenance graph (both kept and rejected moves)
+        # Neutral-budget rejection is not evidence of a failed distinction.
+        $proposal.ReusableRejection = ($outcome -eq 'rejected' -and -not $isNeutral)
         $perceptsIntroduced = [string[]]@($proposal.Arguments)
         $contradictionKeys = @($collisions | ForEach-Object { $_.ConditionKey } | Select-Object -Unique)
 
@@ -376,5 +395,7 @@ function Invoke-PerceptRefine {
         Iterations                = $refineIterations
         ReachedZeroContradictions = ($currentMeasure.Contradictions -eq 0)
         RemainingNeutralBudget    = $remainingNeutralBudget
+        CandidateEvaluations      = $candidateEvaluations
+        ReusedRejections          = $reusedRejections
     }
 }
