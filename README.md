@@ -8,6 +8,59 @@
 
 ---
 
+## Current integrated milestone
+
+PSPerception is a domain-independent percept refinement system. Phonemization is
+its first measured application; TypeScript-to-CoreCLR execution remains a target,
+not a demonstrated capability. The retained representation and independent
+admission judges define the system, rather than the vocabulary of an application.
+
+The ordinary phonemizer path now runs an automatic greedy learning cycle:
+
+```text
+Get-SmaPhonemes predictions and justification
+→ structural error grouping and experience retrieval
+→ candidate proposals through Invoke-PerceptRefine
+→ independent emitted-phone admission on construction-excluded identities
+→ keep/reject with retained provenance
+→ rerun predictions until no candidate passes
+```
+
+[Gate 11](tests/Gate11-AutomaticPhonemizer.ps1) starts with a fresh store and
+selects two transferable percepts without caller-selected rules or manually
+installed percepts. The normal phonemizer consumes retained state.
+
+| Representation | Mapped phone micro | Mapped phone macro | Diagnostic fixes / regressions |
+|---|---:|---:|---:|
+| Baseline | 67.99% | 68.25% | — |
+| Learned determiner context → NOUN | 73.13% | 73.33% | +62 / −1 |
+| Added infinitival context → VERB | 77.34% | 77.53% | +52 / −2 |
+
+The total gain is **9.35 percentage points micro, with 111 net fixes**.
+Lexically disjoint admission measured +6/−0 and +4/−0 respectively. Removing
+learned state restores exact baseline phones. Repeating terminal search with
+the same evidence reduces candidate evaluations from 2 to 0 through rejection
+memory. Gate 10 separately demonstrates unseen analogical search reduction.
+
+These phone results cover **1,187 of 1,615 cases**; 428 remain unscored under
+the conservative reference mapping. The full score is diagnostic, and the
+admission slice is consulted repeatedly. This is neither an untouched final
+validation score nor a head-to-head Misaki comparison. Historical WORDID
+classification accuracy is a separate metric. Observable invention, calibrated
+surprisal reduction, full phone-reference coverage, cross-domain transfer, and
+CoreLib-only lowering of this learned path remain unproved.
+
+The [frozen receipt and reproduction instructions](docs/AUTOMATIC-PHONEMIZER-REFINEMENT.md)
+specify pinned inputs, exact counts, runtime, and limitations. The measured host
+was PowerShell 7.7.0-preview.3 on .NET 11 preview 6, not RC1.
+
+**Completion rule:** No capability may be marked complete until it is integrated
+into the canonical execution path and demonstrated there by a behavioral gate.
+Isolated component completion is “implemented” or “proven locally,” not
+“completed.”
+
+---
+
 ## 1. Executive Summary & Authoritative Intent
 
 PSPerception is counterexample-guided percept refinement. It proposes reversible changes, measures each against fixed gates, keeps or reverts, stores every kept and rejected move in a provenance graph, and hands kept percepts to PSLowering to compile into CoreLib-only code. The delta (reference minus candidate) only steers the search; percepts are what it keeps. Don't call the delta a gradient or the backward walk backpropagation. The implemented backward walk is chronological backtracking: at a dead end it returns to the most recent kept state. Dependency-directed backtracking is the intended replacement and is not implemented; don't call the current walk dependency-directed.
@@ -36,7 +89,7 @@ PSPerception is counterexample-guided percept refinement. It proposes reversible
 
 ---
 
-## 2. The Eight Empirical Verification Gates
+## 2. Empirical Verification Gates
 
 Every claim in `PSPerception` corresponds to an executable verification script under `tests/`. Passing tests are the sole acceptable proof of capability.
 
@@ -50,6 +103,9 @@ Every claim in `PSPerception` corresponds to an executable verification script u
 | **Gate 6** | **Predicate Synthesis** | [`tests/Gate6-PredicateSynthesis.ps1`](tests/Gate6-PredicateSynthesis.ps1) | Synthesizes a composite predicate $\text{Or}(\text{BinderOperationChanged}, \text{ConstantValueChanged})$ from atomic primitives, verifies it against execution evidence, and materializes it into the live runspace via PowerShell Extended Type System (`Update-TypeData`). Pre-compiled `ScriptBlock` instances dynamically resolve the newly synthesized predicate without recompilation, and revert when `Remove-TypeData` is executed. |
 | **Gate 7** | **Process-Death State Reconstruction** | [`tests/Gate7-StateReconstruction.ps1`](tests/Gate7-StateReconstruction.ps1) | Verifies bounded state reconstruction across process boundaries: learns a representational delta from recorded evidence, persists it to a `.psd1` mutation journal (`src/MutationJournal.ps1`), reconstructs the identical runtime tokenizer state in a separate `pwsh` process, and rolls back to pristine state via exact inverses. Result and limits: [`docs/GATE7-STATE-RECONSTRUCTION-RESULT.md`](docs/GATE7-STATE-RECONSTRUCTION-RESULT.md); upstream audit: [`UPSTREAM-AUDIT.md`](UPSTREAM-AUDIT.md). |
 | **Gate 8** | **Refine Loop** | [`tests/Gate8-RefineLoop.ps1`](tests/Gate8-RefineLoop.ps1) | Counterexample-guided refine loop matches exhaustive search on small synthetic case ("mechanics only"), pruning non-differing attributes, recording kept and rejected moves in the in-memory provenance graph (`src/Store.ps1`), and reproducing the exact final state upon replaying the store from scratch. |
+| **Gate 9** | **Inference Contracts** | [`tests/Gate9-InferenceContracts.ps1`](tests/Gate9-InferenceContracts.ps1) | Expectation justification, surprisal, structural matching, topology and ambiguous-binding rejection, and rejection-memory invalidation. |
+| **Gate 10** | **Unseen Analogical Search** | [`tests/Gate10-UnseenAnalogicalSearch.ps1`](tests/Gate10-UnseenAnalogicalSearch.ps1) | Prior experience automatically reorders proposals through normal refinement on a surface-disjoint structural case, reducing evaluations from 3 to 1 with the same admitted result; removal removes the advantage. |
+| **Gate 11** | **Automatic Phonemizer Refinement** | [`tests/Gate11-AutomaticPhonemizer.ps1`](tests/Gate11-AutomaticPhonemizer.ps1) | Fresh-store automatic two-percept trajectory, lexically disjoint admission, improved normal emitted phones, exact removal restoration, and terminal rejection reuse. |
 
 ---
 
@@ -78,6 +134,9 @@ PSPerception/
 │   ├── Search.ps1                             # Bounded hill-climbing search with exhaustive optimum reference
 │   ├── Store.ps1                              # In-memory provenance graph of live objects & replay from scratch
 │   ├── Refine.ps1                             # Counterexample-guided percept refinement loop
+│   ├── Expectations.ps1                       # Expectations, justification, and surprise
+│   ├── Analogy.ps1                            # Structural experience retrieval for proposals
+│   ├── GetSmaPhonemes.ps1                     # Phonemizer adapter and automatic refinement cycle
 │   ├── SmaDataset.ps1                         # Authentic SMA AST/Token/LINQ lowering specimen generator
 │   ├── SmaContentfulDataset.ps1               # Multi-quadrant adversarial corpus preserving AST signatures
 │   ├── ExpressionFeatures.ps1                 # Deep reflection extractors for DLR binders, constants, node types
@@ -93,7 +152,10 @@ PSPerception/
     ├── Gate6-PredicateSynthesis.ps1           # Dynamic predicate synthesis & ETS live materialization proof
     ├── Gate7-StateReconstruction.ps1          # Two-process mutation journal replay and rollback gate
     ├── Gate7-Phase.ps1                        # Execution phase worker for Gate 7 (Learn / Replay)
-    └── Gate8-RefineLoop.ps1                   # Counterexample-guided refine loop & store replay gate
+    ├── Gate8-RefineLoop.ps1                   # Counterexample-guided refine loop & store replay gate
+    ├── Gate9-InferenceContracts.ps1           # Expectation, retrieval, and rejection-memory contracts
+    ├── Gate10-UnseenAnalogicalSearch.ps1       # Ordinary-path unseen search reduction
+    └── Gate11-AutomaticPhonemizer.ps1          # Frozen automatic phone-output improvement gate
 ```
 
 ---
@@ -142,6 +204,12 @@ pwsh -NoProfile -File tests/Verify.ps1
 
 All build outputs and temporary run receipts default to `$env:LOCALAPPDATA\Build\PSPerception\` in compliance with NIST SP 800-53 CM-8.
 
+Gate 11 requires the pinned inputs described in its
+[reproduction instructions](docs/AUTOMATIC-PHONEMIZER-REFINEMENT.md). Run it
+directly with `pwsh -NoProfile -File tests/Gate11-AutomaticPhonemizer.ps1`, or set
+`PSPERCEPTION_PHONEMIZER_GATE=1` to include it in `tests/Verify.ps1`. Gates that
+require unavailable inputs are reported as not run; skipping is not a pass.
+
 ---
 
 ## 7. Relation to Prior Work & Primary Research
@@ -173,9 +241,11 @@ To maintain strict epistemological rigor, implemented capabilities must be expli
 - In-memory provenance graph recording live state transitions, kept and rejected moves, and replay from scratch (`src/Store.ps1`, Gate 8).
 - Counterexample-guided percept refinement loop with attribute differencing pruning at combination depth $\le 2$, strictly ordered lexicographic gates, and chronological backtracking to the most recent kept state (`src/Refine.ps1`, Gate 8).
 - Versioned live receipts exchange contract ([`docs/EXPERIMENT-RECORD-CONTRACT.md`](docs/EXPERIMENT-RECORD-CONTRACT.md)).
+- Integrated structural experience retrieval reducing unseen search through normal refinement (Gate 10).
+- Automatic phonemizer refinement selecting and reusing transferable percepts through the normal application path (Gate 11; coverage and admission limits above).
 
 ### Remaining Proposals & Unimplemented Work
-- **Autonomous End-to-End Pipeline**: Currently, the refine loop executes on candidate batches; continuous autonomous integration with live compiler streams is future work.
+- **Continuous Compiler Integration**: The phonemizer has a bounded automatic corpus cycle (Gate 11); continuous autonomous integration with live compiler streams remains future work.
 - **Reflective Tokens & Evolving Grammar**: Modifying token definitions or parsing grammars dynamically at runtime beyond SMA `DynamicKeyword` is unimplemented.
 - **General Structural AST Mutation Search**: Search is currently bounded to feature selection and boolean compositions; arbitrary AST rewriting under semantic admission is unimplemented.
 - **Dependency-Directed Backtracking**: The refine loop backtracks chronologically. Walking recorded justifications back to the culprit assumption (Doyle TMS, de Kleer ATMS) and minimizing the culprit set by subset search (delta debugging) is unimplemented.
