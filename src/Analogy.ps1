@@ -80,17 +80,18 @@ function Test-PerceptRelationPattern {
 
 function Find-PerceptRoleBinding {
     [CmdletBinding()]
-    param([Parameter(Mandatory)][object[]]$SourcePattern,[Parameter(Mandatory)][object[]]$TargetPattern,[ValidateRange(1,4096)][int]$BindingBudget=256)
+    param([Parameter(Mandatory)][object[]]$SourcePattern,[Parameter(Mandatory)][object[]]$TargetPattern,[ValidateRange(1,4096)][int]$BindingBudget=256,[switch]$InferRelationBindings)
     Test-PerceptRelationPattern $SourcePattern
     Test-PerceptRelationPattern $TargetPattern
     if ($SourcePattern.Count -ne $TargetPattern.Count) { return [pscustomobject]@{Status='DifferentTopology';Bindings=@();BindingAttempts=0} }
     $stack=[Collections.Generic.Stack[object]]::new()
-    $stack.Push([pscustomobject]@{Index=0;Map=[Collections.Generic.Dictionary[string,string]]::new([StringComparer]::Ordinal);Used=[int[]]@()})
-    $attempts=0;$solutions=[Collections.Generic.List[object]]::new()
+    $stack.Push([pscustomobject]@{Index=0;Map=[Collections.Generic.Dictionary[string,string]]::new([StringComparer]::Ordinal);RelationMap=[Collections.Generic.Dictionary[string,string]]::new([StringComparer]::Ordinal);Used=[int[]]@()})
+    $attempts=0;$solutions=[Collections.Generic.List[object]]::new();$relationSolutions=[Collections.Generic.List[object]]::new()
     while ($stack.Count -gt 0) {
         $state=$stack.Pop()
         if ($state.Index -eq $SourcePattern.Count) {
             $solutions.Add($state.Map)
+            $relationSolutions.Add($state.RelationMap)
             if ($solutions.Count -gt 1) { return [pscustomobject]@{Status='Ambiguous';Bindings=@();BindingAttempts=$attempts} }
             continue
         }
@@ -98,10 +99,19 @@ function Find-PerceptRoleBinding {
         for ($i=0;$i -lt $TargetPattern.Count;$i++) {
             if ($i -in $state.Used) { continue }
             $target=$TargetPattern[$i]
-            if (-not [StringComparer]::Ordinal.Equals($source.Relation,$target.Relation)) { continue }
+            if (-not $InferRelationBindings -and -not [StringComparer]::Ordinal.Equals($source.Relation,$target.Relation)) { continue }
             $attempts++
             if ($attempts -gt $BindingBudget) { return [pscustomobject]@{Status='BudgetExhausted';Bindings=@();BindingAttempts=$BindingBudget} }
             $map=[Collections.Generic.Dictionary[string,string]]::new($state.Map,[StringComparer]::Ordinal)
+            $relationMap=[Collections.Generic.Dictionary[string,string]]::new($state.RelationMap,[StringComparer]::Ordinal)
+            if ($InferRelationBindings) {
+                if ($relationMap.ContainsKey($source.Relation)) {
+                    if (-not [StringComparer]::Ordinal.Equals($relationMap[$source.Relation],$target.Relation)) { continue }
+                } else {
+                    if ($relationMap.ContainsValue($target.Relation)) { continue }
+                    $relationMap.Add($source.Relation,$target.Relation)
+                }
+            }
             $valid=$true
             foreach ($pair in @(@($source.From,$target.From),@($source.To,$target.To))) {
                 if ($map.ContainsKey($pair[0])) {
@@ -111,15 +121,15 @@ function Find-PerceptRoleBinding {
                     $map.Add($pair[0],$pair[1])
                 }
             }
-            if ($valid) { $stack.Push([pscustomobject]@{Index=$state.Index+1;Map=$map;Used=[int[]]@($state.Used+$i)}) }
+            if ($valid) { $stack.Push([pscustomobject]@{Index=$state.Index+1;Map=$map;RelationMap=$relationMap;Used=[int[]]@($state.Used+$i)}) }
         }
     }
-    [pscustomobject]@{Status=$(if ($solutions.Count -eq 1) {'Matched'} else {'DifferentTopology'});Bindings=$solutions.ToArray();BindingAttempts=$attempts}
+    [pscustomobject]@{Status=$(if ($solutions.Count -eq 1) {'Matched'} else {'DifferentTopology'});Bindings=$solutions.ToArray();RelationBindings=$relationSolutions.ToArray();BindingAttempts=$attempts;RelationEquivalence='NotProved'}
 }
 
 function Get-AnalogicalPerceptProposals {
     [CmdletBinding()]
-    param([Parameter(Mandatory)][object[]]$Pattern,[Parameter(Mandatory)][PerceptionStore]$Store,[ValidateRange(1,4096)][int]$BindingBudget=256,[ValidateRange(1,4096)][int]$NodeBudget=256)
+    param([Parameter(Mandatory)][object[]]$Pattern,[Parameter(Mandatory)][PerceptionStore]$Store,[ValidateRange(1,4096)][int]$BindingBudget=256,[ValidateRange(1,4096)][int]$NodeBudget=256,[switch]$InferRelationBindings)
     Test-PerceptRelationPattern $Pattern
     $proposals=[Collections.Generic.List[object]]::new();$attempts=0;$status='Completed'
     # Only current-path retained percepts are knowledge; abandoned kept branches are not active.
@@ -134,7 +144,7 @@ function Get-AnalogicalPerceptProposals {
         if ($node.Outcome -cne 'kept' -or $node.Proposal -isnot [RepresentationMutation] -or $node.Proposal.Pattern.Count -eq 0) { continue }
         $remaining=$BindingBudget-$attempts
         if ($remaining -le 0) { $status='BindingBudgetExhausted';break }
-        $match=Find-PerceptRoleBinding $node.Proposal.Pattern $Pattern -BindingBudget $remaining
+        $match=Find-PerceptRoleBinding $node.Proposal.Pattern $Pattern -BindingBudget $remaining -InferRelationBindings:$InferRelationBindings
         $attempts+=$match.BindingAttempts
         if ($match.Status -ceq 'BudgetExhausted') { $status='BindingBudgetExhausted';break }
         if ($match.Status -cne 'Matched') { continue }
@@ -147,7 +157,7 @@ function Get-AnalogicalPerceptProposals {
         $mutation=[RepresentationMutation]::new($node.Proposal.Verb,$arguments.ToArray())
         $mutation.Pattern=@($Pattern | ForEach-Object { [pscustomobject]@{Relation=$_.Relation;From=$_.From;To=$_.To} })
         $mutation.Evidence=[string[]]@($node.Proposal.Evidence)
-        $proposals.Add([pscustomobject]@{Mutation=$mutation;SourceNode=$node.Id;RoleBindings=$map;Status='ProposalOnly'})
+        $proposals.Add([pscustomobject]@{Mutation=$mutation;SourceNode=$node.Id;RoleBindings=$map;RelationBindings=$match.RelationBindings[0];RelationEquivalence='NotProved';Status='ProposalOnly'})
     }
     [pscustomobject]@{Proposals=$proposals.ToArray();BindingAttempts=$attempts;NodesVisited=$path.Count;SearchStatus=$status;Admission='NotPerformed'}
 }

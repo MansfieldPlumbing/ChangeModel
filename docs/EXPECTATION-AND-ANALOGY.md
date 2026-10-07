@@ -29,6 +29,13 @@ topology fails. Ambiguous mappings and exhausted budgets produce no binding.
 This is exact structural alignment, not approximate similarity or semantic
 understanding.
 
+With explicit `-InferRelationBindings`, relation labels can also become
+variables. Alignment then infers separate bijections for entity roles and
+relation roles. This is an explanatory hypothesis, not a declaration that two
+operators have equivalent semantics. Default matching still requires exact
+relation labels. Behavioral admission must decide whether the transferred
+hypothesis is useful.
+
 `Get-AnalogicalPerceptProposals` retrieves explanation-bearing mutations from
 the current provenance path and binds their arguments to the query roles.
 The proposal retains its source node and evidence references. Abandoned
@@ -56,7 +63,7 @@ same-context reuse, not held-out analogical search reduction or intuition.
 The gate `tests/Gate9-InferenceContracts.ps1` checks these contracts with
 independently specified expected values and graph mappings. Its fixtures
 establish mechanics only. They do not establish phonemizer correctness,
-TypeScript execution, held-out predictive lift, reduced search effort,
+TypeScript execution, held-out predictive lift, unseen search reduction,
 automatic abduction, learned proposal preferences, process-death explanation
 reconstruction, consolidation, or CoreLib lowering.
 
@@ -65,3 +72,26 @@ grammar. These interfaces do not silently change that admission policy.
 Connecting attributed surprises to proposal selection requires explicit
 domain observations, regression gates, and transfer evidence. A missing
 measurement must not be treated as success.
+
+## Unseen analogical search gate
+
+`tests/Gate10-UnseenAnalogicalSearch.ps1` uses disjoint entity labels, relation
+labels, specimen identities, and outcome labels for discovery and transfer.
+The core receives no correspondence table. Discovery begins with an unexpected
+outcome and preserves its active justification graph. A fixed behavioral judge
+admits the useful projection on learning observations and withheld combinations;
+the store retains its explanation and supporting specimen references.
+
+The transfer family has the same directed topology with scrambled edge order.
+The core infers entity and relation bindings, then proposes a bound mutation
+before the unchanged fixed grammar. Fresh search evaluates three candidates;
+experienced search evaluates one. Both admit the same projection under the
+same judge. The test also blocks incompatible topology, abstains on a symmetric
+ambiguous graph, and rejects a structurally matching hypothesis whose behavior
+differs. Isomorphism never bypasses admission.
+
+This establishes synthetic unseen analogical proposal transfer and search
+reduction. It does not establish a new explanatory relation being invented,
+concept consolidation, natural-language correctness, language execution, or
+cross-domain runtime transfer. The fixture's behavioral oracle and combination
+split are fixed; they are not borrowed application benchmarks.

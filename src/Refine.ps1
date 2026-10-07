@@ -75,10 +75,9 @@ function Get-DifferingObservationAttributes {
         [Representation]$CurrentRepresentation = $null
     )
 
-    $currentFeatures = if ($CurrentRepresentation) {
-        [System.Collections.Generic.HashSet[string]]::new([string[]]$CurrentRepresentation.Features, [StringComparer]::OrdinalIgnoreCase)
-    } else {
-        [System.Collections.Generic.HashSet[string]]::new([StringComparer]::OrdinalIgnoreCase)
+    $currentFeatures = [System.Collections.Generic.HashSet[string]]::new([StringComparer]::OrdinalIgnoreCase)
+    if ($null -ne $CurrentRepresentation) {
+        foreach ($feature in $CurrentRepresentation.Features) { [void]$currentFeatures.Add($feature) }
     }
 
     $differingAttributes = [System.Collections.Generic.SortedSet[string]]::new([StringComparer]::Ordinal)
@@ -140,10 +139,9 @@ function Get-GrammarProposals {
     )
 
     $proposals = [System.Collections.Generic.List[RepresentationMutation]]::new()
-    $currentFeatures = if ($CurrentRepresentation) {
-        [System.Collections.Generic.HashSet[string]]::new([string[]]$CurrentRepresentation.Features, [StringComparer]::OrdinalIgnoreCase)
-    } else {
-        [System.Collections.Generic.HashSet[string]]::new([StringComparer]::OrdinalIgnoreCase)
+    $currentFeatures = [System.Collections.Generic.HashSet[string]]::new([StringComparer]::OrdinalIgnoreCase)
+    if ($null -ne $CurrentRepresentation) {
+        foreach ($feature in $CurrentRepresentation.Features) { [void]$currentFeatures.Add($feature) }
     }
 
     # Depth 1: AddFeature for each differing attribute

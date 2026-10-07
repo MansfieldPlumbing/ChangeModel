@@ -26,6 +26,10 @@ Assert-Rejected { New-PerceptExpectation -Specimen 'bad' -RepresentationId 'r0' 
 $cycle=@([pscustomobject]@{Id='cycle';DependsOn=@('cycle');Relation=$null;From=$null;To=$null})
 Assert-Rejected { New-PerceptExpectation -Specimen 'bad' -RepresentationId 'r0' -PredictedOutcome 'same' -Justifications $cycle } 'Cyclic justification was accepted.'
 $initial=[Representation]::new([string[]]@('X'))
+$empty=[Representation]::new([string[]]@())
+Assert-That ((Get-GrammarProposals -DifferingAttributes @('a','b') -CurrentRepresentation $empty).Count -eq 3) 'Empty representation lost its feature set.'
+$multiple=[Representation]::new([string[]]@('a','b'))
+Assert-That (@(Get-GrammarProposals -DifferingAttributes @('A','B') -CurrentRepresentation $multiple | Where-Object Verb -eq 'AddFeature').Count -eq 0) 'Feature exclusion lost its intended comparer.'
 $store=New-PerceptionStore -InitialRepresentation $initial -InitialDelta ([pscustomobject]@{Contradictions=1})
 $mutation=[RepresentationMutation]::new('AddFeature',[string[]]@('ReceiverIdentity'))
 $mutation.Pattern=$attribution.Pattern;$mutation.Evidence=@('discovery')
@@ -52,6 +56,7 @@ $ambiguousSource=@([pscustomobject]@{Relation='Link';From='A';To='B'},[pscustomo
 $ambiguousTarget=@([pscustomobject]@{Relation='Link';From='X';To='Y'},[pscustomobject]@{Relation='Link';From='Y';To='X'})
 Assert-That ((Find-PerceptRoleBinding $ambiguousSource $ambiguousTarget).Status -ceq 'Ambiguous') 'Ambiguous role mapping was silently selected.'
 Assert-That ((Find-PerceptRoleBinding $attribution.Pattern $target -BindingBudget 1).Status -ceq 'BudgetExhausted') 'Binding budget was not enforced.'
+Assert-That ((Find-PerceptRoleBinding $attribution.Pattern $target -BindingBudget 1 -InferRelationBindings).Status -ceq 'BudgetExhausted') 'Relation inference bypassed the binding budget.'
 $store.Current=$store.Root
 Assert-That ((Get-AnalogicalPerceptProposals $target $store).Proposals.Count -eq 0) 'Abandoned kept branch was retrieved as active knowledge.'
 $experience=@(

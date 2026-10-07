@@ -12,3 +12,4 @@ if ($env:JS2PS_ROOT) {
 }
 & $PSScriptRoot\Gate8-RefineLoop.ps1
 & $PSScriptRoot\Gate9-InferenceContracts.ps1
+& $PSScriptRoot\Gate10-UnseenAnalogicalSearch.ps1
