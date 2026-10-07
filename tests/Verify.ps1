@@ -11,3 +11,4 @@ if ($env:JS2PS_ROOT) {
     Write-Host 'GATE7_STATE_RECONSTRUCTION=NOT RUN (set JS2PS_ROOT to a JS2PS checkout at the pinned commit)'
 }
 & $PSScriptRoot\Gate8-RefineLoop.ps1
+& $PSScriptRoot\Gate9-InferenceContracts.ps1

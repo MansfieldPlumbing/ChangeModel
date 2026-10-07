@@ -9,6 +9,11 @@
     Description = 'Counterexample-guided percept refinement engine.'
     PowerShellVersion = '7.4'
     FunctionsToExport = @(
+        'New-PerceptExpectation'
+        'Measure-PerceptSurprise'
+        'Get-SurpriseAttribution'
+        'Find-PerceptRoleBinding'
+        'Get-AnalogicalPerceptProposals'
         'New-PerceptionStore'
         'New-PerceptionReceipt'
         'Invoke-PerceptRefine'

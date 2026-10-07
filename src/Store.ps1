@@ -121,6 +121,13 @@ class PerceptionStore {
             throw "Invalid outcome: '$outcome'. Must be 'kept', 'rejected', or 'inapplicable'."
         }
 
+        # Retain explanation structure without sharing mutable proposal inputs.
+        $retainedProposal = if ($proposal -is [RepresentationMutation]) {
+            Copy-RepresentationMutation -Mutation $proposal
+        } else {
+            $proposal
+        }
+
         $id = "state_" + $this.NextId
         $this.NextId = $this.NextId + 1
         $node = [PerceptionProvenanceNode]::new(
@@ -131,7 +138,7 @@ class PerceptionStore {
             $deltaBefore,
             $deltaAfter,
             $outcome,
-            $proposal
+            $retainedProposal
         )
 
         if ($parentNode) {

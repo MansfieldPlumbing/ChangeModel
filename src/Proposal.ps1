@@ -1,15 +1,40 @@
 class RepresentationMutation {
     [string]$Verb
     [string[]]$Arguments
+    [object[]]$Pattern = @()
+    [string[]]$Evidence = @()
 
     RepresentationMutation([string]$verb, [string[]]$arguments) {
         $this.Verb = $verb
-        $this.Arguments = $arguments
+        $this.Arguments = [string[]]$arguments.Clone()
     }
 
     [string] ToString() {
         return "$($this.Verb) $($this.Arguments -join ' ')"
     }
+}
+
+function Copy-RepresentationMutation {
+    param([Parameter(Mandatory)][RepresentationMutation]$Mutation)
+    $copy = [RepresentationMutation]::new($Mutation.Verb, $Mutation.Arguments)
+    if ($Mutation.Pattern.Count -gt 8 -or $Mutation.Evidence.Count -gt 256) {
+        throw 'Mutation explanation exceeds bounds.'
+    }
+    $pattern = [System.Collections.Generic.List[object]]::new()
+    foreach ($edge in $Mutation.Pattern) {
+        foreach ($field in @('Relation', 'From', 'To')) {
+            if ($edge.$field -isnot [string] -or $edge.$field.Length -eq 0 -or $edge.$field.Length -gt 256) {
+                throw 'Invalid mutation relation pattern.'
+            }
+        }
+        $pattern.Add([pscustomobject]@{ Relation = $edge.Relation; From = $edge.From; To = $edge.To })
+    }
+    foreach ($id in $Mutation.Evidence) {
+        if (-not $id -or $id.Length -gt 1024) { throw 'Invalid mutation evidence identity.' }
+    }
+    $copy.Pattern = $pattern.ToArray()
+    $copy.Evidence = [string[]]$Mutation.Evidence.Clone()
+    return $copy
 }
 
 function ConvertTo-RepresentationMutation {

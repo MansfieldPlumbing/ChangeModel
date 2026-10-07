@@ -14,8 +14,15 @@ Set-StrictMode -Version Latest
 . (Join-Path $PSScriptRoot 'src/MutationJournal.ps1')
 . (Join-Path $PSScriptRoot 'src/Store.ps1')
 . (Join-Path $PSScriptRoot 'src/Refine.ps1')
+. (Join-Path $PSScriptRoot 'src/Expectations.ps1')
+. (Join-Path $PSScriptRoot 'src/Analogy.ps1')
 
 Export-ModuleMember -Function @(
+    'New-PerceptExpectation'
+    'Measure-PerceptSurprise'
+    'Get-SurpriseAttribution'
+    'Find-PerceptRoleBinding'
+    'Get-AnalogicalPerceptProposals'
     'New-PerceptionStore'
     'New-PerceptionReceipt'
     'Invoke-PerceptRefine'
