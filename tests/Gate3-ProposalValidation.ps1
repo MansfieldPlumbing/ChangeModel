@@ -127,4 +127,4 @@ if ($heldOutMeasure.Contradictions -ne 0) {
     throw "Held-out verification failed: contradictions detected under accepted representation."
 }
 
-Write-Host "GATE3_PROPOSAL_VALIDATION=PASS"
+Write-Host "GATE3_PROPOSAL_VALIDATION: CandidateFeatures=$($validAudit.CandidateRepresentation.Features -join ','), HeldOutCount=$($heldOut.Count), HeldOutContradictions=$($heldOutMeasure.Contradictions), PredictionError=$($heldOutMeasure.PredictionError)"

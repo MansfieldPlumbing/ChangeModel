@@ -79,4 +79,4 @@ if ($heldOutMeasure.Contradictions -ne 0) {
     throw "Held-out validation failed: Detected contradictions under revised representation R2."
 }
 
-Write-Host "GATE4_SMA_FEATURE_SELECTION=PASS"
+Write-Host "GATE4_SMA_FEATURE_SELECTION: DiscoveredFeatures=$($finalRep.Features -join ','), HeldOutCount=$($heldOutPairs.Count), Contradictions=$($heldOutMeasure.Contradictions), PredictionError=$($heldOutMeasure.PredictionError)"

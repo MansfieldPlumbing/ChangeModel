@@ -193,4 +193,4 @@ if ($null -ne $afterRemovalPreserving -or $null -ne $afterRemovalBreaking) {
 }
 Write-Host "Confirmed: Semantic reversibility proven — property access reverted to null on exact same ScriptBlock."
 
-Write-Host "GATE6_PREDICATE_SYNTHESIS=PASS"
+Write-Host "GATE6_PREDICATE_SYNTHESIS: WinningPredicate=$($winningPred.Name), Complexity=$($winningPred.Complexity), Contradictions=$($winningMeasure.Contradictions), PredictionError=$($winningMeasure.PredictionError), SemanticReversibility=Verified"

@@ -132,4 +132,4 @@ Write-Host "  Exhaustive Optimum Contradictions: $($exhaustiveResult.FinalMeasur
 Write-Host "  Refine Loop Contradictions: $($refineResult.FinalMeasure.Contradictions)"
 Write-Host "  Store Replayed Features: $($actualFeatures -join ', ')"
 Write-Host "  Store Provenance Nodes: $($store.AllNodes.Count) (Kept: $(@($store.AllNodes | Where-Object { $_.Outcome -eq 'kept' }).Count), Rejected: $($rejectedTransitions.Length))"
-Write-Host "GATE8_REFINE_LOOP=PASS"
+Write-Host "GATE8_REFINE_LOOP: InitialContradictions=$($initialMeasure.Contradictions), FinalContradictions=$($refineResult.FinalMeasure.Contradictions), OptimumContradictions=$($exhaustiveResult.FinalMeasure.Contradictions), KeptPercepts=$($keptPercepts -join ','), ProvenanceNodes=$($store.AllNodes.Count), RejectedTransitions=$($rejectedTransitions.Length)"

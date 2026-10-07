@@ -150,4 +150,4 @@ if ($heldOutError -ne 0 -or $heldOutCorrect -ne $heldOutCount) {
     throw "Condition 6 Failure: Held-out predictions were incorrect ($heldOutError errors out of $heldOutCount)."
 }
 
-Write-Host "GATE5_CONTENTFUL_DELTA=PASS"
+Write-Host "GATE5_CONTENTFUL_DELTA: SelectedFeatures=$($winningRep.Features -join ','), WinningComplexity=$($winningMeasure.RepresentationComplexity), HeldOutCount=$heldOutCount, HeldOutCorrect=$heldOutCorrect, Contradictions=$($winningMeasure.Contradictions)"

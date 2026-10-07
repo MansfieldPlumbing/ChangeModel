@@ -35,5 +35,4 @@ foreach ($f in $searchResult.FinalRep.Features) {
     if ($f -eq 'Direction') { $hasDirection = $true }
 }
 if (-not $hasDirection) { throw "Final representation did not discover 'Direction'" }
-
-Write-Host "GATE2_FEATURE_SELECTION=PASS"
+Write-Host "GATE2_FEATURE_SELECTION: DiscoveredFeatures=$($searchResult.FinalRep.Features -join ','), Contradictions=$($finalMeasure.Contradictions), OptimumReached=$($searchResult.ReachedExhaustiveOptimum)"

@@ -48,5 +48,4 @@ foreach ($record in $heldOut) {
 }
 
 if ($heldOutError -ne 0) { throw "Expected 0 error on held-out, got $heldOutError" }
-
-Write-Host "GATE1_PARAMETER_CALIBRATION=PASS"
+Write-Host "GATE1_PARAMETER_CALIBRATION: HeldOutCount=$($heldOut.Count), HeldOutError=$heldOutError, Magnitude=$magnitude, Status=Verified"
