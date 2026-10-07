@@ -31,6 +31,17 @@ class PhonemizerContext {
     [object]$RefinementStore
     [object]$CandidateRepresentation
     [object]$RefinementResult
+    [object[]]$LearningValidation = @()
+    [object]$AdmissionBaseline
+    [object]$LearningCurve
+    [string]$LearningTermination
+    [string[]]$OutcomeKeys = @('DEFAULT','VERB')
+    [string[]]$ClusterPriority = @()
+    [string[]]$SelectionCandidates = @()
+    [string]$LearningSignature
+    [int]$MinimumNetFixes = 2
+    [int]$MinimumTransferIdentities = 2
+    [double]$MaximumRegressionRate = 0.01
     [System.Collections.Generic.HashSet[char]]$KokoroVocab
     [System.Collections.Generic.HashSet[string]]$MultiWords
 
@@ -72,12 +83,101 @@ function Initialize-Phonemizer {
         [string]$GoldPath = (Join-Path $env:LOCALAPPDATA 'Build\PSPerception\inputs\misaki\us_gold.json'),
         [string]$SilverPath = (Join-Path $env:LOCALAPPDATA 'Build\PSPerception\inputs\misaki\us_silver.json'),
         [object[]]$Experience = @(),
-        [PhonemizerContext]$Context = $null
+        [PhonemizerContext]$Context = $null,
+        [object[]]$ValidationExperience = @(),
+        [object[]]$EvaluationExperience = @(),
+        [ValidateRange(1,32)][int]$MaxLearningIterations = 16,
+        [ValidateRange(1,128)][int]$MinimumNetFixes = 2,
+        [ValidateRange(2,128)][int]$MinimumTransferIdentities = 2,
+        [ValidateRange(0,1)][double]$MaximumRegressionRate = 0.01
     )
 
     $ctx = if ($null -ne $Context) {$Context} else {[PhonemizerContext]::new()}
     if ($null -eq $Context) { $ctx.LoadLexicons($GoldPath, $SilverPath) }
     $script:GlobalContext = $ctx
+    if ($ValidationExperience.Count -gt 0) {
+        $ctx.LearningTermination=''
+        if ($Experience.Count -eq 0 -or $Experience.Count -gt 128 -or $ValidationExperience.Count -gt 128) { throw 'Automatic learning requires bounded construction and admission sets.' }
+        $constructionWords=[Collections.Generic.HashSet[string]]::new([StringComparer]::OrdinalIgnoreCase)
+        foreach ($row in $Experience) { [void]$constructionWords.Add($row.Word) }
+        foreach ($row in $ValidationExperience) { if ($constructionWords.Contains($row.Word)) { throw 'Construction and admission lexical identities overlap.' } }
+        $ctx.OutcomeKeys=[string[]]@(($Experience+$ValidationExperience).ExpectedKey | Sort-Object -Unique -CaseSensitive)
+        $ctx.MinimumNetFixes=$MinimumNetFixes;$ctx.MinimumTransferIdentities=$MinimumTransferIdentities;$ctx.MaximumRegressionRate=$MaximumRegressionRate
+        $construction=Get-PhonemizerObservations $Experience $ctx
+        $ctx.LearningValidation=Get-PhonemizerObservations $ValidationExperience $ctx
+        $evaluation=if ($EvaluationExperience.Count -gt 0) {Get-PhonemizerObservations $EvaluationExperience $ctx} else {$ctx.LearningValidation}
+        $signature=[Text.StringBuilder]::new()
+        foreach ($row in @($construction)+@($ctx.LearningValidation)) {
+            foreach ($text in @($row.SpecimenName,$row.Word,$row.Sentence,$row.ExpectedKey)+@($ctx.Gold[$row.Word].Values | Sort-Object -CaseSensitive)) { [void]$signature.Append($text.Length.ToString()+':'+$text) }
+        }
+        [void]$signature.Append((Get-FileHash -LiteralPath $PSCommandPath -Algorithm SHA256).Hash)
+        [void]$signature.Append($MinimumNetFixes.ToString()+':'+$MinimumTransferIdentities.ToString()+':'+$MaximumRegressionRate.ToString([Globalization.CultureInfo]::InvariantCulture))
+        $ctx.LearningSignature=[Convert]::ToHexString([Security.Cryptography.SHA256]::HashData([Text.Encoding]::UTF8.GetBytes($signature.ToString())))
+        $ctx.LearningCurve=[Collections.Generic.List[object]]::new()
+        $initial=if ($null -ne $ctx.RefinementStore) {$ctx.RefinementStore.Current.Representation} else {[Representation]::new([string[]]@())}
+        $ctx.AdmissionBaseline=$null
+        $score=Measure-PhonemizerRepresentation $evaluation $initial 'Corpus' $ctx -ValidationOnly
+        $ctx.LearningCurve.Add((Get-PhonemizerCurvePoint 0 $score $null 0 @()))
+        for ($iteration=1;$iteration -le $MaxLearningIterations;$iteration++) {
+            $parentRep=if ($null -ne $ctx.RefinementStore) {$ctx.RefinementStore.Current.Representation} else {$initial}
+            $before=Measure-PhonemizerRepresentation $construction $parentRep 'Construction' $ctx -ValidationOnly
+            # Abduct selection effects from observed construction failures only.
+            # Applicability stays in the existing observable percept language.
+            $candidates=[Collections.Generic.HashSet[string]]::new([StringComparer]::Ordinal)
+            for ($case=0;$case -lt $construction.Count;$case++) {
+                if ($before.ReplayHistory[$case].PredictionError -eq 0) { continue }
+                foreach ($property in $construction[$case].CanonicalBefore.PSObject.Properties) {
+                    if ($property.Name.Contains('|') -or $property.Value -ne 1) { continue }
+                    [void]$candidates.Add($property.Name+'|'+$construction[$case].ExpectedKey)
+                }
+            }
+            $ctx.SelectionCandidates=[string[]]@($candidates | Sort-Object -CaseSensitive)
+            $construction=Get-PhonemizerObservations $Experience $ctx
+            $ctx.LearningValidation=Get-PhonemizerObservations $ValidationExperience $ctx
+            $evaluation=if ($EvaluationExperience.Count -gt 0) {Get-PhonemizerObservations $EvaluationExperience $ctx} else {$ctx.LearningValidation}
+            $before=Measure-PhonemizerRepresentation $construction $parentRep 'Construction' $ctx -ValidationOnly
+            $held=Measure-PhonemizerRepresentation $ctx.LearningValidation $parentRep 'Admission' $ctx -ValidationOnly
+            # Cluster actual surprises by active relation structure and observable
+            # property values. Lexical identities only measure support/transfer.
+            $clusters=@($before.ReplayHistory | Where-Object PredictionError -gt 0 | Group-Object {
+                $i=[array]::IndexOf([object[]]@($before.ReplayHistory),$_)
+                $record=$construction[$i]
+                $attribution=Get-SurpriseAttribution (Measure-PerceptSurprise (New-PerceptExpectation -Specimen $record.SpecimenName -RepresentationId 'cluster' -PredictedOutcome ([string]$_.PredictedDelta) -ActiveAssumptions $record.ActiveAssumptions -Justifications $record.Justifications) ([string]$record.ActualDelta))
+                (($attribution.Pattern | ForEach-Object {$_.Relation+':'+$_.From+':'+$_.To} | Sort-Object) -join ';')+'|'+(($_.CanonicalBefore.PSObject.Properties | Sort-Object Name | ForEach-Object {$_.Name+'='+$_.Value}) -join ';')+'|'+$_.PredictedDelta+'>'+ $_.ActualDelta
+            } | Sort-Object Count -Descending)
+            $ranking=@(foreach ($property in $construction[0].CanonicalBefore.PSObject.Properties.Name) {
+                if ($property -cnotin $ctx.SelectionCandidates) { continue }
+                if ($property -in $parentRep.Features) { continue }
+                $support=0;$population=0
+                foreach ($row in $before.ReplayHistory) { if ($row.CanonicalBefore.$property -eq 1) { $population++;if ($row.PredictionError -gt 0) {$support++} } }
+                $clusterRank=2147483647
+                for ($index=0;$index -lt $clusters.Count;$index++) {
+                    if ($clusters[$index].Group[0].CanonicalBefore.$property -eq 1) { $clusterRank=$index;break }
+                }
+                if ($support -gt 0) { [pscustomobject]@{Property=$property;Support=$support;Enrichment=($support/[double]$population);ClusterRank=$clusterRank} }
+            })
+            $ctx.ClusterPriority=[string[]]@($ranking | Sort-Object ClusterRank,@{Expression='Enrichment';Descending=$true},@{Expression='Support';Descending=$true} | ForEach-Object Property)
+            $ctx.AdmissionBaseline=[pscustomobject]@{Construction=$before;Validation=$held}
+            $judge={param($History,$Rep,$RepVersion) Measure-PhonemizerRepresentation -History $History -Rep $Rep -RepVersion $RepVersion -Context $ctx}.GetNewClosure()
+            $ctx.RefinementResult=Invoke-PerceptRefine -Experience $construction -InitialRepresentation $parentRep -Store $ctx.RefinementStore -NeutralBudget 0 -MaxIterations 1 -MaxAdmissions 1 -GreedyBest -MeasureRepresentation $judge
+            $ctx.RefinementStore=$ctx.RefinementResult.Store
+            if ($ctx.RefinementResult.Admissions -eq 0) { $ctx.LearningTermination='NoAdmissibleCandidateInCurrentPerceptLanguage';break }
+            $saved=$ctx.RefinementStore.Current
+            try {
+                $ctx.RefinementStore.Current=$saved.Parents[0]
+                $removed=Measure-PhonemizerRepresentation $ctx.LearningValidation $saved.Parents[0].Representation 'Removed' $ctx -ValidationOnly
+                if (($removed.PhoneCases.FullPhones -join '|') -cne ($held.PhoneCases.FullPhones -join '|')) { throw 'Percept removal failed exact phone restoration.' }
+            } finally { $ctx.RefinementStore.Current=$saved }
+            $next=Measure-PhonemizerRepresentation $evaluation $saved.Representation 'Corpus' $ctx -ValidationOnly
+            $point=Get-PhonemizerCurvePoint $iteration $next $score $ctx.RefinementResult.CandidateEvaluations $saved.Proposal.Arguments
+            $point | Add-Member -NotePropertyName Admission -NotePropertyValue $ctx.RefinementResult.FinalMeasure.Transfer
+            $point | Add-Member -NotePropertyName StructuralClusters -NotePropertyValue $clusters.Count
+            $ctx.LearningCurve.Add($point);$score=$next
+        }
+        if (-not $ctx.LearningTermination) { $ctx.LearningTermination='IterationBudgetExhausted' }
+        $ctx.AdmissionBaseline=$null
+        return $ctx
+    }
     if ($Experience.Count -gt 0) {
         $observations=@(foreach ($row in $Experience) {
             $result=Get-SmaPhonemes -Text $row.Sentence -Context $ctx
@@ -94,21 +194,68 @@ function Initialize-Phonemizer {
 }
 
 function Measure-PhonemizerRepresentation {
-    param([array]$History,[object]$Rep,[string]$RepVersion,[PhonemizerContext]$Context)
+    param([array]$History,[object]$Rep,[string]$RepVersion,[PhonemizerContext]$Context,[switch]$ValidationOnly)
     $replay=[Collections.Generic.List[object]]::new();$errors=0
+    $phones=[Collections.Generic.List[object]]::new()
     $previous=$Context.CandidateRepresentation
     try {
         $Context.CandidateRepresentation=$Rep
         foreach ($row in $History) {
             $result=Get-SmaPhonemes -Text $row.Sentence -Context $Context
-            $decision=@($result.AmbiguousDecisions | Where-Object { $_.Word.ToLowerInvariant() -ceq $row.Word.ToLowerInvariant() })[0]
+            $decision=Get-PhonemizerTarget $result $row
             $expected=$Context.Gold[$row.Word][$row.ExpectedKey]
             $wrong=[int]($decision.Pronunciation -cne $expected);$errors+=$wrong
             $represented=$Rep.GetRepresentedState($row.CanonicalBefore)
-            $replay.Add((New-ObservationRecord -RepresentationVersion $RepVersion -CanonicalBefore $row.CanonicalBefore -RepresentedBefore $represented -Action $row.Action -PredictedDelta $(if ($decision.ChosenKey -ceq 'VERB') {1} else {0}) -ActualDelta $row.ActualDelta -PredictionError $wrong -ConditionKey (Get-ConditionKey $represented $row.Action)))
+            $predicted=if ($Context.LearningValidation.Count -gt 0) {[array]::IndexOf($Context.OutcomeKeys,$decision.ChosenKey)} elseif ($decision.ChosenKey -ceq 'VERB') {1} else {0}
+            $replay.Add((New-ObservationRecord -RepresentationVersion $RepVersion -CanonicalBefore $row.CanonicalBefore -RepresentedBefore $represented -Action $row.Action -PredictedDelta $predicted -ActualDelta $row.ActualDelta -PredictionError $wrong -ConditionKey (Get-ConditionKey $represented $row.Action)))
+            $phones.Add([pscustomobject]@{Word=$row.Word;Phone=$decision.Pronunciation;FullPhones=$result.KokoroPhones;Correct=($wrong -eq 0)})
         }
     } finally { $Context.CandidateRepresentation=$previous }
-    [pscustomobject]@{Contradictions=0;PredictionError=$errors;RepresentationComplexity=$Rep.Features.Count;ReplayHistory=$replay}
+    $measure=[pscustomobject]@{Contradictions=0;PredictionError=$errors;RepresentationComplexity=$Rep.Features.Count;ReplayHistory=$replay;PhoneCases=$phones.ToArray()}
+    if (-not $ValidationOnly -and $null -ne $Context.AdmissionBaseline) {
+        $held=Measure-PhonemizerRepresentation $Context.LearningValidation $Rep $RepVersion $Context -ValidationOnly
+        $change=Get-PhonemizerCurvePoint 0 $held $Context.AdmissionBaseline.Validation 0 @()
+        $constructionNet=$Context.AdmissionBaseline.Construction.PredictionError-$errors
+        $allowed=($constructionNet -gt 0 -and $change.NetFixes -ge $Context.MinimumNetFixes -and $change.TransferredIdentities -ge $Context.MinimumTransferIdentities -and $change.Regressions/[double]$held.PhoneCases.Count -le $Context.MaximumRegressionRate)
+        $measure | Add-Member -NotePropertyName AdmissionAllowed -NotePropertyValue $allowed
+        $measure | Add-Member -NotePropertyName Transfer -NotePropertyValue $change
+        $measure | Add-Member -NotePropertyName FeaturePriority -NotePropertyValue $Context.ClusterPriority
+        $measure | Add-Member -NotePropertyName CandidateAttributes -NotePropertyValue $Context.SelectionCandidates
+        $measure | Add-Member -NotePropertyName AllowedMutationVerbs -NotePropertyValue @('AddFeature')
+        $identity=Get-RefinementEvidenceIdentity $History $Rep
+        $measure | Add-Member -NotePropertyName EvidenceIdentity -NotePropertyValue ([Convert]::ToHexString([Security.Cryptography.SHA256]::HashData([Text.Encoding]::UTF8.GetBytes($identity+$Context.LearningSignature))))
+    }
+    $measure
+}
+
+function Get-PhonemizerTarget($Result,$Row) {
+    $targets=@($Result.AmbiguousDecisions | Where-Object { $_.Word.ToLowerInvariant() -ceq $Row.Word.ToLowerInvariant() })
+    if ($null -ne $Row.PSObject.Properties['TargetStart']) { $targets=@($targets | Sort-Object @{Expression={[math]::Abs($_.SourceStart-[int]$Row.TargetStart)}}) }
+    elseif ($targets.Count -ne 1) { throw 'Observation requires a unique target span.' }
+    if ($targets.Count -eq 0) { throw 'Missing observation target.' }
+    $targets[0]
+}
+
+function Get-PhonemizerObservations($Rows,$Context) {
+    @(foreach ($row in $Rows) {
+        if (-not $Context.Gold[$row.Word].ContainsKey($row.ExpectedKey)) { throw 'Reference key is unavailable.' }
+        $decision=Get-PhonemizerTarget (Get-SmaPhonemes $row.Sentence -Context $Context) $row
+        $observation=[pscustomobject]@{SpecimenName=$row.SpecimenName;Sentence=$row.Sentence;Word=$row.Word;ExpectedKey=$row.ExpectedKey;CanonicalBefore=$decision.CanonicalContext;Action='ChoosePronunciation';ActualDelta=[array]::IndexOf($Context.OutcomeKeys,$row.ExpectedKey);Justifications=$decision.Justifications;ActiveAssumptions=@('projection')}
+        if ($null -ne $row.PSObject.Properties['TargetStart']) { $observation | Add-Member TargetStart $row.TargetStart }
+        $observation
+    })
+}
+
+function Get-PhonemizerCurvePoint($Iteration,$Score,$Before,$Evaluations,$Percept) {
+    $fixes=0;$regressions=0;$identities=[Collections.Generic.HashSet[string]]::new([StringComparer]::OrdinalIgnoreCase)
+    if ($null -ne $Before) {
+        for ($i=0;$i -lt $Score.PhoneCases.Count;$i++) {
+            if (-not $Before.PhoneCases[$i].Correct -and $Score.PhoneCases[$i].Correct) { $fixes++;[void]$identities.Add($Score.PhoneCases[$i].Word) }
+            if ($Before.PhoneCases[$i].Correct -and -not $Score.PhoneCases[$i].Correct) { $regressions++ }
+        }
+    }
+    $macro=@($Score.PhoneCases | Group-Object Word | ForEach-Object {100*@($_.Group | Where-Object Correct).Count/$_.Count})
+    [pscustomobject]@{Iteration=$Iteration;Micro=(100*($Score.PhoneCases.Count-$Score.PredictionError)/$Score.PhoneCases.Count);Macro=($macro | Measure-Object -Average).Average;Fixes=$fixes;Regressions=$regressions;NetFixes=($fixes-$regressions);UnexpectedOutputsReduction=($fixes-$regressions);SurprisalBits='NotMeasured';TransferredIdentities=$identities.Count;CandidateEvaluations=$Evaluations;Percept=@($Percept);Complexity=$Score.RepresentationComplexity}
 }
 
 function Get-SmaPhonemes {
@@ -242,6 +389,17 @@ function Get-SmaPhonemes {
                 DeterminerContext=[int]($prevWord -cin @('a','an','the'))
                 InfinitivalVerbContext=[int]($prevWord -ceq 'to' -and $entry.ContainsKey('VERB'))
             }
+            $active=$Context.CandidateRepresentation
+            if ($null -eq $active -and $null -ne $Context.RefinementStore) { $active=$Context.RefinementStore.Current.Representation }
+            $selectionFields=@($Context.SelectionCandidates)
+            if ($null -ne $active) { $selectionFields+=@($active.Features) }
+            foreach ($field in @($selectionFields | Sort-Object -Unique -CaseSensitive)) {
+                $parts=$field.Split('|')
+                if ($parts.Count -ne 2) { continue }
+                $property=$canonicalContext.PSObject.Properties[$parts[0]]
+                if ($null -eq $property) { throw 'Unknown selection applicability property.' }
+                $canonicalContext | Add-Member -NotePropertyName $field -NotePropertyValue ([int]($property.Value -eq 1 -and $entry.ContainsKey($parts[1])))
+            }
             $justifications=@(
                 [pscustomobject]@{Id='projection';DependsOn=@('predecessor');Relation='Contains';From='ProjectedCommand';To='TargetToken'},
                 [pscustomobject]@{Id='predecessor';DependsOn=@('context');Relation='PrecededBy';From='TargetToken';To='PreviousToken'},
@@ -277,8 +435,11 @@ function Get-SmaPhonemes {
             if ($null -ne $active) {
                 foreach ($feature in $active.Features) {
                     $property=$canonicalContext.PSObject.Properties[$feature]
-                    if ($null -ne $property -and $property.Value -eq 1 -and $entry.ContainsKey('VERB')) {
-                        $chosenKey='VERB';$ruleFired=$feature;$firedDelta='RetainedPercept';break
+                    $parts=$feature.Split('|')
+                    $outcome=if ($parts.Count -eq 2) {$parts[1]} else {'VERB'}
+                    if ($null -ne $property -and $property.Value -eq 1 -and $entry.ContainsKey($outcome)) {
+                        $justifications[2].To=$feature
+                        $chosenKey=$outcome;$ruleFired=$feature;$firedDelta='RetainedPercept';break
                     }
                 }
             }

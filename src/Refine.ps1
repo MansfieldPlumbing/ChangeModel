@@ -174,7 +174,9 @@ function Invoke-PerceptRefine {
         [PerceptionStore]$Store = $null,
         [int]$NeutralBudget = 2,
         [int]$MaxIterations = 20,
-        [scriptblock]$MeasureRepresentation = $null
+        [scriptblock]$MeasureRepresentation = $null,
+        [switch]$GreedyBest,
+        [ValidateRange(1,100)][int]$MaxAdmissions = 100
     )
 
     $measure=if ($null -ne $MeasureRepresentation) {$MeasureRepresentation} else {'Measure-Representation'}
@@ -208,6 +210,7 @@ function Invoke-PerceptRefine {
     $triedMutationsOnNode = @{}
     $candidateEvaluations = 0
     $reusedRejections = 0
+    $admissions = 0
 
     # Chronological backtracking: stack of kept state nodes in the provenance graph.
     # A dead end pops the most recent node; it does not trace justifications to a culprit.
@@ -268,6 +271,13 @@ function Invoke-PerceptRefine {
 
         # If representation collision: percept candidates come ONLY from differing attributes
         $diffAttrs = Get-DifferingObservationAttributes -Collisions $collisions -CurrentRepresentation $currentRep
+        if ($null -ne $currentMeasure.PSObject.Properties['CandidateAttributes']) {
+            $diffAttrs=[string[]]@($diffAttrs | Where-Object {$_ -cin $currentMeasure.CandidateAttributes})
+        }
+        if ($null -ne $currentMeasure.PSObject.Properties['FeaturePriority']) {
+            $priority=[string[]]@($currentMeasure.FeaturePriority)
+            $diffAttrs=[string[]]@($diffAttrs | Sort-Object @{Expression={ $index=[array]::IndexOf($priority,$_);if ($index -lt 0) {2147483647} else {$index} }})
+        }
 
         if ($diffAttrs.Length -eq 0) {
             # No differing attributes among colliding observations; backtrack chronologically to the previous kept node
@@ -340,19 +350,39 @@ function Invoke-PerceptRefine {
         }
 
         # Existing rejection identities cover the default judge only.
-        $evidenceIdentity = if ($null -eq $MeasureRepresentation) { Get-RefinementEvidenceIdentity -Experience $Experience -Representation $currentRep } else { '' }
+        $evidenceIdentity = if ($null -eq $MeasureRepresentation) { Get-RefinementEvidenceIdentity -Experience $Experience -Representation $currentRep } elseif ($null -ne $currentMeasure.PSObject.Properties['EvidenceIdentity']) { $currentMeasure.EvidenceIdentity } else { '' }
         $proposal = $null
+        $selectedMeasure=$null;$selectedRep=$null
+        $evaluated=[Collections.Generic.List[object]]::new()
         foreach ($candidate in $candidateProposals) {
+            if ($null -ne $currentMeasure.PSObject.Properties['AllowedMutationVerbs'] -and $candidate.Verb -cnotin $currentMeasure.AllowedMutationVerbs) { continue }
+            if ($triedMutationsOnNode[$activeNode.Id].Contains($candidate.ToString())) { continue }
             $priorEvidence = Get-PerceptProposalHistory -Mutation $candidate -Store $Store -EvidenceIdentity $evidenceIdentity
             if ($priorEvidence.ReusableRejections -gt 0) {
                 $reusedRejections++
                 [void]$triedMutationsOnNode[$activeNode.Id].Add($candidate.ToString())
                 continue
             }
-            $proposal = $candidate
-            break
+            if (-not $GreedyBest) { $proposal=$candidate;break }
+            [void]$triedMutationsOnNode[$activeNode.Id].Add($candidate.ToString())
+            $candidate.EvidenceIdentity=$evidenceIdentity
+            $candidate.Pattern=@($pattern);$candidate.Evidence=[string[]]@($Experience.SpecimenName)
+            $testedRep=Invoke-ApplyMutation $currentRep $candidate
+            $testedMeasure=& $measure -History $Experience -Rep $testedRep -RepVersion 'V_Candidate'
+            $candidateEvaluations++
+            $allowed=($null -eq $testedMeasure.PSObject.Properties['AdmissionAllowed'] -or $testedMeasure.AdmissionAllowed)
+            $improves=($testedMeasure.Contradictions -lt $currentMeasure.Contradictions -or ($testedMeasure.Contradictions -eq $currentMeasure.Contradictions -and $testedMeasure.PredictionError -lt $currentMeasure.PredictionError))
+            $evaluated.Add([pscustomobject]@{Proposal=$candidate;Representation=$testedRep;Measure=$testedMeasure;Reusable=(-not ($allowed -and $improves))})
+            if ($allowed -and $improves -and ($null -eq $selectedMeasure -or $testedMeasure.Contradictions -lt $selectedMeasure.Contradictions -or ($testedMeasure.Contradictions -eq $selectedMeasure.Contradictions -and ($testedMeasure.PredictionError -lt $selectedMeasure.PredictionError -or ($testedMeasure.PredictionError -eq $selectedMeasure.PredictionError -and $testedMeasure.RepresentationComplexity -lt $selectedMeasure.RepresentationComplexity))))) {
+                $proposal=$candidate;$selectedMeasure=$testedMeasure;$selectedRep=$testedRep
+            }
         }
-        if ($null -eq $proposal) { continue }
+        foreach ($tested in $evaluated) {
+            if ([object]::ReferenceEquals($tested.Proposal,$proposal)) { continue }
+            $tested.Proposal.ReusableRejection=$tested.Reusable
+            [void]$Store.RecordTransition($activeNode,$tested.Representation,$tested.Proposal.Arguments,$attributions.ToArray(),$currentMeasure,$tested.Measure,'rejected',$tested.Proposal)
+        }
+        if ($null -eq $proposal) { if ($GreedyBest) {break};continue }
         $proposal.EvidenceIdentity = $evidenceIdentity
         $proposal.Pattern=@($pattern)
         $proposal.Evidence=[string[]]@($Experience.SpecimenName)
@@ -360,7 +390,7 @@ function Invoke-PerceptRefine {
 
         # Step 4: Apply reversibly
         $previousRep = $currentRep
-        $candidateRep = Invoke-ApplyMutation -Representation $currentRep -Mutation $proposal
+        $candidateRep = if ($null -ne $selectedRep) {$selectedRep} else {Invoke-ApplyMutation -Representation $currentRep -Mutation $proposal}
 
         # Step 5: Gate
         # Strictly lexicographic ordering:
@@ -368,8 +398,8 @@ function Invoke-PerceptRefine {
         # 2. PredictionError (lower is strictly better)
         # 3. Complexity (lower is strictly better, when Contradictions == 0)
         # Fixed budget of neutral moves
-        $candidateMeasure = & $measure -History $Experience -Rep $candidateRep -RepVersion "V_Candidate"
-        $candidateEvaluations++
+        $candidateMeasure = if ($null -ne $selectedMeasure) {$selectedMeasure} else {& $measure -History $Experience -Rep $candidateRep -RepVersion 'V_Candidate'}
+        if ($null -eq $selectedMeasure) { $candidateEvaluations++ }
 
         $isBetter = $false
         $isNeutral = $false
@@ -388,6 +418,7 @@ function Invoke-PerceptRefine {
             }
         }
 
+        if ($null -ne $candidateMeasure.PSObject.Properties['AdmissionAllowed'] -and -not $candidateMeasure.AdmissionAllowed) { $isBetter=$false;$isNeutral=$false }
         # Step 6: Keep or revert
         $outcome = 'rejected'
         if ($isBetter) {
@@ -442,6 +473,8 @@ function Invoke-PerceptRefine {
 
         if ($outcome -eq 'kept') {
             $stateStack.Push($newNode)
+            $admissions++
+            if ($admissions -ge $MaxAdmissions) { break }
         }
     }
 
@@ -454,5 +487,6 @@ function Invoke-PerceptRefine {
         RemainingNeutralBudget    = $remainingNeutralBudget
         CandidateEvaluations      = $candidateEvaluations
         ReusedRejections          = $reusedRejections
+        Admissions                = $admissions
     }
 }
