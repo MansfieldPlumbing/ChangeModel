@@ -376,11 +376,13 @@ function Get-SmaPhonemes {
         [Parameter(Mandatory, ValueFromPipeline)]
         [string]$Text,
 
-        [PhonemizerContext]$Context = $script:GlobalContext
+        [PhonemizerContext]$Context = $script:GlobalContext,
+        [switch]$Sma,
+        [object]$SmaContext = $null
     )
 
-    if ($null -eq $Context) {
-        $Context = Initialize-Phonemizer
+    if ($Sma -or $null -eq $Context) {
+        return Invoke-EnglishPhonemizer -Text $Text -Context $SmaContext
     }
     if ($null -eq $Context.CandidateRepresentation) {Sync-PhonemizerRuntime $Context}
 
@@ -655,4 +657,10 @@ function Get-SmaPhonemes {
     }
 
     return $result
+}
+
+# Narrow compatibility import. The directly launchable script owns the native
+# product; explicitly initialized refinement contexts retain their frozen path.
+if ($null -eq (Get-Command Invoke-EnglishPhonemizer -ErrorAction SilentlyContinue)) {
+    . (Join-Path $PSScriptRoot 'Dev.MansfieldPlumbing.English.Phonemizer.ps1') -Import
 }
