@@ -9,13 +9,20 @@ param(
     [Parameter(ParameterSetName='Zira',Mandatory)][switch]$Zira,
     [Parameter(ParameterSetName='Speak',Mandatory)][switch]$Speak,
     [Parameter(ParameterSetName='Distill',Mandatory)][switch]$Distill,
+    [Parameter(ParameterSetName='BuildDriver',Mandatory)][switch]$BuildDriver,
+    [Parameter(ParameterSetName='VerifyDriver',Mandatory)][switch]$VerifyDriver,
+    [Parameter(ParameterSetName='Audit',Mandatory)][switch]$Audit,
+    [Parameter(ParameterSetName='Parity',Mandatory)][switch]$Parity,
+    [Parameter(ParameterSetName='GenerateCorpus',Mandatory)][switch]$GenerateCorpus,
     [string]$Text='',
     [string]$Voice='af_heart',
     [ValidateRange(0.5,2.0)][single]$Speed=1,
     [switch]$NoPlayback,
+    [Parameter(ParameterSetName='Speak')][switch]$UseZira,
     [string]$SpeechAssemblyPath=(Join-Path $PSHOME 'System.Speech.dll'),
     [string]$KokoroDirectory=(Join-Path $env:LOCALAPPDATA 'Build\PSPerception\kokoro'),
     [string]$PythonPath='C:\bin\micromamba\envs\mono\python.exe',
+    [string]$DotnetPath='dotnet',
     [string]$CorpusPath='',
     [string]$ValidationCorpusPath='',
     [string]$CorrectionPath=(Join-Path $env:LOCALAPPDATA 'Build\PSPerception\english\zira-corrections.json'),
@@ -26,6 +33,7 @@ Set-StrictMode -Version Latest
 $ErrorActionPreference='Stop'
 $script:EnglishReferenceCache=@{}
 $script:EnglishCorrectionCache=@{}
+$script:EnglishCoreCache=@{}
 $script:MobyPhoneMap=[Collections.Generic.Dictionary[string,string]]::new([StringComparer]::Ordinal)
 foreach($entry in '&=æ;(@)=ɛ;A=ɑ;eI=A;@=ə;-=ə;b=b;tS=ʧ;d=d;E=ɛ;i=i;f=f;g=ɡ;h=h;hw=w;I=ɪ;aI=I;dZ=ʤ;k=k;l=l;m=m;N=ŋ;n=n;Oi=Y;AU=W;O=ɔ;oU=O;u=u;U=ʊ;p=p;r=ɹ;S=ʃ;s=s;T=θ;D=ð;t=t;@r=əɹ;v=v;w=w;j=j;Z=ʒ;z=z'.Split(';')){
     $pair=$entry.Split('=');$script:MobyPhoneMap.Add($pair[0],$pair[1])
@@ -770,11 +778,517 @@ function Invoke-EnglishPhonemizer {
     [CmdletBinding()]
     param([Parameter(Mandatory)][AllowEmptyString()][string]$Text,$Context=$null,[string]$ReferencePath=$AssemblyPath)
     $start=[Diagnostics.Stopwatch]::StartNew()
-    if($null -eq $Context){$Context=New-EnglishContext -ReferencePath $ReferencePath}
+    if($null -eq $Context){
+        $driver=Import-EnglishCoreDriver -ReferencePath $ReferencePath
+        $result=$driver.Run.Invoke($Text)
+        $result | Add-Member -NotePropertyName Timing -NotePropertyValue ([pscustomobject]@{TotalMs=$start.Elapsed.TotalMilliseconds;BinderInvocations=0})
+        return $result
+    }
     Add-EnglishText -Context $Context -Chunk $Text
     $result=Get-EnglishResult $Context
     $result | Add-Member -NotePropertyName Timing -NotePropertyValue ([pscustomobject]@{TotalMs=$start.Elapsed.TotalMilliseconds;BinderInvocations=$Context.Invocations})
     $result
+}
+
+function Get-EnglishCoreTemplate {
+    @'
+class CoreOccurrence {
+    CoreOccurrence() {}
+    [int]$Identity
+    [int]$LexicalId
+    [int]$Capabilities
+    [string]$Text
+    [int]$Start
+    [int]$End
+    [string]$Kind
+}
+class CoreNominal {
+    CoreNominal() {}
+    [CoreOccurrence]$Head
+    [CoreOccurrence]$Determiner
+    [CoreOccurrence[]]$Modifiers
+    [int[]]$Dependencies
+}
+class CoreClause {
+    CoreClause() {}
+    [string]$Voice
+    [string]$Tense
+    [CoreNominal]$Subject
+    [CoreOccurrence]$Predicate
+    [CoreNominal]$Object
+    [CoreOccurrence]$Auxiliary
+    [CoreNominal]$Agent
+    [CoreNominal]$Time
+    [CoreClause]$Complement
+    [int[]]$Dependencies
+}
+class CoreCandidate {
+    [CoreNominal]$Subject
+    [CoreOccurrence]$Determiner
+    [CoreOccurrence[]]$Modifiers
+    [CoreOccurrence]$Auxiliary
+    [CoreOccurrence]$Predicate
+    [CoreNominal]$Object
+    [CoreClause]$Clause
+    [CoreOccurrence]$Relation
+    [int]$PredicateRole=1
+    [string]$Tense='Unspecified'
+    [string]$Phase='Subject'
+    [string]$Voice='Active'
+    [string]$Status='Pending'
+    [string]$Need='Nominal'
+    [int[]]$Choices
+    CoreCandidate() {
+        $this.Modifiers=[CoreOccurrence[]]::new(0)
+        $this.Choices=[int[]]::new(256)
+        for([int]$i=0;$i -lt 256;$i++){$this.Choices[$i]=-1}
+    }
+    [CoreCandidate] Copy() {
+        [CoreCandidate]$c=[CoreCandidate]::new()
+        $c.Subject=$this.Subject;$c.Determiner=$this.Determiner;$c.Modifiers=$this.Modifiers
+        $c.Auxiliary=$this.Auxiliary;$c.Predicate=$this.Predicate;$c.Object=$this.Object
+        $c.Clause=$this.Clause;$c.Relation=$this.Relation;$c.PredicateRole=$this.PredicateRole
+        $c.Tense=$this.Tense;$c.Phase=$this.Phase;$c.Voice=$this.Voice;$c.Status=$this.Status;$c.Need=$this.Need
+        [Array]::Copy($this.Choices,$c.Choices,256)
+        return $c
+    }
+}
+class CoreToken {
+    CoreToken() {}
+    [int]$Identity
+    [int]$LexicalId
+    [string]$Word
+    [int]$SourceStart
+    [int]$SourceEnd
+    [string]$Pron
+    [string]$PronunciationSource='CompiledLexicon'
+    [int[]]$SymbolIds
+    [int[]]$Roles
+    [string[]]$Alternatives
+    [string]$Status
+    [System.Nullable[int]]$EmissionStart
+    [System.Nullable[int]]$EmissionEnd
+}
+class CoreResult {
+    CoreResult() {}
+    [string]$OriginalText
+    [string]$ProjectedText
+    [bool]$Reversible=$true
+    [string]$KokoroPhones
+    [string]$SupportedPhones
+    [int[]]$SymbolIds
+    [CoreToken[]]$Tokens
+    [bool]$Complete
+    [string]$GrammarStatus
+    [string]$PronunciationStatus
+    [CoreCandidate[]]$Candidates
+    [CoreCandidate[]]$RetainedCandidates
+    [CoreToken[]]$UnresolvedSpans
+    [CoreToken[]]$OovSpans
+    [CoreToken[]]$AmbiguousDecisions
+    [string[]]$Bindings
+    [string[]]$Withdrawn
+    [int]$Revision
+    [string[]]$Pending
+    [string]$Execution='CoreLib lowered typed pronunciation driver'
+    [string]$ReferenceAssembly='@REFERENCE@'
+}
+class CoreEngine {
+    [Collections.Generic.List[CoreOccurrence]]$Occurrences
+    [CoreCandidate[]]$Candidates
+    [Collections.Generic.List[string]]$Trace
+    [Collections.Generic.List[string]]$Withdrawn
+    [Collections.Generic.Dictionary[string,string]]$Corrections
+    [bool]$Boundary
+    CoreEngine() {
+        $this.Occurrences=[Collections.Generic.List[CoreOccurrence]]::new()
+        $this.Candidates=[CoreCandidate[]]::new(1);$this.Candidates[0]=[CoreCandidate]::new()
+        $this.Trace=[Collections.Generic.List[string]]::new()
+        $this.Withdrawn=[Collections.Generic.List[string]]::new()
+        $this.Corrections=[Collections.Generic.Dictionary[string,string]]::new([StringComparer]::Ordinal)
+        [string]$data=[CoreDriver]::CorrectionData()
+        [string[]]$lines=$data.Split([Convert]::ToChar(10),[StringSplitOptions]::RemoveEmptyEntries)
+        [string]$line=''
+        foreach($line in $lines){
+            [string[]]$pair=$line.Split([Convert]::ToChar(9),[StringSplitOptions]::None)
+            if($pair.Length -ne 2){throw [InvalidOperationException]::new('Correction contract failure.')}
+            $this.Corrections.Add($pair[0],$pair[1])
+        }
+    }
+    static [int[]] Join([int[]]$a,[int[]]$b) {
+        [int[]]$r=[int[]]::new($a.Length+$b.Length)
+        [Array]::Copy($a,0,$r,0,$a.Length);[Array]::Copy($b,0,$r,$a.Length,$b.Length)
+        return $r
+    }
+    static [CoreClause] CopyClause([CoreClause]$from) {
+        [CoreClause]$c=[CoreClause]::new()
+        $c.Voice=$from.Voice;$c.Tense=$from.Tense;$c.Subject=$from.Subject;$c.Predicate=$from.Predicate
+        $c.Object=$from.Object;$c.Auxiliary=$from.Auxiliary;$c.Agent=$from.Agent;$c.Time=$from.Time
+        $c.Complement=$from.Complement;$c.Dependencies=$from.Dependencies
+        return $c
+    }
+    [CoreNominal] Nominal([CoreCandidate]$c,[CoreOccurrence]$o) {
+        if(($o.Capabilities -band 1) -eq 0){throw [ArgumentException]::new('Nominal capability required.')}
+        [CoreNominal]$n=[CoreNominal]::new();$n.Head=$o;$n.Determiner=$c.Determiner;$n.Modifiers=$c.Modifiers
+        [Collections.Generic.List[int]]$ids=[Collections.Generic.List[int]]::new();$ids.Add($o.Identity)
+        [CoreOccurrence]$m=$null
+        foreach($m in $c.Modifiers){
+            if(($m.Capabilities -band 4) -eq 0){throw [ArgumentException]::new('Modifier capability required.')}
+            $ids.Add($m.Identity);$c.Choices[$m.Identity]=2
+        }
+        $c.Choices[$o.Identity]=0
+        if(-not [object]::ReferenceEquals($null,$c.Determiner)){
+            if(($c.Determiner.Capabilities -band 32) -eq 0){throw [ArgumentException]::new('Determiner capability required.')}
+            $ids.Add($c.Determiner.Identity);$c.Choices[$c.Determiner.Identity]=4
+        }
+        $n.Dependencies=$ids.ToArray();$c.Determiner=$null;$c.Modifiers=[CoreOccurrence[]]::new(0)
+        $this.Trace.Add('CoreEngine.Nominal')
+        return $n
+    }
+    [void] CompleteClause([CoreCandidate]$c) {
+        [CoreClause]$clause=[CoreClause]::new();$clause.Voice=$c.Voice;$clause.Tense=$c.Tense
+        $clause.Subject=$c.Subject;$clause.Predicate=$c.Predicate;$clause.Auxiliary=$c.Auxiliary
+        [int]$role=$c.PredicateRole
+        if($c.Voice -ceq 'Passive'){
+            if(($c.Predicate.Capabilities -band 8) -eq 0 -or ($c.Auxiliary.Capabilities -band 64) -eq 0){throw [ArgumentException]::new('Passive operand capability failure.')}
+            $role=3
+        }elseif($c.Voice -ceq 'Stative'){
+            if(($c.Predicate.Capabilities -band 4) -eq 0 -or ($c.Auxiliary.Capabilities -band 64) -eq 0){throw [ArgumentException]::new('Stative operand capability failure.')}
+            $role=2
+        }else{
+            if(($c.Predicate.Capabilities -band 2) -eq 0 -or (($c.Predicate.Capabilities -band 1024) -ne 0 -and [object]::ReferenceEquals($null,$c.Object))){throw [ArgumentException]::new('Active operand capability failure.')}
+            $clause.Object=$c.Object
+            if(-not [object]::ReferenceEquals($null,$c.Auxiliary)){if(($c.Auxiliary.Capabilities -band 4096) -eq 0){throw [ArgumentException]::new('Perfect capability required.')};$role=3}
+        }
+        [int[]]$predicate=[int[]]::new(1);$predicate[0]=$c.Predicate.Identity
+        $clause.Dependencies=[CoreEngine]::Join($c.Subject.Dependencies,$predicate)
+        if(-not [object]::ReferenceEquals($null,$clause.Object)){$clause.Dependencies=[CoreEngine]::Join($clause.Dependencies,$clause.Object.Dependencies)}
+        if(-not [object]::ReferenceEquals($null,$c.Auxiliary)){$predicate[0]=$c.Auxiliary.Identity;$clause.Dependencies=[CoreEngine]::Join($clause.Dependencies,$predicate);$c.Choices[$c.Auxiliary.Identity]=4}
+        $c.Choices[$c.Predicate.Identity]=$role;$c.Clause=$clause;$c.Phase='Extension';$c.Status='Extensible';$c.Need='OptionalRelation'
+        $this.Trace.Add('CoreEngine.CompleteClause')
+    }
+    [void] Add([CoreOccurrence]$o) {
+        if($this.Occurrences.Count -ge 256){throw [ArgumentOutOfRangeException]::new('occurrences')}
+        $o.Identity=$this.Occurrences.Count;$this.Occurrences.Add($o)
+        if($o.Kind -ceq 'Boundary'){$this.Boundary=$o.Text -ceq '.' -or $o.Text -ceq '!' -or $o.Text -ceq '?';return}
+        $this.Boundary=$false
+        [Collections.Generic.List[CoreCandidate]]$next=[Collections.Generic.List[CoreCandidate]]::new()
+        [CoreCandidate]$prior=$null
+        foreach($prior in $this.Candidates){
+            [CoreCandidate]$c=$prior.Copy()
+            if($c.Status -ceq 'Unsupported' -or $c.Status -ceq 'Contradictory'){$next.Add($c);continue}
+            [int]$f=$o.Capabilities
+            if($o.LexicalId -lt 0){$c.Status='Unsupported';$c.Need='UnknownLexicalIdentity';$next.Add($c);continue}
+            if($c.Phase -ceq 'Subject' -or $c.Phase -ceq 'Object' -or $c.Phase -ceq 'RelationComplement'){
+                if(($f -band 32) -ne 0 -and [object]::ReferenceEquals($null,$c.Determiner)){
+                    [CoreCandidate]$det=$c.Copy();$det.Determiner=$o;$det.Choices[$o.Identity]=4;$det.Status='Pending';$det.Need='NominalHead';$next.Add($det)
+                    $this.Trace.Add('CoreEngine.DeterminerRequirement')
+                }
+                if(($f -band 4) -ne 0 -and -not [object]::ReferenceEquals($null,$c.Determiner)){
+                    [CoreCandidate]$mod=$c.Copy();[CoreOccurrence[]]$mods=[CoreOccurrence[]]::new($c.Modifiers.Length+1)
+                    [Array]::Copy($c.Modifiers,$mods,$c.Modifiers.Length);$mods[$mods.Length-1]=$o
+                    $mod.Modifiers=$mods;$mod.Choices[$o.Identity]=2;$mod.Need='NominalHead';$next.Add($mod)
+                }
+                if(($f -band 1) -ne 0){
+                    [CoreNominal]$nominal=$this.Nominal($c,$o)
+                    if($c.Phase -ceq 'Subject'){$c.Subject=$nominal;$c.Phase='Predicate';$c.Status='Extensible';$c.Need='Predicate'}
+                    elseif($c.Phase -ceq 'Object'){$c.Object=$nominal;$this.CompleteClause($c)}
+                    else{
+                        if(($f -band 512) -ne 0 -or (($f -band 256) -ne 0 -and $c.Voice -ceq 'Passive')){
+                            [CoreClause]$relation=[CoreEngine]::CopyClause($c.Clause)
+                            if(($f -band 512) -ne 0){$relation.Time=$nominal}else{$relation.Agent=$nominal}
+                            [int[]]$rid=[int[]]::new(1);$rid[0]=$c.Relation.Identity
+                            $relation.Dependencies=[CoreEngine]::Join([CoreEngine]::Join($relation.Dependencies,$nominal.Dependencies),$rid)
+                            $c.Clause=$relation;$c.Phase='Extension';$c.Status='Extensible';$c.Need='OptionalRelation';$this.Trace.Add('CoreEngine.Relation')
+                        }else{$c.Status='Unsupported';$c.Need='RelationSense';$this.Withdrawn.Add('UnsupportedRelationSense')}
+                    }
+                    $next.Add($c)
+                }
+                if(($f -band 37) -eq 0){$c.Status='Contradictory';$c.Need='NominalHead';$next.Add($c)}
+            }elseif($c.Phase -ceq 'Predicate'){
+                if(($f -band 4160) -ne 0){$c.Auxiliary=$o;$c.Choices[$o.Identity]=4;$c.Phase='AfterAuxiliary';$c.Status='Pending';$c.Need='Predicate';$next.Add($c);$this.Trace.Add('CoreEngine.AuxiliaryRequirement')}
+                elseif(($f -band 2) -ne 0){
+                    $c.Predicate=$o;$c.Choices[$o.Identity]=1;$this.Trace.Add('CoreEngine.OperationRequirement')
+                    if(($f -band 1024) -ne 0){$c.Phase='Object';$c.Status='Pending';$c.Need='Object'}else{$this.CompleteClause($c)}
+                    $next.Add($c)
+                    if(($f -band 8192) -ne 0){[CoreCandidate]$past=$c.Copy();$past.PredicateRole=3;$past.Tense='Past';$past.Choices[$o.Identity]=3;$c.Tense='Present';if($past.Phase -ceq 'Extension'){$this.CompleteClause($past)};$next.Add($past)}
+                }else{$c.Status='Contradictory';$c.Need='CallablePredicate';$next.Add($c)}
+            }elseif($c.Phase -ceq 'AfterAuxiliary'){
+                if(($c.Auxiliary.Capabilities -band 4096) -ne 0 -and ($f -band 8) -ne 0){$c.Predicate=$o;$c.Choices[$o.Identity]=3;if(($f -band 1024) -ne 0){$c.Phase='Object';$c.Need='Object'}else{$this.CompleteClause($c)};$next.Add($c)}
+                elseif(($c.Auxiliary.Capabilities -band 64) -ne 0){
+                    if(($f -band 8) -ne 0){[CoreCandidate]$passive=$c.Copy();$passive.Predicate=$o;$passive.Voice='Passive';$this.CompleteClause($passive);$next.Add($passive)}
+                    if(($f -band 4) -ne 0){[CoreCandidate]$stative=$c.Copy();$stative.Predicate=$o;$stative.Voice='Stative';$this.CompleteClause($stative);$next.Add($stative)}
+                    if(($f -band 12) -eq 0){$c.Status='Unsupported';$c.Need='CopularComplement';$next.Add($c)}
+                }else{$c.Status='Contradictory';$c.Need='Participle';$next.Add($c)}
+            }elseif($c.Phase -ceq 'Extension'){
+                if(($f -band 128) -ne 0){$c.Relation=$o;$c.Choices[$o.Identity]=4;$c.Phase='RelationComplement';$c.Status='Pending';$c.Need='RelationComplement';$next.Add($c)}
+                elseif(($c.Predicate.Capabilities -band 2048) -ne 0 -and ($f -band 2) -ne 0 -and ($f -band 1024) -eq 0){
+                    [CoreCandidate]$embedded=[CoreCandidate]::new();$embedded.Subject=$c.Object;$embedded.Predicate=$o;$this.CompleteClause($embedded)
+                    [CoreClause]$parent=[CoreEngine]::CopyClause($c.Clause);$parent.Complement=$embedded.Clause
+                    $parent.Dependencies=[CoreEngine]::Join($parent.Dependencies,$embedded.Clause.Dependencies)
+                    $c.Clause=$parent;$c.Choices[$o.Identity]=1;$next.Add($c)
+                }else{$c.Status='Unsupported';$c.Need='AdditionalConstruction';$next.Add($c)}
+            }
+        }
+        if($next.Count -gt 16){throw [ArgumentOutOfRangeException]::new('candidates')}
+        $this.Candidates=$next.ToArray()
+    }
+    [void] Scan([string]$text) {
+        if([object]::ReferenceEquals($null,$text) -or $text.Length -gt 8192){throw [ArgumentOutOfRangeException]::new('text')}
+        [int]$at=0
+        while($at -lt $text.Length){
+            if([char]::IsWhiteSpace($text.get_Chars($at))){$at++;continue}
+            [int]$start=$at;[string]$kind='Word'
+            if([char]::IsLetterOrDigit($text.get_Chars($at)) -or $text.get_Chars($at) -ceq [Convert]::ToChar(36)){
+                $at++
+                while($at -lt $text.Length -and ([char]::IsLetterOrDigit($text.get_Chars($at)) -or $text.get_Chars($at) -ceq [Convert]::ToChar(39) -or $text.get_Chars($at) -ceq [Convert]::ToChar(8217))){$at++}
+            }else{$kind='Boundary';$at++}
+            [CoreOccurrence]$o=[CoreOccurrence]::new();$o.Text=$text.Substring($start,$at-$start);$o.Start=$start;$o.End=$at;$o.Kind=$kind;$o.LexicalId=-1
+            if($kind -ceq 'Word'){$o.LexicalId=[Lexicon]::Find($o.Text);if($o.LexicalId -ge 0){$o.Capabilities=[Lexicon]::Capabilities($o.LexicalId)}}
+            $this.Add($o)
+        }
+    }
+    static [void] Alternatives([Collections.Generic.List[string]]$values,[int]$id,[int]$role) {
+        [string[]]$parts=[Lexicon]::Phones($id,$role).Split([Convert]::ToChar(124),[StringSplitOptions]::RemoveEmptyEntries)
+        [string]$part=''
+        foreach($part in $parts){if(-not $values.Contains($part)){$values.Add($part)}}
+    }
+    [int] FollowingVowel([CoreOccurrence]$o) {
+        if($o.Identity+1 -ge $this.Occurrences.Count){return 0}
+        [CoreOccurrence]$next=$this.Occurrences.get_Item($o.Identity+1)
+        if($next.Kind -ceq 'Boundary'){return 0}
+        if($next.LexicalId -lt 0){return 2}
+        [int]$answer=-1
+        for([int]$role=0;$role -lt 5;$role++){
+            [string[]]$values=[Lexicon]::Phones($next.LexicalId,$role).Split([Convert]::ToChar(124),[StringSplitOptions]::RemoveEmptyEntries)
+            [string]$value=''
+            foreach($value in $values){
+                [int]$at=0;while($at -lt $value.Length -and ($value.get_Chars($at) -ceq [Convert]::ToChar(712) -or $value.get_Chars($at) -ceq [Convert]::ToChar(716))){$at++}
+                if($at -ge $value.Length){return 2}
+                [int]$vowel=0;if('AIOWYɑɔəæɛɜɪiʊuʌ'.IndexOf($value.get_Chars($at)) -ge 0){$vowel=1}
+                if($answer -ge 0 -and $answer -ne $vowel){return 2};$answer=$vowel
+            }
+        }
+        if($answer -lt 0){return 2};return $answer
+    }
+    [CoreResult] Result([string]$text) {
+        [CoreResult]$r=[CoreResult]::new();$r.OriginalText=$text;$r.Revision=$this.Occurrences.Count
+        [Collections.Generic.List[CoreCandidate]]$viable=[Collections.Generic.List[CoreCandidate]]::new()
+        [Collections.Generic.List[string]]$pending=[Collections.Generic.List[string]]::new();[bool]$unsupported=$false
+        [CoreCandidate]$c=$null
+        foreach($c in $this.Candidates){
+            if($c.Status -ceq 'Unsupported'){$unsupported=$true}
+            elseif($c.Status -cne 'Contradictory'){$viable.Add($c);if($c.Status -ceq 'Pending'){$pending.Add($c.Need)}}
+        }
+        $r.Candidates=$viable.ToArray();$r.RetainedCandidates=$this.Candidates;$r.Pending=$pending.ToArray()
+        $r.GrammarStatus='Contradictory'
+        if($viable.Count -gt 1){$r.GrammarStatus='Ambiguous'}elseif($viable.Count -eq 1){$r.GrammarStatus=$viable.get_Item(0).Status;if($this.Boundary -and $viable.get_Item(0).Status -ceq 'Extensible' -and -not [object]::ReferenceEquals($null,$viable.get_Item(0).Clause)){$r.GrammarStatus='Resolved'}}elseif($unsupported){$r.GrammarStatus='Unsupported'}
+        [Collections.Generic.List[CoreToken]]$tokens=[Collections.Generic.List[CoreToken]]::new()
+        [Collections.Generic.List[CoreToken]]$unresolved=[Collections.Generic.List[CoreToken]]::new()
+        [Collections.Generic.List[CoreToken]]$oov=[Collections.Generic.List[CoreToken]]::new()
+        [Collections.Generic.List[CoreToken]]$ambiguous=[Collections.Generic.List[CoreToken]]::new()
+        [Collections.Generic.List[int]]$ids=[Collections.Generic.List[int]]::new();[Text.StringBuilder]$phones=[Text.StringBuilder]::new()
+        [CoreOccurrence]$o=$null
+        foreach($o in $this.Occurrences.ToArray()){
+            [CoreToken]$t=[CoreToken]::new();$t.Identity=$o.Identity;$t.LexicalId=$o.LexicalId;$t.Word=$o.Text;$t.SourceStart=$o.Start;$t.SourceEnd=$o.End
+            [Collections.Generic.List[int]]$roles=[Collections.Generic.List[int]]::new()
+            [Collections.Generic.List[string]]$alternatives=[Collections.Generic.List[string]]::new()
+            [string]$phone=$null;[string]$reason=$null
+            if($o.Kind -ceq 'Boundary'){if([Phonology]::SymbolId($o.Text.get_Chars(0)) -ge 0){$phone=$o.Text}else{$reason='UnsupportedSymbol'}}
+            elseif($o.LexicalId -lt 0){$reason='UnknownLexicalIdentity'}
+            elseif($viable.Count -eq 0){$reason='NoAdmittedRelationship'}
+            else{
+                foreach($c in $viable.ToArray()){[int]$role=$c.Choices[$o.Identity];if(-not $roles.Contains($role)){$roles.Add($role)}}
+                $roles.Sort()
+                if($roles.Contains(-1)){$reason='PendingRole'}else{
+                    [int]$role=0
+                    foreach($role in $roles.ToArray()){[CoreEngine]::Alternatives($alternatives,$o.LexicalId,$role)}
+                    $alternatives.Sort()
+                    if($alternatives.Count -eq 1){$phone=$alternatives.get_Item(0)}else{$reason='PronunciationAmbiguous'}
+                }
+            }
+            if([object]::ReferenceEquals($null,$phone) -and $o.LexicalId -ge 0){
+                [Collections.Generic.List[string]]$all=[Collections.Generic.List[string]]::new()
+                for([int]$role=0;$role -lt 5;$role++){[CoreEngine]::Alternatives($all,$o.LexicalId,$role)}
+                if($all.Count -eq 1){$phone=$all.get_Item(0);$reason=$null}
+            }
+            if($roles.Count -eq 1 -and $roles.get_Item(0) -ge 0 -and $this.Corrections.Count -gt 0){
+                [string]$key=$o.Text.ToLowerInvariant()+':'+[Convert]::ToString($roles.get_Item(0))+':'+[Convert]::ToString($this.FollowingVowel($o))
+                if($this.Corrections.ContainsKey($key)){$phone=$this.Corrections.get_Item($key);$reason=$null;$t.PronunciationSource='ZiraCorrection'}
+            }
+            [Collections.Generic.List[int]]$tokenIds=[Collections.Generic.List[int]]::new()
+            if(-not [object]::ReferenceEquals($null,$phone)){
+                if($phones.Length -gt 0){[void]$phones.Append(' ');$ids.Add(16)}
+                $t.EmissionStart=[System.Nullable[int]]::new($phones.Length)
+                [char]$ch=[Convert]::ToChar(0)
+                foreach($ch in $phone.ToCharArray()){
+                    [int]$symbol=[Phonology]::SymbolId($ch);if($symbol -lt 0){throw [ArgumentException]::new('Phone outside target vocabulary.')}
+                    $ids.Add($symbol);$tokenIds.Add($symbol)
+                }
+                [void]$phones.Append($phone);$t.EmissionEnd=[System.Nullable[int]]::new($phones.Length);$t.Status='Valid'
+            }else{$t.Status=$reason;$unresolved.Add($t);if($reason -ceq 'UnknownLexicalIdentity'){$oov.Add($t)}}
+            $t.Pron=$phone;$t.Roles=$roles.ToArray();$t.Alternatives=$alternatives.ToArray();$t.SymbolIds=$tokenIds.ToArray()
+            $tokens.Add($t);if($roles.Count -gt 1 -or $alternatives.Count -gt 1){$ambiguous.Add($t)}
+        }
+        $r.Tokens=$tokens.ToArray();$r.UnresolvedSpans=$unresolved.ToArray();$r.OovSpans=$oov.ToArray();$r.AmbiguousDecisions=$ambiguous.ToArray()
+        $r.SymbolIds=$ids.ToArray();$r.SupportedPhones=$phones.ToString();$r.Complete=$unresolved.Count -eq 0
+        $r.PronunciationStatus='UnsupportedOrPending';if($r.Complete){$r.KokoroPhones=$r.SupportedPhones;$r.PronunciationStatus='Resolved'}
+        $r.Bindings=$this.Trace.ToArray();$r.Withdrawn=$this.Withdrawn.ToArray()
+        return $r
+    }
+}
+class CoreDriver {
+    static [string] CorrectionData() {return '@CORRECTIONS@'}
+    static [string] NormalizeZira([string]$raw) {
+        if([object]::ReferenceEquals($null,$raw) -or $raw.Length -gt 8192){throw [ArgumentOutOfRangeException]::new('raw')}
+        return $raw.Replace('i͡ə','iə').Replace('t͡ʃ','ʧ').Replace('d͡ʒ','ʤ').Replace('a͡ɪ','I').Replace('e͡ɪ','A').Replace('o͡ʊ','O').Replace('a͡ʊ','W').Replace('ɔ͡ɪ','Y').Replace('a͡i','I').Replace('e͡i','A').Replace('o͡u','O').Replace('a͡u','W').Replace('ɔ͡i','Y').Replace('ɻ','ɹ').Replace('ɚ','əɹ').Replace('ɝ','ɜɹ').Replace('g','ɡ').Replace('tʃ','ʧ').Replace('dʒ','ʤ').Replace('aɪ','I').Replace('eɪ','A').Replace('oʊ','O').Replace('aʊ','W').Replace('ɔɪ','Y')
+    }
+    static [int[]] ZiraTokenIds([string]$raw) {
+        [string]$phones=[CoreDriver]::NormalizeZira($raw)
+        [int[]]$ids=[int[]]::new($phones.Length)
+        for([int]$i=0;$i -lt $phones.Length;$i++){
+            [int]$id=[Phonology]::SymbolId($phones.get_Chars($i))
+            if($id -lt 0){throw [ArgumentException]::new('Zira phone outside Kokoro vocabulary.')}
+            $ids[$i]=$id
+        }
+        return $ids
+    }
+    static [int] ZiraBatch([string]$raw,[int]$count) {
+        if($count -lt 1 -or $count -gt 100000){throw [ArgumentOutOfRangeException]::new('count')}
+        [int]$sum=0
+        for([int]$i=0;$i -lt $count;$i++){$sum+=[CoreDriver]::ZiraTokenIds($raw).Length}
+        return $sum
+    }
+    static [CoreResult] Run([string]$text) {
+        [CoreEngine]$engine=[CoreEngine]::new();$engine.Scan($text);return $engine.Result($text)
+    }
+    static [int] Batch([string]$text,[int]$count) {
+        if($count -lt 1 -or $count -gt 100000){throw [ArgumentOutOfRangeException]::new('count')}
+        [int]$total=0
+        for([int]$i=0;$i -lt $count;$i++){[CoreResult]$r=[CoreDriver]::Run($text);if(-not $r.Complete){throw [InvalidOperationException]::new('Benchmark phrase unresolved.')};$total=$total+$r.SymbolIds.Length}
+        return $total
+    }
+    static [string] Quote([string]$text) {
+        if([object]::ReferenceEquals($null,$text)){return 'null'}
+        [Text.StringBuilder]$b=[Text.StringBuilder]::new();[void]$b.Append([Convert]::ToChar(34))
+        [char]$ch=[Convert]::ToChar(0)
+        foreach($ch in $text.ToCharArray()){
+            if($ch -ceq [Convert]::ToChar(34) -or $ch -ceq [Convert]::ToChar(92)){[void]$b.Append([Convert]::ToChar(92));[void]$b.Append($ch)}
+            elseif([Convert]::ToInt32($ch) -lt 32){[void]$b.Append('\u');[void]$b.Append([Convert]::ToString([Convert]::ToInt32($ch),16).PadLeft(4,[Convert]::ToChar(48)))}
+            else{[void]$b.Append($ch)}
+        }
+        [void]$b.Append([Convert]::ToChar(34));return $b.ToString()
+    }
+    static [string] Json([CoreResult]$r) {
+        [Text.StringBuilder]$b=[Text.StringBuilder]::new()
+        [void]$b.Append('{"Execution":"CoreLib lowered typed pronunciation driver","Complete":')
+        if($r.Complete){[void]$b.Append('true')}else{[void]$b.Append('false')}
+        [void]$b.Append(',"RuntimeSmaLoaded":')
+        if([CoreDriver]::SmaLoaded()){[void]$b.Append('true')}else{[void]$b.Append('false')}
+        [void]$b.Append(',"OriginalText":');[void]$b.Append([CoreDriver]::Quote($r.OriginalText))
+        [void]$b.Append(',"KokoroPhones":');[void]$b.Append([CoreDriver]::Quote($r.KokoroPhones))
+        [void]$b.Append(',"GrammarStatus":');[void]$b.Append([CoreDriver]::Quote($r.GrammarStatus))
+        [void]$b.Append(',"SymbolIds":[')
+        for([int]$i=0;$i -lt $r.SymbolIds.Length;$i++){if($i -gt 0){[void]$b.Append(',')};[void]$b.Append([Convert]::ToString($r.SymbolIds[$i]))}
+        [void]$b.Append('],"Tokens":[')
+        for([int]$i=0;$i -lt $r.Tokens.Length;$i++){
+            [CoreToken]$t=$r.Tokens[$i];if($i -gt 0){[void]$b.Append(',')}
+            [void]$b.Append('{"Word":');[void]$b.Append([CoreDriver]::Quote($t.Word))
+            [void]$b.Append(',"SourceStart":');[void]$b.Append([Convert]::ToString($t.SourceStart))
+            [void]$b.Append(',"SourceEnd":');[void]$b.Append([Convert]::ToString($t.SourceEnd))
+            [void]$b.Append(',"Pron":');[void]$b.Append([CoreDriver]::Quote($t.Pron))
+            [void]$b.Append(',"Status":');[void]$b.Append([CoreDriver]::Quote($t.Status))
+            [void]$b.Append(',"PronunciationSource":');[void]$b.Append([CoreDriver]::Quote($t.PronunciationSource))
+            [void]$b.Append(',"Roles":[')
+            for([int]$j=0;$j -lt $t.Roles.Length;$j++){if($j -gt 0){[void]$b.Append(',')};[void]$b.Append([Convert]::ToString($t.Roles[$j]))}
+            [void]$b.Append(']}')
+        }
+        [void]$b.Append(']}');return $b.ToString()
+    }
+    static [int] Main([string[]]$arguments) {
+        if($arguments.Length -eq 3 -and $arguments[0] -ceq '--zira'){
+            [CoreResult]$mapped=[CoreResult]::new();$mapped.OriginalText=$arguments[1]
+            $mapped.KokoroPhones=[CoreDriver]::NormalizeZira($arguments[1]);$mapped.SymbolIds=[CoreDriver]::ZiraTokenIds($arguments[1])
+            $mapped.Complete=$true;$mapped.GrammarStatus='ZiraEvents';$mapped.Tokens=[CoreToken[]]::new(1)
+            [CoreToken]$token=[CoreToken]::new();$token.Word=$arguments[1];$token.SourceStart=0;$token.SourceEnd=$arguments[1].Length
+            $token.Pron=$mapped.KokoroPhones;$token.PronunciationSource='ZiraEvents';$token.Status='Valid';$token.Roles=[int[]]::new(0)
+            $mapped.Tokens[0]=$token
+            [IO.File]::WriteAllText($arguments[2],[CoreDriver]::Json($mapped));return 0
+        }
+        if($arguments.Length -ne 2){return 2}
+        [CoreResult]$result=[CoreDriver]::Run($arguments[0])
+        [IO.File]::WriteAllText($arguments[1],[CoreDriver]::Json($result))
+        if(-not $result.Complete){return 1};return 0
+    }
+    static [bool] SmaLoaded() {
+        [System.Reflection.Assembly]$assembly=$null
+        foreach($assembly in [AppDomain]::CurrentDomain.GetAssemblies()){
+            if($assembly.GetName().Name -ceq 'System.Management.Automation'){return $true}
+        }
+        return $false
+    }
+}
+'@
+}
+
+function Import-EnglishCoreDriver {
+    [CmdletBinding()]
+    param([string]$ReferencePath=$AssemblyPath)
+    if($script:EnglishCoreCache.ContainsKey($ReferencePath)){return $script:EnglishCoreCache[$ReferencePath]}
+    $reference=Import-EnglishReference $ReferencePath
+    $lex=$reference.Assembly.GetType('Lexicon',$true)
+    $literal=@((Get-Command Build-EnglishReference).ScriptBlock.Ast.FindAll({param($node) $node -is [Management.Automation.Language.StringConstantExpressionAst] -and $node.Value.StartsWith('class Lexicon {')},$true))
+    if($literal.Count -ne 1){throw 'Lexical lowering template identity failure.'}
+    $source=$literal[0].Value
+    foreach($pair in @(@('COUNT','Count'),@('FORMS','Forms'),@('FLAGS','Flags'),@('OFFSETS','Offsets'),@('ROLES','RoleIndexes'),@('ALTERNATES','Alternates'),@('PHONES','Sequences'))){
+        $value=[string]$lex.GetMethod($pair[1]).Invoke($null,@())
+        $source=$source.Replace('@'+$pair[0]+'@',$value.Replace("'","''"))
+    }
+    $vocabulary=$reference.Assembly.GetType('Phonology').GetMethod('Vocabulary').Invoke($null,@())
+    $source=$source.Replace('@VOCAB@',$vocabulary.Replace("'","''"))
+    $table=if(Test-Path -LiteralPath $CorrectionPath){Import-EnglishCorrections $CorrectionPath}else{@{}}
+    $corrections=@(foreach($key in ($table.Keys | Sort-Object)){
+        foreach($ch in $table[$key].ToCharArray()){if($reference.SymbolId.Invoke($ch) -lt 0){throw 'Correction outside Kokoro vocabulary.'}}
+        $key+"`t"+$table[$key]
+    }) -join "`n"
+    $source+="`n"+(Get-EnglishCoreTemplate).Replace('[Collections.Generic.','[System.Collections.Generic.').Replace('[void]','').Replace('@CORRECTIONS@',$corrections.Replace("'","''")).Replace('@REFERENCE@',$reference.Assembly.GetName().Name)
+    $identity=[Convert]::ToHexString([Security.Cryptography.SHA256]::HashData([Text.Encoding]::UTF8.GetBytes($source)))
+    $directory=Join-Path $env:LOCALAPPDATA ('Build\PSPerception\english\driver\'+$identity)
+    $name='Dev.MansfieldPlumbing.English.Driver.'+$identity.Substring(0,16)
+    $output=Join-Path $directory ($name+'.dll');$receiptPath=Join-Path $directory 'driver-receipt.json'
+    if(-not(Test-Path -LiteralPath $receiptPath)){
+        [void][IO.Directory]::CreateDirectory($directory)
+        $input=Join-Path $directory 'driver.ps1'
+        [IO.File]::WriteAllText($input,$source,[Text.UTF8Encoding]::new($false))
+        $compiler=Join-Path $env:LOCALAPPDATA 'Build\PSPerception\inputs\pslowering-1afabe056235a570da29e268824784557d4f6cdd'
+        if(-not(Test-Path -LiteralPath (Join-Path $compiler 'verified-source.tsv'))){& (Join-Path $PSScriptRoot '..\tools\Get-LoweringReference.ps1') -OutDir $compiler}
+        $manifest=Import-Csv -LiteralPath (Join-Path $compiler 'verified-source.tsv') -Delimiter "`t"
+        if($manifest.Count -ne 9){throw 'Incomplete pinned lowering source.'}
+        foreach($row in $manifest){
+            $path=[IO.Path]::GetFullPath((Join-Path $compiler $row.Path))
+            if(-not $path.StartsWith($compiler+'\',[StringComparison]::OrdinalIgnoreCase) -or $row.Commit -cne '1afabe056235a570da29e268824784557d4f6cdd' -or (Get-FileHash -LiteralPath $path).Hash -cne $row.Sha256){throw 'Pinned compiler integrity failure.'}
+        }
+        Import-Module (Join-Path $compiler 'src\Dev.MansfieldPlumbing.PowerShell.Lowering.psd1') -Force
+        $lowered=Export-LoweredAssembly -SourcePath $input -ClassName CoreDriver -EntryPoint Main -OutputPath $output -Deterministic
+        $inspection=Test-LoweredAssembly -AssemblyPath $output
+        if($inspection.AssemblyReferences.Count -ne 1 -or $inspection.AssemblyReferences[0] -cne 'System.Private.CoreLib'){throw 'Standalone driver is not CoreLib only.'}
+        $runtimes=@(& $DotnetPath --list-runtimes)
+        if($LASTEXITCODE){throw 'Standalone .NET runtime discovery failed.'}
+        $versions=@($runtimes | ForEach-Object {if($_ -match '^Microsoft.NETCore.App (\S+) ' -and $Matches[1].StartsWith([string][Environment]::Version.Major+'.')){$Matches[1]}})
+        if($versions.Count -eq 0){throw 'A standalone .NET runtime matching the compiler major version is required.'}
+        $runtimeConfig=[IO.Path]::ChangeExtension($output,'.runtimeconfig.json')
+        [ordered]@{runtimeOptions=[ordered]@{tfm='net'+[Environment]::Version.Major+'.0';framework=[ordered]@{name='Microsoft.NETCore.App';version=$versions[-1]};rollForward='Disable'}} | ConvertTo-Json -Depth 4 | Set-Content -LiteralPath $runtimeConfig -Encoding utf8
+        [ordered]@{SourceSha256=$identity;AssemblySha256=(Get-FileHash $output).Hash;ReferenceSha256=(Get-FileHash $ReferencePath).Hash;CompilerCommit='1afabe056235a570da29e268824784557d4f6cdd';AssemblyReferences=$inspection.AssemblyReferences;EntryPoint='CoreDriver.Main';Output=$output;Corrections=$table.Count} | ConvertTo-Json -Depth 4 | Set-Content -LiteralPath $receiptPath -Encoding utf8
+    }
+    $receipt=Get-Content -LiteralPath $receiptPath -Raw | ConvertFrom-Json
+    if($receipt.SourceSha256 -cne $identity -or (Get-FileHash -LiteralPath $output).Hash -cne $receipt.AssemblySha256){throw 'Standalone driver integrity failure.'}
+    $assembly=[Reflection.Assembly]::LoadFrom($output)
+    $dependencies=@($assembly.GetReferencedAssemblies())
+    if($dependencies.Count -ne 1 -or $dependencies[0].Name -cne 'System.Private.CoreLib'){throw 'Unexpected standalone dependency.'}
+    $type=$assembly.GetType('CoreDriver',$true)
+    $driver=[pscustomobject]@{Assembly=$assembly;Run=[Func[string,object]]$type.GetMethod('Run').CreateDelegate([Func[string,object]]);Batch=[Func[string,int,int]]$type.GetMethod('Batch').CreateDelegate([Func[string,int,int]]);NormalizeZira=[Func[string,string]]$type.GetMethod('NormalizeZira').CreateDelegate([Func[string,string]]);ZiraTokenIds=[Func[string,int[]]]$type.GetMethod('ZiraTokenIds').CreateDelegate([Func[string,int[]]]);ZiraBatch=[Func[string,int,int]]$type.GetMethod('ZiraBatch').CreateDelegate([Func[string,int,int]]);Output=$output;Receipt=$receiptPath;SourceSha256=$identity;Corrections=$table.Count}
+    $script:EnglishCoreCache[$ReferencePath]=$driver
+    $driver
 }
 
 function Get-EnglishCorrectionKey {
@@ -874,7 +1388,7 @@ function Get-EnglishZiraReference {
 
 function ConvertTo-EnglishKokoroPhones {
     param([string]$Phones)
-    $Phones.Replace('ɻ','ɹ').Replace('ɚ','əɹ').Replace('ɝ','ɜɹ').Replace('g','ɡ').Replace('tʃ','ʧ').Replace('dʒ','ʤ').Replace('aɪ','I').Replace('eɪ','A').Replace('oʊ','O').Replace('aʊ','W').Replace('ɔɪ','Y')
+    $Phones.Replace('i͡ə','iə').Replace('t͡ʃ','ʧ').Replace('d͡ʒ','ʤ').Replace('a͡ɪ','I').Replace('e͡ɪ','A').Replace('o͡ʊ','O').Replace('a͡ʊ','W').Replace('ɔ͡ɪ','Y').Replace('a͡i','I').Replace('e͡i','A').Replace('o͡u','O').Replace('a͡u','W').Replace('ɔ͡i','Y').Replace('ɻ','ɹ').Replace('ɚ','əɹ').Replace('ɝ','ɜɹ').Replace('g','ɡ').Replace('tʃ','ʧ').Replace('dʒ','ʤ').Replace('aɪ','I').Replace('eɪ','A').Replace('oʊ','O').Replace('aʊ','W').Replace('ɔɪ','Y')
 }
 
 function Get-EnglishPhoneComparison {
@@ -976,6 +1490,7 @@ function Invoke-EnglishZiraDistillation {
         if(Test-Path -LiteralPath $destination){Copy-Item -LiteralPath $destination -Destination ($destination+'.'+[guid]::NewGuid().ToString('N')+'.before')}
         $report | ConvertTo-Json -Depth 8 | Set-Content -LiteralPath $destination -Encoding utf8
         $null=Import-EnglishCorrections -Path $destination
+        $script:EnglishCoreCache=@{}
         foreach($row in @($rows | Where-Object Partition -ceq 'Admission')){$null=Invoke-EnglishPhonemizer -Text $row.Text}
     }
     [pscustomobject]@{Gate=$report.Gate;Captures=$rows.Count;AlignedSentences=$report.AlignedSentences;Corrections=$entries.Count;RuntimeFixes=$runtimeFixes;RuntimeRegressions=$runtimeRegressions;Report=$reportPath;CorrectionPath=if($report.Gate -ceq 'ZIRA_CORRECTION_ADMISSION=PASS'){$CorrectionPath}else{$null}}
@@ -1023,17 +1538,40 @@ function Initialize-EnglishKokoro {
     [pscustomobject]@{Directory=$Directory;SourceRoot=$source;SourceCommit=$commit;SourceFiles=$files;Inputs=$inputs;ModelRevision=$revision}
 }
 
+function Invoke-EnglishZiraPhones {
+    param([Parameter(Mandatory)][string]$Text)
+    $capture=Get-EnglishZiraReference -Text $Text
+    if($capture.Alignment -cne 'ExactSourceSpansAndWordOnsets'){throw 'Zira source alignment is unproved; direct teacher speech requires complete word spans.'}
+    $driver=Import-EnglishCoreDriver
+    $parts=[Collections.Generic.List[string]]::new();$tokens=[Collections.Generic.List[object]]::new();$at=0
+    foreach($word in $capture.AlignedWords){
+        $gap=$Text.Substring($at,$word.Start-$at)
+        if($gap -match '[^\s.,!?;:()\-]'){throw 'Zira omitted a source span; synthesis refused.'}
+        foreach($ch in $gap.ToCharArray()){if(-not [char]::IsWhiteSpace($ch)){$parts.Add([string]$ch)}}
+        $phone=$driver.NormalizeZira.Invoke($word.RawPhones);$parts.Add($phone)
+        $tokens.Add([pscustomobject]@{Word=$word.Word;Roles=@();Pron=$phone;PronunciationSource='ZiraEvents';SourceStart=$word.Start;SourceEnd=$word.Start+$word.Length})
+        $at=$word.Start+$word.Length
+    }
+    $tail=$Text.Substring($at)
+    if($tail -match '[^\s.,!?;:()\-]'){throw 'Zira omitted a trailing source span; synthesis refused.'}
+    foreach($ch in $tail.ToCharArray()){if(-not [char]::IsWhiteSpace($ch)){$parts.Add([string]$ch)}}
+    $phones=$parts.ToArray() -join ' '
+    $ids=$driver.ZiraTokenIds.Invoke($phones)
+    [pscustomobject]@{Complete=$true;KokoroPhones=$phones;SymbolIds=$ids;Tokens=$tokens.ToArray();Execution='Zira captured events mapped by lowered CoreLib driver';Capture=$capture.CapturePath;CaptureSha256=(Get-FileHash -LiteralPath $capture.CapturePath).Hash}
+}
+
 function Invoke-EnglishKokoroSpeech {
     [CmdletBinding()]
     param([Parameter(Mandatory)][ValidateLength(1,8192)][string]$Text)
-    $result=Invoke-EnglishPhonemizer -Text $Text
+    $result=if($UseZira){Invoke-EnglishZiraPhones -Text $Text}else{Invoke-EnglishPhonemizer -Text $Text}
     if(-not $result.Complete){throw ('Phonemizer cannot resolve the complete phrase: '+(($result.UnresolvedSpans | ForEach-Object {$_.Word+':'+$_.Status}) -join ', '))}
     if($result.KokoroPhones.Length -gt 510){throw 'Kokoro accepts at most 510 phones per utterance.'}
     $assets=Initialize-EnglishKokoro
     $run=Join-Path $assets.Directory ([guid]::NewGuid().ToString('N'))
     [void][IO.Directory]::CreateDirectory($run)
-    $spec=@{SourceRoot=$assets.SourceRoot;SourceCommit=$assets.SourceCommit;SourceFiles=$assets.SourceFiles;Inputs=$assets.Inputs;ModelRevision=$assets.ModelRevision;Voice=$Voice;Speed=$Speed;Text=$Text;Phonemes=$result.KokoroPhones;SymbolIds=$result.SymbolIds;Phonemizer='PSPerception SMA named parameter binding';AuthorSha256=(Get-FileHash -LiteralPath $PSCommandPath).Hash;Output=$run;Tokens=@($result.Tokens | Select-Object Word,Roles,Pron,PronunciationSource)}
-    $spec.CorrectionTableSha256=if(Test-Path -LiteralPath $CorrectionPath){(Get-FileHash -LiteralPath $CorrectionPath).Hash}else{$null}
+    $spec=@{SourceRoot=$assets.SourceRoot;SourceCommit=$assets.SourceCommit;SourceFiles=$assets.SourceFiles;Inputs=$assets.Inputs;ModelRevision=$assets.ModelRevision;Voice=$Voice;Speed=$Speed;Text=$Text;Phonemes=$result.KokoroPhones;SymbolIds=$result.SymbolIds;Phonemizer=$result.Execution;AuthorSha256=(Get-FileHash -LiteralPath $PSCommandPath).Hash;Output=$run;Tokens=@($result.Tokens | Select-Object Word,Roles,Pron,PronunciationSource)}
+    $spec.CorrectionTableSha256=if(-not $UseZira -and (Test-Path -LiteralPath $CorrectionPath)){(Get-FileHash -LiteralPath $CorrectionPath).Hash}else{$null}
+    if($UseZira){$spec.ZiraCapture=$result.Capture;$spec.ZiraCaptureSha256=$result.CaptureSha256}
     $specPath=Join-Path $run 'input.json'
     $spec | ConvertTo-Json -Depth 8 | Set-Content -LiteralPath $specPath -Encoding utf8
     # Windows reference-only transport; the portable phonemizer never imports it.
@@ -1082,7 +1620,7 @@ pcm = (np.clip(audio, -1, 1) * 32767).astype('<i2').tobytes()
 output = pathlib.Path(spec['Output']) / 'speech.wav'
 with wave.open(str(output), 'wb') as wav:
     wav.setnchannels(1); wav.setsampwidth(2); wav.setframerate(24000); wav.writeframes(pcm)
-receipt = {'Gate':'SMA_TO_STOCK_KOKORO_WAV=PASS','Phonemizer':spec['Phonemizer'],'Phonemes':phones,'Samples':len(audio),'SampleRate':24000,'Seconds':len(audio)/24000,'Peak':float(np.max(np.abs(audio))),'Wave':str(output),'WaveSha256':hashlib.sha256(output.read_bytes()).hexdigest().upper(),'SourceCommit':spec['SourceCommit'],'ModelRevision':spec['ModelRevision'],'Voice':spec['Voice'],'Torch':torch.__version__,'AuthorSha256':spec['AuthorSha256'],'Tokens':spec['Tokens']}
+receipt = {'Gate':'PHONEMIZER_TO_STOCK_KOKORO_WAV=PASS','Phonemizer':spec['Phonemizer'],'Phonemes':phones,'Samples':len(audio),'SampleRate':24000,'Seconds':len(audio)/24000,'Peak':float(np.max(np.abs(audio))),'Wave':str(output),'WaveSha256':hashlib.sha256(output.read_bytes()).hexdigest().upper(),'SourceCommit':spec['SourceCommit'],'ModelRevision':spec['ModelRevision'],'Voice':spec['Voice'],'Torch':torch.__version__,'AuthorSha256':spec['AuthorSha256'],'Tokens':spec['Tokens'],'ZiraCapture':spec.get('ZiraCapture'),'ZiraCaptureSha256':spec.get('ZiraCaptureSha256')}
 receipt['CorrectionTableSha256'] = spec['CorrectionTableSha256']
 (pathlib.Path(spec['Output']) / 'receipt.json').write_text(json.dumps(receipt, ensure_ascii=False, indent=2), encoding='utf-8')
 print('Stock Kokoro WAV created: samples=' + str(len(audio)) + '; sample_rate=24000')
@@ -1100,6 +1638,241 @@ print('Stock Kokoro WAV created: samples=' + str(len(audio)) + '; sample_rate=24
     }
     $receipt | Add-Member -NotePropertyName PlaybackRequested -NotePropertyValue (-not $NoPlayback)
     $receipt
+}
+
+function New-EnglishZiraCorpus {
+    $directory=Join-Path $env:LOCALAPPDATA ('Build\PSPerception\english\corpora\'+[guid]::NewGuid().ToString('N'))
+    [void][IO.Directory]::CreateDirectory($directory)
+    $construction=[Collections.Generic.List[string]]::new();$heldout=[Collections.Generic.List[string]]::new()
+    foreach($noun in @('record','present','permit','book','song','music','door','clock','apple','orange','elephant','actor','hour','university','idea','computer','buffer','file','number','date','voice','window','pipe','team','teacher','leaf','key')){
+        $construction.Add('The '+$noun+' is here.');$construction.Add('I saw the '+$noun+'.')
+        $heldout.Add('We saw the '+$noun+' today.')
+    }
+    foreach($verb in @('record','present','permit','close','wind','lead','read','write','watch','open','find')){
+        $construction.Add('They '+$verb+' the book.');$construction.Add('We '+$verb+' the record.')
+        $heldout.Add('They '+$verb+' the book every day.')
+    }
+    foreach($adj in @('live','closed','open','red','heavy','useful','new','old','small','large')){
+        $construction.Add('The door is '+$adj+'.');$construction.Add('The book is '+$adj+'.')
+        $heldout.Add('The record is '+$adj+'.')
+    }
+    foreach($n in @(0,1,12,64,1024)){
+        $construction.Add('The value is '+$n+'.');$heldout.Add('The file is '+$n+' KB.')
+    }
+    foreach($phrase in @('The meeting is on October 8, 2026.','The total is $12.50.','The file is 12 MB.','They had read the book.','They will read the book tomorrow.','Alice cannot find her keys.')){$construction.Add($phrase)}
+    foreach($phrase in @('The meeting is on November 9, 2027.','The total is $24.75.','The file is 32 MB.','We had read the record.','They read the book yesterday.','John cannot find his keys.')){$heldout.Add($phrase)}
+    foreach($sentence in $construction){if($sentence -cin $heldout){throw 'Corpus partitions overlap.'}}
+    $trainingPath=Join-Path $directory 'construction.txt';$heldoutPath=Join-Path $directory 'held-out.txt'
+    [IO.File]::WriteAllLines($trainingPath,$construction.ToArray(),[Text.UTF8Encoding]::new($false))
+    [IO.File]::WriteAllLines($heldoutPath,$heldout.ToArray(),[Text.UTF8Encoding]::new($false))
+    $receipt=[ordered]@{Version=1;Generator='PowerShell authored sentence templates';ConstructionSentences=$construction.Count;HeldOutSentences=$heldout.Count;Construction=$trainingPath;ConstructionSha256=(Get-FileHash -LiteralPath $trainingPath).Hash;HeldOut=$heldoutPath;HeldOutSha256=(Get-FileHash -LiteralPath $heldoutPath).Hash;Purpose='Zira contextual pronunciation capture and independent held-out context evaluation';Coverage='Seed corpus; not comprehensive English';AuthorSha256=(Get-FileHash -LiteralPath $PSCommandPath).Hash}
+    $receipt | ConvertTo-Json -Depth 4 | Set-Content -LiteralPath (Join-Path $directory 'corpus.json') -Encoding utf8
+    [pscustomobject]$receipt
+}
+
+function Test-EnglishZiraTokenParity {
+    [CmdletBinding()]
+    param([string]$Path=$CorpusPath)
+    $driver=Import-EnglishCoreDriver
+    $configPath=Join-Path $env:LOCALAPPDATA 'Build\PSPerception\kokoro-config.json'
+    $configHash=(Get-FileHash -LiteralPath $configPath).Hash
+    if($configHash -cne '5ABB01E2403B072BF03D04FDE160443E209D7A0DAD49A423BE15196B9B43C17F'){throw 'Kokoro vocabulary integrity failure.'}
+    $config=Get-Content -LiteralPath $configPath -Raw | ConvertFrom-Json -AsHashtable
+    $vocab=$config.vocab
+    $compiledSymbolId=[Func[char,int]]$driver.Assembly.GetType('Phonology',$true).GetMethod('SymbolId').CreateDelegate([Func[char,int]])
+    foreach($symbol in $vocab.Keys){Assert-EnglishContract 'all compiled target vocabulary IDs independently match pinned config' ($compiledSymbolId.Invoke($symbol[0]) -eq $vocab[$symbol])}
+    foreach($pair in @(@('ɻɚɝgtʃdʒaɪeɪoʊaʊɔɪ','ɹəɹɜɹɡʧʤIAOWY'),@('t͡ʃd͡ʒa͡ie͡io͡ua͡uɔ͡i','ʧʤIAOWY'),@('a͡idi͡ə','Idiə'),@('ðə ɻɛkəɻd','ðə ɹɛkəɹd'),@('ˈɛˌɪ','ˈɛˌɪ'))){
+        Assert-EnglishContract 'fixed Zira symbol conversion specimen' ($driver.NormalizeZira.Invoke($pair[0]) -ceq $pair[1])
+    }
+    foreach($invalid in @('∑',([string][char]1),('x'*8193))){
+        $rejected=$false;try{$null=$driver.ZiraTokenIds.Invoke($invalid)}catch{$rejected=$true}
+        Assert-EnglishContract 'unsupported and over-bound raw phones are rejected' $rejected
+    }
+    if($Path){
+        $info=Get-Item -LiteralPath $Path
+        if($info.Length -gt 1048576){throw 'Corpus size bound exceeded.'}
+        $sentences=@([IO.File]::ReadAllLines($info.FullName) | Where-Object {$_ -match '\S'})
+        if($sentences.Count -lt 1 -or $sentences.Count -gt 4096){throw 'Corpus sentence bound exceeded.'}
+        $captures=@(foreach($sentence in $sentences){Get-EnglishZiraReference -Text $sentence})
+        $corpusHash=(Get-FileHash -LiteralPath $info.FullName).Hash
+    }else{
+        $files=@(Get-ChildItem -LiteralPath (Join-Path $env:LOCALAPPDATA 'Build\PSPerception\english\zira-captures') -Filter '*.json' -File)
+        if($files.Count -lt 1 -or $files.Count -gt 4096){throw 'Capture inventory bound exceeded.'}
+        $captures=@(foreach($file in $files){
+            if($file.Length -gt 4194304){throw 'Capture size bound exceeded.'}
+            $capture=Get-Content -LiteralPath $file.FullName -Raw | ConvertFrom-Json
+            $capture | Add-Member -NotePropertyName CapturePath -NotePropertyValue $file.FullName -PassThru
+        })
+        $corpusHash=$null
+    }
+    $rows=[Collections.Generic.List[object]]::new();$observations=[Collections.Generic.List[object]]::new();$totalIds=0;$excluded=0;$rawCases=[Collections.Generic.List[string]]::new()
+    foreach($capture in $captures){
+        if($capture.Version -ne 1 -or $capture.Voice -cne 'Microsoft Zira Desktop'){throw 'Unexpected capture contract or voice.'}
+        $events=@($capture.Phones | Where-Object {$_.Phone.Length -gt 0 -and -not [char]::IsControl($_.Phone[0])})
+        $excluded+=$capture.Phones.Count-$events.Count
+        # Exact, captured word boundaries are useful; unproved alignment never supplies invented boundaries.
+        $raw=if($capture.Alignment -ceq 'ExactSourceSpansAndWordOnsets'){@($capture.AlignedWords.RawPhones) -join ' '}else{$events.Phone -join ''}
+        $normalized=$driver.NormalizeZira.Invoke($raw)
+        $unsupported=@($normalized.ToCharArray() | Where-Object {-not $vocab.ContainsKey([string]$_)} | Sort-Object -Unique)
+        if($unsupported.Count){throw ('Unmapped Zira phones in specimen "'+$capture.Text+'": '+(($unsupported | ForEach-Object {'U+'+[Convert]::ToInt32($_).ToString('X4')}) -join ', '))}
+        $ids=$driver.ZiraTokenIds.Invoke($raw)
+        $expected=[int[]]@(foreach($ch in $normalized.ToCharArray()){
+            if(-not $vocab.ContainsKey([string]$ch)){throw 'Teacher phone outside pinned Kokoro vocabulary.'}
+            $vocab[[string]$ch]
+        })
+        Assert-EnglishContract 'captured Zira mapping has no dropped symbols' ($ids.Length -eq $normalized.Length -and ($ids -join ',') -ceq ($expected -join ','))
+        Assert-EnglishContract 'compiled map agrees with independently authored conversion fixtures and script map' ($normalized -ceq (ConvertTo-EnglishKokoroPhones $raw))
+        Assert-EnglishContract 'Kokoro model context length' ($ids.Length+2 -le $config.plbert.max_position_embeddings)
+        $totalIds+=$ids.Length;$rawCases.Add($raw)
+        $rows.Add([pscustomobject]@{Text=$capture.Text;RawZiraPhones=$raw;KokoroPhones=$normalized;SymbolIds=$ids;ModelInputIds=([int[]]@(0)+$ids+[int[]]@(0));WordAlignment=$capture.Alignment;Capture=$capture.CapturePath;CaptureSha256=(Get-FileHash -LiteralPath $capture.CapturePath).Hash;LexicalSource='Zira captured events; no dictionary pronunciation lookup'})
+        if($capture.Alignment -ceq 'ExactSourceSpansAndWordOnsets'){
+            foreach($word in $capture.AlignedWords){
+                $wordPhones=$driver.NormalizeZira.Invoke($word.RawPhones)
+                $observations.Add([pscustomobject]@{Word=$word.Word.ToLowerInvariant();Text=$capture.Text;Start=$word.Start;End=$word.Start+$word.Length;RawZiraPhones=$word.RawPhones;KokoroPhones=$wordPhones;SymbolIds=$driver.ZiraTokenIds.Invoke($word.RawPhones);LexicalStress='Unproved';Role='Unassigned';Capture=$capture.CapturePath})
+            }
+        }
+    }
+    $directory=Join-Path $env:LOCALAPPDATA ('Build\PSPerception\english\token-parity\'+[guid]::NewGuid().ToString('N'))
+    [void][IO.Directory]::CreateDirectory($directory)
+    $externalPath=Join-Path $directory 'standalone.json'
+    & $DotnetPath $driver.Output --zira $rawCases[0] $externalPath
+    $status=$LASTEXITCODE;$external=Get-Content -LiteralPath $externalPath -Raw | ConvertFrom-Json
+    Assert-EnglishContract 'standalone Zira token map has no SMA and preserves all IDs' ($status -eq 0 -and -not $external.RuntimeSmaLoaded -and $external.KokoroPhones -ceq $rows[0].KokoroPhones -and ($external.SymbolIds -join ',') -ceq ($rows[0].SymbolIds -join ','))
+    $null=$driver.ZiraBatch.Invoke($rawCases[0],1000)
+    $samples=[Collections.Generic.List[double]]::new();$runs=2000
+    foreach($batch in 1..9){
+        $watch=[Diagnostics.Stopwatch]::StartNew();$count=$driver.ZiraBatch.Invoke($rawCases[0],$runs);$watch.Stop()
+        Assert-EnglishContract 'compiled token benchmark retains outputs' ($count -eq $rows[0].SymbolIds.Length*$runs)
+        $samples.Add($watch.Elapsed.TotalMilliseconds*1000/$runs)
+    }
+    $ordered=@($samples | Sort-Object)
+    $phonemizerSamples=[Collections.Generic.List[double]]::new();$null=$driver.Batch.Invoke('The record records the record.',200)
+    foreach($batch in 1..9){
+        $watch=[Diagnostics.Stopwatch]::StartNew();$null=$driver.Batch.Invoke('The record records the record.',500);$watch.Stop()
+        $phonemizerSamples.Add($watch.Elapsed.TotalMilliseconds*1000/500)
+    }
+    $graphOrdered=@($phonemizerSamples | Sort-Object)
+    $report=[ordered]@{Gate='ZIRA_TO_KOKORO_TOKEN_PARITY=PASS';Captures=$rows.Count;MappedSymbols=$totalIds;DroppedSymbols=0;PauseOrControlEventsExcluded=$excluded;VocabularySymbols=$vocab.Count;ConfigSha256=$configHash;ModelRevision='f3ff3571791e39611d31c381e3a41a3af07b4987';CorpusSha256=$corpusHash;ReferenceBoundary='KModel.forward pinned dfb907a02bba8152ca444717ca5d78747ccb4bec; config vocabulary IDs plus zero BOS/EOS';SeparateProcessSmaLoaded=$external.RuntimeSmaLoaded;TokenMapMedianBatchMeanUs=$ordered[4];TokenMapMaxBatchMeanUs=$ordered[8];TokenMapBatchMeansUs=$samples.ToArray();TokenMapFixture=$rows[0].Text;FullDriverMedianBatchMeanUs=$graphOrdered[4];FullDriverMaxBatchMeanUs=$graphOrdered[8];FullDriverBatchMeansUs=$phonemizerSamples.ToArray();FullDriverFixture='The record records the record.';FullDriverLexiconOrigin='Existing Moby plus admitted corrections; distinct from dictionary-free Zira token mapping';TimingBoundary='Warm compiled managed loops; 9 batches; excludes capture, build, process startup and synthesis';MachineCondition='Current observed Windows load; not an idle-machine baseline';Accuracy='Token parity only; contextual pronunciation quality, stress and unseen-word coverage need separate gates';Driver=$driver.Output;DriverSha256=(Get-FileHash -LiteralPath $driver.Output).Hash}
+    ConvertTo-Json -InputObject $rows.ToArray() -Depth 6 | Set-Content -LiteralPath (Join-Path $directory 'cases.json') -Encoding utf8
+    ConvertTo-Json -InputObject $observations.ToArray() -Depth 5 | Set-Content -LiteralPath (Join-Path $directory 'word-observations.json') -Encoding utf8
+    $receipt=Join-Path $directory 'parity.json';$report | ConvertTo-Json -Depth 5 | Set-Content -LiteralPath $receipt -Encoding utf8
+    [pscustomobject]$report | Add-Member -NotePropertyName Receipt -NotePropertyValue $receipt -PassThru
+}
+
+function Get-EnglishSymbolDistance {
+    param([string]$Expected,[string]$Actual)
+    $prior=[int[]]::new($Actual.Length+1)
+    for($j=0;$j -le $Actual.Length;$j++){$prior[$j]=$j}
+    for($i=1;$i -le $Expected.Length;$i++){
+        $next=[int[]]::new($Actual.Length+1);$next[0]=$i
+        for($j=1;$j -le $Actual.Length;$j++){
+            $cost=if($Expected[$i-1] -ceq $Actual[$j-1]){0}else{1}
+            $next[$j]=[Math]::Min([Math]::Min($prior[$j]+1,$next[$j-1]+1),$prior[$j-1]+$cost)
+        }
+        $prior=$next
+    }
+    $prior[$Actual.Length]
+}
+
+function Test-EnglishPronunciationCorpus {
+    [CmdletBinding()]
+    param([Parameter(Mandatory)][string]$Path)
+    $Path=[IO.Path]::GetFullPath($Path)
+    $info=Get-Item -LiteralPath $Path
+    if($info.Length -gt 1048576){throw 'Evaluation corpus size bound exceeded.'}
+    $sentences=@([IO.File]::ReadAllLines($Path) | Where-Object {$_ -match '\S'})
+    if($sentences.Count -eq 0 -or $sentences.Count -gt 4096){throw 'Evaluation corpus sentence bound exceeded.'}
+    $driver=Import-EnglishCoreDriver
+    $rows=[Collections.Generic.List[object]]::new()
+    $words=0;$supported=0;$compared=0;$matched=0;$edits=0;$symbols=0;$alignmentFailures=0;$complete=0
+    foreach($sentence in $sentences){
+        $capture=Get-EnglishZiraReference -Text $sentence
+        $candidate=Invoke-EnglishPhonemizer -Text $sentence
+        if($candidate.Complete){$complete++}
+        $tokens=@($candidate.Tokens | Where-Object {$_.Word -match '[\p{L}\p{Nd}]'})
+        $words+=$tokens.Count;$supported+=@($tokens | Where-Object Status -ceq 'Valid').Count
+        if($capture.Alignment -cne 'ExactSourceSpansAndWordOnsets'){$alignmentFailures++}
+        foreach($token in $tokens){
+            $teacher=@($capture.AlignedWords | Where-Object {$_.Start -eq $token.SourceStart -and $_.Start+$_.Length -eq $token.SourceEnd})
+            $expected=$null;$distance=$null;$agreement=$null
+            if($capture.Alignment -ceq 'ExactSourceSpansAndWordOnsets' -and $teacher.Count -eq 1){
+                $expected=[string]$teacher[0].Phones
+                $actual=Get-EnglishPhoneComparison $token.Pron
+                $distance=Get-EnglishSymbolDistance -Expected $expected -Actual $actual
+                $agreement=$expected -ceq $actual
+                $compared++;$symbols+=$expected.Length;$edits+=$distance
+                if($agreement){$matched++}
+            }
+            $rows.Add([pscustomobject]@{Sentence=$sentence;Word=$token.Word;Start=$token.SourceStart;End=$token.SourceEnd;Status=$token.Status;PronunciationSource=$token.PronunciationSource;StudentPhones=$token.Pron;TeacherPhones=$expected;TeacherAgreement=$agreement;SymbolEdits=$distance;Capture=$capture.CapturePath})
+        }
+    }
+    $directory=Join-Path $env:LOCALAPPDATA ('Build\PSPerception\english\audits\'+[guid]::NewGuid().ToString('N'))
+    [void][IO.Directory]::CreateDirectory($directory)
+    $detail=Join-Path $directory 'words.json'
+    ConvertTo-Json -InputObject $rows.ToArray() -Depth 4 | Set-Content -LiteralPath $detail -Encoding utf8
+    $lexicalReceipt=Import-Clixml -LiteralPath (Join-Path ([IO.Path]::GetDirectoryName($AssemblyPath)) 'build-receipt.clixml')
+    $report=[ordered]@{Gate='PRONUNCIATION_AUDIT_RECORDED';CorpusSha256=(Get-FileHash -LiteralPath $Path).Hash;Sentences=$sentences.Count;CompleteSentences=$complete;InputWords=$words;SupportedWords=$supported;WordCoverage=if($words){$supported/$words}else{$null};ComparableTeacherWords=$compared;TeacherMatchedWords=$matched;TeacherWordAgreement=if($compared){$matched/$compared}else{$null};TeacherSymbols=$symbols;KokoroSymbolEditRate=if($symbols){$edits/$symbols}else{$null};AlignmentFailures=$alignmentFailures;LexiconOrigin=$lexicalReceipt.DataOrigin;Driver=$driver.Output;DriverSha256=(Get-FileHash -LiteralPath $driver.Output).Hash;StressAccuracy='Unmeasured: captured teacher phones do not establish lexical stress';IndependentAccuracy='Unmeasured: Zira agreement is teacher fidelity';AudioPreference='Unmeasured';Details=$detail}
+    $destination=Join-Path $directory 'audit.json'
+    $report | ConvertTo-Json -Depth 4 | Set-Content -LiteralPath $destination -Encoding utf8
+    [pscustomobject]$report | Add-Member -NotePropertyName Receipt -NotePropertyValue $destination -PassThru
+}
+
+function Test-EnglishCoreDriver {
+    [CmdletBinding()]
+    param()
+    $driver=Import-EnglishCoreDriver
+    $fixtures=@('The record records the record.','They present the present.','They permit the record.','They live.','The music is live.','They close the door.','They wind the clock.','They lead the cat.','They had read the record.','They read the record.','The door was closed by Alice.','The door was closed by noon.','I saw her duck.','I saw her shit.','The duck.','They duck.','the door was','The quuxblarg records the record.','The actor records the record.','The hour records the record.','The university records the record.','The one records the record.','')
+    foreach($sentence in $fixtures){
+        $legacy=Invoke-EnglishPhonemizer -Text $sentence -Context (New-EnglishContext)
+        $native=Invoke-EnglishPhonemizer -Text $sentence
+        Assert-EnglishContract 'canonical CoreLib path' ($native.Execution -ceq 'CoreLib lowered typed pronunciation driver')
+        Assert-EnglishContract 'lowered phone and grammar equivalence' ($legacy.KokoroPhones -ceq $native.KokoroPhones -and $legacy.SupportedPhones -ceq $native.SupportedPhones -and $legacy.GrammarStatus -ceq $native.GrammarStatus -and $legacy.Complete -eq $native.Complete -and $legacy.Candidates.Count -eq $native.Candidates.Count -and ($legacy.SymbolIds -join ',') -ceq ($native.SymbolIds -join ','))
+        $before=@($legacy.Tokens | ForEach-Object {$_.SourceStart.ToString()+':'+$_.SourceEnd+':'+$_.Status+':'+$_.Pron+':'+($_.Roles -join ',')}) -join '|'
+        $after=@($native.Tokens | ForEach-Object {$_.SourceStart.ToString()+':'+$_.SourceEnd+':'+$_.Status+':'+$_.Pron+':'+($_.Roles -join ',')}) -join '|'
+        Assert-EnglishContract 'lowered token extent, role and status equivalence' ($before -ceq $after)
+    }
+    $record=$driver.Run.Invoke('The record records the record.')
+    Assert-EnglishContract 'independent fixed record fixture' ($record.KokoroPhones -ceq 'ðə ɹˈɛkəɹd ɹɪkˈɔɹdz ðə ɹˈɛkəɹd .')
+    $unknown=$driver.Run.Invoke('The quuxblarg records the record.')
+    Assert-EnglishContract 'standalone source coverage rejection' (-not $unknown.Complete -and $null -eq $unknown.KokoroPhones -and $unknown.OovSpans.Count -gt 0)
+    $bounded=$false
+    try{$null=$driver.Run.Invoke(('x'*8193))}catch{$bounded=$_.Exception.ToString().Contains('ArgumentOutOfRangeException')}
+    Assert-EnglishContract 'standalone input bound' $bounded
+    $directory=Join-Path ([IO.Path]::GetDirectoryName($driver.Output)) ([guid]::NewGuid().ToString('N'))
+    [void][IO.Directory]::CreateDirectory($directory)
+    $externalCases=@('The record records the record.','The actor records the record.','They read the record.','The quuxblarg records the record.')
+    for($i=0;$i -lt $externalCases.Count;$i++){
+        $destination=Join-Path $directory ($i.ToString()+'.json')
+        & $DotnetPath $driver.Output $externalCases[$i] $destination
+        $status=$LASTEXITCODE
+        $external=Get-Content -LiteralPath $destination -Raw | ConvertFrom-Json
+        $expected=$driver.Run.Invoke($externalCases[$i])
+        Assert-EnglishContract 'separate dotnet process without SMA' (-not $external.RuntimeSmaLoaded -and $external.Execution -ceq $expected.Execution)
+        Assert-EnglishContract 'standalone exit code and phones' ((($status -eq 0 -and $external.Complete) -or ($status -eq 1 -and -not $external.Complete)) -and $external.KokoroPhones -ceq $expected.KokoroPhones -and ($external.SymbolIds -join ',') -ceq ($expected.SymbolIds -join ','))
+    }
+    $teacherChecks=0
+    if(Test-Path -LiteralPath $CorrectionPath){
+        $model=Get-Content -LiteralPath $CorrectionPath -Raw | ConvertFrom-Json
+        foreach($capturePath in @($model.Captures | Sort-Object -Unique)){
+            $capture=Get-Content -LiteralPath $capturePath -Raw | ConvertFrom-Json
+            if($capture.Alignment -cne 'ExactSourceSpansAndWordOnsets'){continue}
+            $result=$driver.Run.Invoke($capture.Text)
+            foreach($token in @($result.Tokens | Where-Object PronunciationSource -ceq 'ZiraCorrection')){
+                $word=@($capture.AlignedWords | Where-Object {$_.Start -eq $token.SourceStart -and $_.Start+$_.Length -eq $token.SourceEnd})
+                Assert-EnglishContract 'lowered corrections agree with recorded external teacher' ($word.Count -eq 1 -and (Get-EnglishPhoneComparison $token.Pron) -ceq $word[0].Phones)
+                $teacherChecks++
+            }
+        }
+        Assert-EnglishContract 'retained teacher corrections reached standalone execution' ($teacherChecks -gt 0)
+    }
+    $null=$driver.Batch.Invoke('The record records the record.',100)
+    $runs=2000;$watch=[Diagnostics.Stopwatch]::StartNew()
+    $count=$driver.Batch.Invoke('The record records the record.',$runs)
+    $watch.Stop()
+    Assert-EnglishContract 'native batch output count' ($count -eq $record.SymbolIds.Length*$runs)
+    $report=[pscustomobject]@{Gate='CORELIB_STANDALONE_PHONEMIZER=PASS';Fixtures=$fixtures.Count;ExternalProcesses=$externalCases.Count;ExternalSmaLoaded=$false;TeacherCorrectionChecks=$teacherChecks;BatchRuns=$runs;MeanNativeSentenceUs=$watch.Elapsed.TotalMilliseconds*1000/$runs;BenchmarkBoundary='One managed batch call; includes scanning, lookup, roles, corrections, source spans, graph construction and token IDs; excludes build, process startup and audio';AssemblyReferences=@($driver.Assembly.GetReferencedAssemblies() | ForEach-Object Name);Driver=$driver.Output;BuildReceipt=$driver.Receipt}
+    $report | ConvertTo-Json -Depth 4 | Set-Content -LiteralPath (Join-Path $directory 'verification.json') -Encoding utf8
+    $report
 }
 
 function Assert-EnglishContract {
@@ -1158,13 +1931,13 @@ function Test-EnglishPhonemizer {
     Assert-EnglishContract 'genuine ambiguity can finish phones' ($a.Candidates.Count -eq 2 -and $a.GrammarStatus -ceq 'Ambiguous' -and $a.Complete)
     $transferred=Invoke-EnglishPhonemizer -Text 'I saw her shit.' -ReferencePath $ReferencePath
     Assert-EnglishContract 'perception complement transfers to another nominal and verb' ($transferred.Candidates.Count -eq 2 -and $transferred.GrammarStatus -ceq 'Ambiguous' -and $transferred.Complete -and @($transferred.Candidates | Where-Object {$null -ne $_.Clause.Complement}).Count -eq 1)
-    $entity=Invoke-EnglishPhonemizer -Text 'The duck.' -ReferencePath $ReferencePath
+    $entity=Invoke-EnglishPhonemizer -Text 'The duck.' -Context (New-EnglishContext -ReferencePath $ReferencePath)
     $target=@($ambiguous.Occurrences | Where-Object Text -ceq 'duck')[0].Identity
     $linked=Add-EnglishContextEvidence -Context $ambiguous -OccurrenceIdentity $target -Entity $entity.Candidates[0].Subject -EvidenceIdentity 'observed-nominal-link'
     Assert-EnglishContract 'linked nominal graph constrains reading' ($linked.Candidates.Count -eq 1 -and $null -eq $linked.Candidates[0].Clause.Complement)
     $restored=Remove-EnglishContextEvidence -Context $ambiguous -EvidenceIdentity 'observed-nominal-link'
     Assert-EnglishContract 'evidence withdrawal restores ambiguity' ($restored.Candidates.Count -eq 2 -and $restored.KokoroPhones -ceq $a.KokoroPhones)
-    $event=Invoke-EnglishPhonemizer -Text 'They duck.' -ReferencePath $ReferencePath
+    $event=Invoke-EnglishPhonemizer -Text 'They duck.' -Context (New-EnglishContext -ReferencePath $ReferencePath)
     $linked=Add-EnglishContextEvidence -Context $ambiguous -OccurrenceIdentity $target -Event $event.Candidates[0].Clause -EvidenceIdentity 'observed-event-link'
     Assert-EnglishContract 'linked event graph constrains reading' ($linked.Candidates.Count -eq 1 -and $null -ne $linked.Candidates[0].Clause.Complement)
     $checks.Add('Prior/later explicitly linked typed graphs constrain ambiguity; removing evidence restores alternatives')
@@ -1221,6 +1994,14 @@ elseif($Zira){
     }else{Get-EnglishZiraReference -Text $Text | Select-Object Voice,Alignment,AlignedWords,CapturePath}
 }
 elseif($Distill){Invoke-EnglishZiraDistillation}
+elseif($BuildDriver){Import-EnglishCoreDriver | Select-Object Output,Receipt,SourceSha256,Corrections}
+elseif($VerifyDriver){Test-EnglishCoreDriver}
+elseif($GenerateCorpus){New-EnglishZiraCorpus}
+elseif($Parity){Test-EnglishZiraTokenParity}
+elseif($Audit){
+    if(-not $ValidationCorpusPath){throw 'Audit requires -ValidationCorpusPath pointing to a frozen UTF-8 sentence corpus.'}
+    Test-EnglishPronunciationCorpus -Path $ValidationCorpusPath
+}
 elseif($Speak){Invoke-EnglishKokoroSpeech -Text $Text}
 elseif($Verify){Test-EnglishPhonemizer -ReferencePath $AssemblyPath}
 else{Invoke-EnglishPhonemizer -Text $Text -ReferencePath $AssemblyPath}
