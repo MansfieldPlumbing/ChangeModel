@@ -6,13 +6,26 @@ param(
     [Parameter(ParameterSetName='Inspect',Mandatory)][switch]$Inspect,
     [Parameter(ParameterSetName='Verify',Mandatory)][switch]$Verify,
     [Parameter(ParameterSetName='Import',Mandatory)][switch]$Import,
+    [Parameter(ParameterSetName='Zira',Mandatory)][switch]$Zira,
+    [Parameter(ParameterSetName='Speak',Mandatory)][switch]$Speak,
+    [Parameter(ParameterSetName='Distill',Mandatory)][switch]$Distill,
     [string]$Text='',
+    [string]$Voice='af_heart',
+    [ValidateRange(0.5,2.0)][single]$Speed=1,
+    [switch]$NoPlayback,
+    [string]$SpeechAssemblyPath=(Join-Path $PSHOME 'System.Speech.dll'),
+    [string]$KokoroDirectory=(Join-Path $env:LOCALAPPDATA 'Build\PSPerception\kokoro'),
+    [string]$PythonPath='C:\bin\micromamba\envs\mono\python.exe',
+    [string]$CorpusPath='',
+    [string]$ValidationCorpusPath='',
+    [string]$CorrectionPath=(Join-Path $env:LOCALAPPDATA 'Build\PSPerception\english\zira-corrections.json'),
     [ValidateSet('Proof','Moby','MobyOnly')][string]$LexicalSource='Moby',
     [string]$AssemblyPath=(Join-Path $env:LOCALAPPDATA 'Build\PSPerception\english\Dev.MansfieldPlumbing.English.Phonemizer.dll')
 )
 Set-StrictMode -Version Latest
 $ErrorActionPreference='Stop'
 $script:EnglishReferenceCache=@{}
+$script:EnglishCorrectionCache=@{}
 $script:MobyPhoneMap=[Collections.Generic.Dictionary[string,string]]::new([StringComparer]::Ordinal)
 foreach($entry in '&=æ;(@)=ɛ;A=ɑ;eI=A;@=ə;-=ə;b=b;tS=ʧ;d=d;E=ɛ;i=i;f=f;g=ɡ;h=h;hw=w;I=ɪ;aI=I;dZ=ʤ;k=k;l=l;m=m;N=ŋ;n=n;Oi=Y;AU=W;O=ɔ;oU=O;u=u;U=ʊ;p=p;r=ɹ;S=ʃ;s=s;T=θ;D=ð;t=t;@r=əɹ;v=v;w=w;j=j;Z=ʒ;z=z'.Split(';')){
     $pair=$entry.Split('=');$script:MobyPhoneMap.Add($pair[0],$pair[1])
@@ -447,6 +460,7 @@ function Import-EnglishReference {
         Form=[Func[int,string]]$lex.GetMethod('Form').CreateDelegate([Func[int,string]])
         SymbolId=[Func[char,int]]$ph.GetMethod('SymbolId').CreateDelegate([Func[char,int]])
         Count=$lex.GetMethod('Count').Invoke($null,@())
+        Onsets=@{}
     }
     $script:EnglishReferenceCache[$path]=$reference
     $reference
@@ -463,7 +477,9 @@ function New-EnglishCandidate {
 }
 
 function New-EnglishContext {
-    param([string]$ReferencePath=$AssemblyPath,[switch]$Profile)
+    param([string]$ReferencePath=$AssemblyPath,[switch]$Profile,[string]$Corrections=$CorrectionPath)
+    $table=if($Corrections -and (Test-Path -LiteralPath $Corrections)){Import-EnglishCorrections -Path $Corrections}else{@{}}
+    $words=@{};foreach($key in $table.Keys){$words[$key.Split(':')[0]]=$true}
     [pscustomobject]@{
         Reference=(Import-EnglishReference $ReferencePath)
         Text='';Occurrences=[Collections.Generic.List[EnglishOccurrence]]::new()
@@ -471,6 +487,7 @@ function New-EnglishContext {
         Revision=0;Invocations=0;Trace=[Collections.Generic.List[object]]::new();Evidence=@{}
         MaximumCandidates=16;MaximumOccurrences=256;Boundary=$false
         Profile=if($Profile){@{}}else{$null}
+        Corrections=$table;CorrectionWords=$words
     }
 }
 
@@ -690,6 +707,11 @@ function Get-EnglishResult {
             $all=@(0..4 | ForEach-Object {$Context.Reference.Phones.Invoke($o.LexicalId,$_).Split('|',[StringSplitOptions]::RemoveEmptyEntries)} | Sort-Object -Unique -CaseSensitive)
             if($all.Count -eq 1){$phone=$all[0];$reason=$null}
         }
+        $pronunciationSource='CompiledLexicon'
+        if($o.Kind -ceq 'Word' -and $roles.Count -eq 1 -and $roles[0] -ge 0 -and $Context.CorrectionWords.ContainsKey($o.Text.ToLowerInvariant())){
+            $key=Get-EnglishCorrectionKey -Context $Context -Occurrence $o -Role $roles[0]
+            if($Context.Corrections.ContainsKey($key)){$phone=$Context.Corrections[$key];$reason=$null;$pronunciationSource='ZiraCorrection'}
+        }
         $start=$null;$end=$null
         if($null -ne $phone){
             if($parts.Count -gt 0){$ids.Add(16);$cursor++}
@@ -701,7 +723,7 @@ function Get-EnglishResult {
             }
             $end=$cursor;$parts.Add($phone)
         }
-        $record=[pscustomobject]@{Identity=$o.Identity;LexicalId=$o.LexicalId;Word=$o.Text;SourceStart=$o.Start;SourceEnd=$o.End;Pron=$phone;SymbolIds=if($phone){[int[]]@($phone.ToCharArray() | ForEach-Object {$Context.Reference.SymbolId.Invoke($_)})}else{@()};Roles=$roles;Alternatives=$alternatives;Status=if($phone){'Valid'}else{$reason};EmissionStart=$start;EmissionEnd=$end}
+        $record=[pscustomobject]@{Identity=$o.Identity;LexicalId=$o.LexicalId;Word=$o.Text;SourceStart=$o.Start;SourceEnd=$o.End;Pron=$phone;PronunciationSource=$pronunciationSource;SymbolIds=if($phone){[int[]]@($phone.ToCharArray() | ForEach-Object {$Context.Reference.SymbolId.Invoke($_)})}else{@()};Roles=$roles;Alternatives=$alternatives;Status=if($phone){'Valid'}else{$reason};EmissionStart=$start;EmissionEnd=$end}
         $tokens.Add($record);if($null -ne $reason){$unresolved.Add($record)}
     }
     [pscustomobject]@{
@@ -753,6 +775,331 @@ function Invoke-EnglishPhonemizer {
     $result=Get-EnglishResult $Context
     $result | Add-Member -NotePropertyName Timing -NotePropertyValue ([pscustomobject]@{TotalMs=$start.Elapsed.TotalMilliseconds;BinderInvocations=$Context.Invocations})
     $result
+}
+
+function Get-EnglishCorrectionKey {
+    param($Context,[EnglishOccurrence]$Occurrence,[int]$Role)
+    $vowel=0
+    if($Occurrence.Identity+1 -lt $Context.Occurrences.Count){
+        $next=$Context.Occurrences[$Occurrence.Identity+1]
+        if($next.Kind -ceq 'Word'){
+            $vowel=2 # Unknown onset never matches an admitted correction.
+            if($next.LexicalId -ge 0){
+                if(-not $Context.Reference.Onsets.ContainsKey($next.LexicalId)){
+                    $pronunciations=@(0..4 | ForEach-Object {$Context.Reference.Phones.Invoke($next.LexicalId,$_).Split('|',[StringSplitOptions]::RemoveEmptyEntries)} | Sort-Object -Unique -CaseSensitive)
+                    $onsets=@($pronunciations | ForEach-Object {[int]($_.TrimStart([char[]]'ˈˌ')[0] -cin [char[]]'AIOWYɑɔəæɛɜɪiʊuʌ')} | Sort-Object -Unique)
+                    $Context.Reference.Onsets[$next.LexicalId]=if($onsets.Count -eq 1){$onsets[0]}else{2}
+                }
+                $vowel=$Context.Reference.Onsets[$next.LexicalId]
+            }
+        }
+    }
+    $Occurrence.Text.ToLowerInvariant()+':'+$Role+':'+$vowel
+}
+
+function Import-EnglishCorrections {
+    param([string]$Path)
+    $info=Get-Item -LiteralPath $Path
+    if($info.Length -gt 1048576){throw 'Correction table bound exceeded.'}
+    $identity=$info.FullName+':'+$info.LastWriteTimeUtc.Ticks+':'+$info.Length
+    if($script:EnglishCorrectionCache.ContainsKey($identity)){return $script:EnglishCorrectionCache[$identity]}
+    $model=Get-Content -LiteralPath $Path -Raw | ConvertFrom-Json -AsHashtable
+    if($model.Version -ne 1 -or $model.Gate -cne 'ZIRA_CORRECTION_ADMISSION=PASS' -or $model.Entries.Count -gt 4096){throw 'Correction table contract failure.'}
+    $entries=@{}
+    foreach($entry in $model.Entries){
+        if($entry.Key -cnotmatch "^[a-z][a-z'-]{0,63}:[0-4]:[01]$" -or $entry.Pronunciation.Length -lt 1 -or $entry.Pronunciation.Length -gt 128 -or $entries.ContainsKey($entry.Key)){throw 'Invalid correction entry.'}
+        $entries[$entry.Key]=[string]$entry.Pronunciation
+    }
+    $script:EnglishCorrectionCache=@{$identity=$entries}
+    $entries
+}
+
+function Get-EnglishZiraReference {
+    [CmdletBinding()]
+    param([Parameter(Mandatory)][ValidateLength(1,8192)][string]$Text,[string]$Path=$SpeechAssemblyPath)
+    if(-not $IsWindows){throw 'Zira reference capture requires Windows; inference does not.'}
+    $Path=[IO.Path]::GetFullPath($Path)
+    if(-not(Test-Path -LiteralPath $Path -PathType Leaf)){throw 'Installed System.Speech assembly is missing.'}
+    $assembly=[Reflection.Assembly]::LoadFrom($Path)
+    $synth=[System.Speech.Synthesis.SpeechSynthesizer]::new()
+    $prefix='EnglishZira-'+[guid]::NewGuid().ToString('N')
+    $sources=@("$prefix-phones","$prefix-words","$prefix-done")
+    try{
+        $inventory=@($synth.GetInstalledVoices())
+        $installed=@($inventory | Where-Object {$_.Enabled -and $_.VoiceInfo.Name -ceq 'Microsoft Zira Desktop' -and $_.VoiceInfo.Culture.Name -ceq 'en-US'})
+        if($installed.Count -ne 1){throw 'Microsoft Zira Desktop en-US is required for reproducible reference capture.'}
+        $synth.SelectVoice($installed[0].VoiceInfo.Name);$synth.Rate=0;$synth.SetOutputToNull()
+        $null=Register-ObjectEvent $synth PhonemeReached -SourceIdentifier $sources[0]
+        $null=Register-ObjectEvent $synth SpeakProgress -SourceIdentifier $sources[1]
+        $null=Register-ObjectEvent $synth SpeakCompleted -SourceIdentifier $sources[2]
+        $prompt=$synth.SpeakAsync($Text)
+        $done=Wait-Event -SourceIdentifier $sources[2] -Timeout 60
+        if($null -eq $done){$synth.SpeakAsyncCancelAll();throw 'Zira reference capture timed out.'}
+        if($null -ne $done.SourceEventArgs.Error){throw $done.SourceEventArgs.Error}
+        $phones=@(Get-Event -SourceIdentifier $sources[0] -ErrorAction SilentlyContinue | Sort-Object EventIdentifier | ForEach-Object {
+            $e=$_.SourceEventArgs
+            [pscustomobject]@{Phone=$e.Phoneme;Next=$e.NextPhoneme;Ticks=$e.AudioPosition.Ticks;DurationTicks=$e.Duration.Ticks;Emphasis=[int]$e.Emphasis;Event=$_.EventIdentifier}
+        })
+        $words=@(Get-Event -SourceIdentifier $sources[1] -ErrorAction SilentlyContinue | Sort-Object EventIdentifier | ForEach-Object {
+            $e=$_.SourceEventArgs
+            [pscustomobject]@{Word=$e.Text;Start=$e.CharacterPosition;Length=$e.CharacterCount;Ticks=$e.AudioPosition.Ticks;Event=$_.EventIdentifier}
+        })
+        if($phones.Count -eq 0 -or $words.Count -eq 0){throw 'Zira did not supply both reference event streams.'}
+        $capture=[pscustomobject]@{Version=1;Text=$Text;Voice=$synth.Voice.Name;AssemblySha256=(Get-FileHash -LiteralPath $Path).Hash;EngineSha256=(Get-FileHash -LiteralPath (Join-Path $env:WINDIR 'System32\speech\engines\tts\MSTTSEngine.dll')).Hash;Words=$words;Phones=$phones;AlignedWords=@();Alignment='Unproved'}
+        $aligned=[Collections.Generic.List[object]]::new();$alignedCount=0
+        $audible=@($phones | Where-Object {$_.Phone.Length -gt 0 -and -not [char]::IsControl($_.Phone[0])})
+        $valid=$true
+        for($i=0;$i -lt $words.Count;$i++){
+            $word=$words[$i]
+            $limit=if($i+1 -lt $words.Count){$words[$i+1].Ticks}else{[long]::MaxValue}
+            $selected=@($audible | Where-Object {$_.Ticks -ge $word.Ticks -and $_.Ticks -lt $limit})
+            if($word.Start -lt 0 -or $word.Length -lt 1 -or $word.Start+$word.Length -gt $Text.Length -or $Text.Substring($word.Start,$word.Length) -cne $word.Word -or $selected.Count -eq 0 -or $selected[0].Ticks -ne $word.Ticks){$valid=$false;continue}
+            if($i -gt 0 -and ($word.Start -lt $words[$i-1].Start+$words[$i-1].Length -or $word.Ticks -le $words[$i-1].Ticks)){$valid=$false;continue}
+            $alignedCount+=$selected.Count
+            $aligned.Add([pscustomobject]@{Word=$word.Word;Start=$word.Start;Length=$word.Length;RawPhones=($selected.Phone -join '');Phones=(ConvertTo-EnglishKokoroPhones ($selected.Phone -join ''));StressObserved=@($selected | Where-Object {($_.Emphasis -band 1) -ne 0}).Count;FirstTicks=$word.Ticks;PhoneCount=$selected.Count})
+        }
+        if($valid -and $alignedCount -eq $audible.Count){$capture.AlignedWords=$aligned.ToArray();$capture.Alignment='ExactSourceSpansAndWordOnsets'}
+        $directory=Join-Path $env:LOCALAPPDATA 'Build\PSPerception\english\zira-captures'
+        [void][IO.Directory]::CreateDirectory($directory)
+        $identity=[Convert]::ToHexString([Security.Cryptography.SHA256]::HashData([Text.Encoding]::UTF8.GetBytes($Text+$capture.Voice+$capture.AssemblySha256+$capture.EngineSha256)))
+        $destination=Join-Path $directory ($identity+'-'+[guid]::NewGuid().ToString('N')+'.json')
+        $capture | ConvertTo-Json -Depth 8 | Set-Content -LiteralPath $destination -Encoding utf8
+        $capture | Add-Member -NotePropertyName CapturePath -NotePropertyValue $destination
+        $capture
+    }finally{
+        foreach($source in $sources){Unregister-Event -SourceIdentifier $source -ErrorAction SilentlyContinue;Get-Event -SourceIdentifier $source -ErrorAction SilentlyContinue | Remove-Event}
+        $synth.Dispose()
+    }
+}
+
+function ConvertTo-EnglishKokoroPhones {
+    param([string]$Phones)
+    $Phones.Replace('ɻ','ɹ').Replace('ɚ','əɹ').Replace('ɝ','ɜɹ').Replace('g','ɡ').Replace('tʃ','ʧ').Replace('dʒ','ʤ').Replace('aɪ','I').Replace('eɪ','A').Replace('oʊ','O').Replace('aʊ','W').Replace('ɔɪ','Y')
+}
+
+function Get-EnglishPhoneComparison {
+    param([AllowNull()][string]$Phones)
+    if($null -eq $Phones){return ''}
+    (ConvertTo-EnglishKokoroPhones $Phones).Replace('ˈ','').Replace('ˌ','')
+}
+
+function Invoke-EnglishZiraDistillation {
+    [CmdletBinding()]
+    param([string]$TrainingFile=$CorpusPath,[string]$AdmissionFile=$ValidationCorpusPath)
+    $training=if($TrainingFile){@([IO.File]::ReadAllLines([IO.Path]::GetFullPath($TrainingFile)) | Where-Object {$_ -match '\S'})}else{@('The apple records the record.','The orange records the record.','The record records the record.','The door records the record.','They record the record.','They permit the record.')}
+    $admission=if($AdmissionFile){@([IO.File]::ReadAllLines([IO.Path]::GetFullPath($AdmissionFile)) | Where-Object {$_ -match '\S'})}else{@('The elephant records the record.','The actor records the record.','The clock records the record.','They present the present.','The university records the record.','The one records the record.','The hour records the record.')}
+    if($training.Count -lt 2 -or $admission.Count -lt 2 -or $training.Count+$admission.Count -gt 4096){throw 'Provide bounded construction and held-out sentence corpora.'}
+    foreach($sentence in $training){if($sentence -cin $admission){throw 'Construction and admission sentences overlap.'}}
+    $reference=Import-EnglishReference $AssemblyPath
+    $rows=@(foreach($partition in @(@{Name='Construction';Sentences=$training},@{Name='Admission';Sentences=$admission})){
+        foreach($sentence in $partition.Sentences){
+            $capture=Get-EnglishZiraReference -Text $sentence
+            $context=New-EnglishContext -Corrections ''
+            $baseline=Invoke-EnglishPhonemizer -Text $sentence -Context $context
+            [pscustomobject]@{Partition=$partition.Name;Text=$sentence;Capture=$capture;Context=$context;Baseline=$baseline}
+        }
+    })
+    $proposals=@{};$rejected=[Collections.Generic.List[object]]::new()
+    foreach($row in @($rows | Where-Object Partition -ceq 'Construction')){
+        if($row.Capture.Alignment -cne 'ExactSourceSpansAndWordOnsets'){continue}
+        foreach($word in $row.Capture.AlignedWords){
+            $token=@($row.Baseline.Tokens | Where-Object {$_.SourceStart -eq $word.Start -and $_.SourceEnd -eq $word.Start+$word.Length})
+            if($token.Count -ne 1 -or $token[0].Roles.Count -ne 1 -or $token[0].Roles[0] -lt 0){continue}
+            $token=$token[0];$phones=$word.Phones
+            if(@($phones.ToCharArray() | Where-Object {$reference.SymbolId.Invoke($_) -lt 0}).Count -gt 0){continue}
+            $variants=@($reference.Phones.Invoke($token.LexicalId,$token.Roles[0]).Split('|',[StringSplitOptions]::RemoveEmptyEntries))
+            $matches=@($variants | Where-Object {(Get-EnglishPhoneComparison $_) -ceq $phones})
+            $stressSource='Unavailable'
+            if($matches.Count -eq 1){$phones=$matches[0];$stressSource='CompiledLexicon'}
+            elseif(@($variants | Where-Object {$_ -match '[ˈˌ]'}).Count -gt 0){
+                $rejected.Add([pscustomobject]@{Word=$word.Word;Reason='TeacherStressUnavailableForChangedPronunciation';Capture=$row.Capture.CapturePath});continue
+            }
+            $key=Get-EnglishCorrectionKey -Context $row.Context -Occurrence $row.Context.Occurrences[$token.Identity] -Role $token.Roles[0]
+            if($key.EndsWith(':2')){continue}
+            if(-not $proposals.ContainsKey($key)){$proposals[$key]=[Collections.Generic.List[object]]::new()}
+            $proposals[$key].Add([pscustomobject]@{Pronunciation=$phones;StressSource=$stressSource;Capture=$row.Capture.CapturePath;Sentence=$row.Text})
+        }
+    }
+    $entries=[Collections.Generic.List[object]]::new();$table=@{}
+    foreach($key in @($proposals.Keys | Sort-Object)){
+        $observations=$proposals[$key]
+        $values=@($observations.Pronunciation | Sort-Object -Unique -CaseSensitive)
+        $support=@($observations.Sentence | Sort-Object -Unique -CaseSensitive).Count
+        if($support -lt 2 -or $values.Count -ne 1){continue}
+        $fixes=0;$regressions=0;$tested=0
+        foreach($row in @($rows | Where-Object Partition -ceq 'Admission')){
+            if($row.Capture.Alignment -cne 'ExactSourceSpansAndWordOnsets'){continue}
+            foreach($word in $row.Capture.AlignedWords){
+                $tokens=@($row.Baseline.Tokens | Where-Object {$_.SourceStart -eq $word.Start -and $_.SourceEnd -eq $word.Start+$word.Length -and $_.Roles.Count -eq 1 -and $_.Roles[0] -ge 0})
+                if($tokens.Count -ne 1){continue}
+                $token=$tokens[0]
+                if((Get-EnglishCorrectionKey $row.Context $row.Context.Occurrences[$token.Identity] $token.Roles[0]) -cne $key){continue}
+                $tested++;$before=(Get-EnglishPhoneComparison $token.Pron) -ceq $word.Phones
+                $after=(Get-EnglishPhoneComparison $values[0]) -ceq $word.Phones
+                if(-not $before -and $after){$fixes++};if($before -and -not $after){$regressions++}
+            }
+        }
+        $decision=[pscustomobject]@{Key=$key;Pronunciation=$values[0];ConstructionSupport=$support;AdmissionCases=$tested;Fixes=$fixes;Regressions=$regressions;StressSource=$observations[0].StressSource;Captures=@($observations.Capture)}
+        if($fixes -ge 1 -and $regressions -eq 0){$entries.Add($decision);$table[$key]=$values[0]}else{$rejected.Add($decision)}
+    }
+    $newCorrections=$entries.Count
+    if(Test-Path -LiteralPath $CorrectionPath){
+        $retained=Import-EnglishCorrections -Path $CorrectionPath
+        $previous=Get-Content -LiteralPath $CorrectionPath -Raw | ConvertFrom-Json
+        foreach($entry in $previous.Entries){
+            if(-not $table.ContainsKey($entry.Key)){$entries.Add($entry);$table[$entry.Key]=$retained[$entry.Key]}
+        }
+    }
+    $runtimeFixes=0;$runtimeRegressions=0
+    foreach($row in @($rows | Where-Object Partition -ceq 'Admission')){
+        $context=New-EnglishContext -Corrections '';$context.Corrections=$table
+        foreach($key in $table.Keys){$context.CorrectionWords[$key.Split(':')[0]]=$true}
+        $after=Invoke-EnglishPhonemizer -Text $row.Text -Context $context
+        foreach($word in $row.Capture.AlignedWords){
+            $before=@($row.Baseline.Tokens | Where-Object SourceStart -eq $word.Start)
+            $changed=@($after.Tokens | Where-Object SourceStart -eq $word.Start)
+            if($before.Count -ne 1 -or $changed.Count -ne 1){continue}
+            $old=(Get-EnglishPhoneComparison $before[0].Pron) -ceq $word.Phones
+            $new=(Get-EnglishPhoneComparison $changed[0].Pron) -ceq $word.Phones
+            if(-not $old -and $new){$runtimeFixes++};if($old -and -not $new){$runtimeRegressions++}
+        }
+    }
+    $report=[ordered]@{Version=1;Feature='FollowingCompiledVowelOnset';Gate=if($newCorrections -gt 0 -and $runtimeFixes -gt 0 -and $runtimeRegressions -eq 0){'ZIRA_CORRECTION_ADMISSION=PASS'}else{'ZIRA_CAPTURE_ONLY'};Voice='Microsoft Zira Desktop';ConstructionSentences=$training.Count;AdmissionSentences=$admission.Count;AlignedSentences=@($rows | Where-Object {$_.Capture.Alignment -ceq 'ExactSourceSpansAndWordOnsets'}).Count;RuntimeFixes=$runtimeFixes;RuntimeRegressions=$runtimeRegressions;Entries=$entries.ToArray();Rejected=$rejected.ToArray();Captures=@($rows.Capture.CapturePath);AuthorSha256=(Get-FileHash -LiteralPath $PSCommandPath).Hash}
+    $directory=Join-Path $env:LOCALAPPDATA 'Build\PSPerception\english'
+    [void][IO.Directory]::CreateDirectory($directory)
+    $reportPath=Join-Path $directory ('zira-admission-'+[guid]::NewGuid().ToString('N')+'.json')
+    $report | ConvertTo-Json -Depth 8 | Set-Content -LiteralPath $reportPath -Encoding utf8
+    if($report.Gate -ceq 'ZIRA_CORRECTION_ADMISSION=PASS'){
+        $destination=[IO.Path]::GetFullPath($CorrectionPath)
+        $buildRoot=[IO.Path]::GetFullPath((Join-Path $env:LOCALAPPDATA 'Build\PSPerception'))+'\'
+        if(-not $destination.StartsWith($buildRoot,[StringComparison]::OrdinalIgnoreCase)){throw 'Learned table must stay under the project build directory.'}
+        if(Test-Path -LiteralPath $destination){Copy-Item -LiteralPath $destination -Destination ($destination+'.'+[guid]::NewGuid().ToString('N')+'.before')}
+        $report | ConvertTo-Json -Depth 8 | Set-Content -LiteralPath $destination -Encoding utf8
+        $null=Import-EnglishCorrections -Path $destination
+        foreach($row in @($rows | Where-Object Partition -ceq 'Admission')){$null=Invoke-EnglishPhonemizer -Text $row.Text}
+    }
+    [pscustomobject]@{Gate=$report.Gate;Captures=$rows.Count;AlignedSentences=$report.AlignedSentences;Corrections=$entries.Count;RuntimeFixes=$runtimeFixes;RuntimeRegressions=$runtimeRegressions;Report=$reportPath;CorrectionPath=if($report.Gate -ceq 'ZIRA_CORRECTION_ADMISSION=PASS'){$CorrectionPath}else{$null}}
+}
+
+function Initialize-EnglishKokoro {
+    [CmdletBinding()]
+    param([string]$Directory=$KokoroDirectory,[string]$VoiceName=$Voice)
+    if(-not $IsWindows){throw 'The stock Kokoro reference adapter requires Windows.'}
+    if($VoiceName -cnotin @('af_heart','am_michael')){throw 'Voice is not in the pinned stock input set.'}
+    $root=[IO.Path]::GetFullPath((Join-Path $env:LOCALAPPDATA 'Build\PSPerception'))+'\'
+    $Directory=[IO.Path]::GetFullPath($Directory)
+    if(-not $Directory.StartsWith($root,[StringComparison]::OrdinalIgnoreCase)){throw 'Kokoro acquisition must stay under the project build directory.'}
+    [void][IO.Directory]::CreateDirectory($Directory)
+    $revision='f3ff3571791e39611d31c381e3a41a3af07b4987'
+    $pins=@{'kokoro-v1_0.pth'='496DBA118D1A58F5F3DB2EFC88DBDC216E0483FC89FE6E47EE1F2C53F18AD1E4';'config.json'='5ABB01E2403B072BF03D04FDE160443E209D7A0DAD49A423BE15196B9B43C17F';'voices/af_heart.pt'='0AB5709B8FFAB19BFD849CD11D98F75B60AF7733253AD0D67B12382A102CB4FF';'voices/am_michael.pt'='9A443B79A4B22489A5B0AB7C651A0BCD1A30BEF675C28333F06971ABBD47BD37'}
+    $inputs=@{}
+    foreach($name in @('kokoro-v1_0.pth','config.json',"voices/$VoiceName.pt")){
+        $local=Join-Path 'C:\models\Kokoro-82M' $name
+        $path=if(Test-Path -LiteralPath $local){$local}else{Join-Path $Directory $name}
+        if(-not(Test-Path -LiteralPath $path)){
+            [void][IO.Directory]::CreateDirectory([IO.Path]::GetDirectoryName($path))
+            Invoke-WebRequest -Uri "https://huggingface.co/hexgrad/Kokoro-82M/resolve/$revision/$name" -OutFile $path
+        }
+        if((Get-FileHash -LiteralPath $path).Hash -cne $pins[$name]){throw 'Pinned stock Kokoro input integrity failure.'}
+        $inputs[$name]=@{Path=$path;Sha256=$pins[$name]}
+    }
+    $commit='dfb907a02bba8152ca444717ca5d78747ccb4bec'
+    $source=Join-Path $Directory $commit
+    $vendor='C:\Dev\.vendor\kokoro'
+    if(-not(Test-Path -LiteralPath $source)){
+        $archive=Join-Path $Directory 'stock-source.zip'
+        & git -C $vendor archive --format=zip "--output=$archive" $commit kokoro
+        if($LASTEXITCODE){throw 'Pinned upstream source acquisition failed.'}
+        [IO.Compression.ZipFile]::ExtractToDirectory($archive,$source)
+    }
+    $files=@(foreach($file in Get-ChildItem -LiteralPath (Join-Path $source 'kokoro') -Filter '*.py' -File){
+        $relative='kokoro/'+$file.Name
+        $blob=(& git -C $vendor rev-parse "${commit}:$relative").Trim()
+        if($LASTEXITCODE){throw 'Pinned stock source identity unavailable.'}
+        $actual=(& git hash-object --no-filters -- $file.FullName).Trim()
+        if($LASTEXITCODE -or $actual -cne $blob){throw 'Cached stock source differs from the immutable upstream commit.'}
+        @{Path=$relative;Sha256=(Get-FileHash -LiteralPath $file.FullName).Hash}
+    })
+    [pscustomobject]@{Directory=$Directory;SourceRoot=$source;SourceCommit=$commit;SourceFiles=$files;Inputs=$inputs;ModelRevision=$revision}
+}
+
+function Invoke-EnglishKokoroSpeech {
+    [CmdletBinding()]
+    param([Parameter(Mandatory)][ValidateLength(1,8192)][string]$Text)
+    $result=Invoke-EnglishPhonemizer -Text $Text
+    if(-not $result.Complete){throw ('Phonemizer cannot resolve the complete phrase: '+(($result.UnresolvedSpans | ForEach-Object {$_.Word+':'+$_.Status}) -join ', '))}
+    if($result.KokoroPhones.Length -gt 510){throw 'Kokoro accepts at most 510 phones per utterance.'}
+    $assets=Initialize-EnglishKokoro
+    $run=Join-Path $assets.Directory ([guid]::NewGuid().ToString('N'))
+    [void][IO.Directory]::CreateDirectory($run)
+    $spec=@{SourceRoot=$assets.SourceRoot;SourceCommit=$assets.SourceCommit;SourceFiles=$assets.SourceFiles;Inputs=$assets.Inputs;ModelRevision=$assets.ModelRevision;Voice=$Voice;Speed=$Speed;Text=$Text;Phonemes=$result.KokoroPhones;SymbolIds=$result.SymbolIds;Phonemizer='PSPerception SMA named parameter binding';AuthorSha256=(Get-FileHash -LiteralPath $PSCommandPath).Hash;Output=$run;Tokens=@($result.Tokens | Select-Object Word,Roles,Pron,PronunciationSource)}
+    $spec.CorrectionTableSha256=if(Test-Path -LiteralPath $CorrectionPath){(Get-FileHash -LiteralPath $CorrectionPath).Hash}else{$null}
+    $specPath=Join-Path $run 'input.json'
+    $spec | ConvertTo-Json -Depth 8 | Set-Content -LiteralPath $specPath -Encoding utf8
+    # Windows reference-only transport; the portable phonemizer never imports it.
+    $adapter=@'
+import hashlib, importlib, json, pathlib, sys, types, wave
+spec = json.loads(pathlib.Path(sys.argv[1]).read_text(encoding='utf-8-sig'))
+root = pathlib.Path(spec['SourceRoot'])
+def verify(path, expected):
+    with open(path, 'rb') as f:
+        if hashlib.file_digest(f, 'sha256').hexdigest().upper() != expected:
+            raise ValueError('Stock reference integrity failure')
+for item in spec['SourceFiles']:
+    verify(root / item['Path'], item['Sha256'])
+for item in spec['Inputs'].values():
+    verify(item['Path'], item['Sha256'])
+package = types.ModuleType('kokoro')
+package.__path__ = [str(root / 'kokoro')]
+sys.modules['kokoro'] = package
+import torch
+from loguru import logger
+logger.remove()
+torch.set_num_threads(4)
+torch.manual_seed(17)
+model = importlib.import_module('kokoro.model').KModel(repo_id='hexgrad/Kokoro-82M', config=spec['Inputs']['config.json']['Path'], model=spec['Inputs']['kokoro-v1_0.pth']['Path']).eval()
+checkpoint = torch.load(spec['Inputs']['kokoro-v1_0.pth']['Path'], map_location='cpu', weights_only=True)
+for component, values in checkpoint.items():
+    loaded = getattr(model, component).state_dict()
+    for original, expected in values.items():
+        key = original.removeprefix('module.')
+        if key not in loaded:
+            key = key.replace('weight_g','parametrizations.weight.original0').replace('weight_v','parametrizations.weight.original1')
+        if key not in loaded or not torch.equal(expected, loaded[key]):
+            raise ValueError('Stock checkpoint parameter mismatch')
+pack = torch.load(spec['Inputs']['voices/' + spec['Voice'] + '.pt']['Path'], map_location='cpu', weights_only=True)
+phones = spec['Phonemes']
+if not 1 <= len(phones) <= min(510, len(pack)) or any(p not in model.vocab for p in phones):
+    raise ValueError('Invalid stock phoneme input')
+if [model.vocab[p] for p in phones] != spec['SymbolIds']:
+    raise ValueError('SMA and stock Kokoro token IDs disagree')
+with torch.inference_mode():
+    audio = model(phones, pack[len(phones)-1], speed=spec['Speed']).float().cpu().numpy()
+import numpy as np
+if not np.isfinite(audio).all() or len(audio) == 0 or np.max(np.abs(audio)) == 0:
+    raise ValueError('Invalid stock waveform')
+pcm = (np.clip(audio, -1, 1) * 32767).astype('<i2').tobytes()
+output = pathlib.Path(spec['Output']) / 'speech.wav'
+with wave.open(str(output), 'wb') as wav:
+    wav.setnchannels(1); wav.setsampwidth(2); wav.setframerate(24000); wav.writeframes(pcm)
+receipt = {'Gate':'SMA_TO_STOCK_KOKORO_WAV=PASS','Phonemizer':spec['Phonemizer'],'Phonemes':phones,'Samples':len(audio),'SampleRate':24000,'Seconds':len(audio)/24000,'Peak':float(np.max(np.abs(audio))),'Wave':str(output),'WaveSha256':hashlib.sha256(output.read_bytes()).hexdigest().upper(),'SourceCommit':spec['SourceCommit'],'ModelRevision':spec['ModelRevision'],'Voice':spec['Voice'],'Torch':torch.__version__,'AuthorSha256':spec['AuthorSha256'],'Tokens':spec['Tokens']}
+receipt['CorrectionTableSha256'] = spec['CorrectionTableSha256']
+(pathlib.Path(spec['Output']) / 'receipt.json').write_text(json.dumps(receipt, ensure_ascii=False, indent=2), encoding='utf-8')
+print('Stock Kokoro WAV created: samples=' + str(len(audio)) + '; sample_rate=24000')
+'@
+    $adapterPath=Join-Path $run 'stock-reference.py'
+    [IO.File]::WriteAllText($adapterPath,$adapter,[Text.UTF8Encoding]::new($false))
+    & $PythonPath $adapterPath $specPath
+    if($LASTEXITCODE){throw 'Stock Kokoro reference synthesis failed.'}
+    $receipt=Get-Content -LiteralPath (Join-Path $run 'receipt.json') -Raw | ConvertFrom-Json
+    if((Get-FileHash -LiteralPath $receipt.Wave).Hash -cne $receipt.WaveSha256){throw 'Waveform receipt integrity failure.'}
+    if(-not $NoPlayback){
+        $null=[Reflection.Assembly]::LoadFrom((Join-Path $PSHOME 'System.Windows.Extensions.dll'))
+        $player=[System.Media.SoundPlayer]::new($receipt.Wave)
+        try{$player.PlaySync()}finally{$player.Dispose()}
+    }
+    $receipt | Add-Member -NotePropertyName PlaybackRequested -NotePropertyValue (-not $NoPlayback)
+    $receipt
 }
 
 function Assert-EnglishContract {
@@ -849,12 +1196,31 @@ function Test-EnglishPhonemizer {
         $samples.Add($sw.Elapsed.TotalMilliseconds);$allocated.Add([GC]::GetAllocatedBytesForCurrentThread()-$bytes)
     }
     $sorted=@($samples | Sort-Object);$allocation=@($allocated | Sort-Object)
+    $lookupRuns=10000
+    $lookupWatch=[Diagnostics.Stopwatch]::StartNew()
+    for($i=0;$i -lt $lookupRuns;$i++){
+        $id=$reference.Find.Invoke('record')
+        $null=$reference.Phones.Invoke($id,1)
+    }
+    $lookupWatch.Stop()
     $receipt=[pscustomobject]@{Gate='CanonicalEnglishSmaExecution';Passed=$checks.ToArray();StreamingStates=$states.ToArray();Runtime=[Runtime.InteropServices.RuntimeInformation]::FrameworkDescription;PowerShell=$PSVersionTable.PSVersion.ToString();AssemblySha256=(Get-FileHash -LiteralPath $ReferencePath).Hash;AssemblyBytes=(Get-Item -LiteralPath $ReferencePath).Length;LexicalIdentities=$reference.Count;WarmFixture='The record records the record.';WarmRuns=$samples.Count;P50Ms=$sorted[14];P95Ms=$sorted[28];P50AllocatedBytes=$allocation[14];IndependentAccuracy='Not established by authored behavior fixtures';AutomaticDiscourseCoreference='Unsupported; graph links must be explicit';Unsupported=@('general grammar','arbitrary mid-token streaming','broad productive morphology','currency/date verbalization','automatic semantic sense resolution')}
+    $receipt | Add-Member -NotePropertyName WarmCompiledLookupMeanUs -NotePropertyValue ($lookupWatch.Elapsed.TotalMilliseconds*1000/$lookupRuns)
+    $receipt | Add-Member -NotePropertyName CompiledLookupRuns -NotePropertyValue $lookupRuns
+    $receipt | Add-Member -NotePropertyName CompiledLookupBoundary -NotePropertyValue 'PowerShell loop plus managed Find and Phones delegates for one repeated word; excludes grammar and provenance'
     $receipt | Export-Clixml -LiteralPath (Join-Path ([IO.Path]::GetDirectoryName($ReferencePath)) 'verify-receipt.clixml')
     $receipt
 }
 
 if($Build){Build-EnglishReference -OutputPath $AssemblyPath -Source $LexicalSource}
 elseif($Import){return}
+elseif($Zira){
+    if($CorpusPath){
+        $sentences=@([IO.File]::ReadAllLines([IO.Path]::GetFullPath($CorpusPath)) | Where-Object {$_ -match '\S'})
+        if($sentences.Count -gt 4096){throw 'Corpus sentence bound exceeded.'}
+        foreach($sentence in $sentences){Get-EnglishZiraReference -Text $sentence | Select-Object Voice,Alignment,CapturePath}
+    }else{Get-EnglishZiraReference -Text $Text | Select-Object Voice,Alignment,AlignedWords,CapturePath}
+}
+elseif($Distill){Invoke-EnglishZiraDistillation}
+elseif($Speak){Invoke-EnglishKokoroSpeech -Text $Text}
 elseif($Verify){Test-EnglishPhonemizer -ReferencePath $AssemblyPath}
 else{Invoke-EnglishPhonemizer -Text $Text -ReferencePath $AssemblyPath}
