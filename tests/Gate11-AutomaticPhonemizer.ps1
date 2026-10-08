@@ -21,7 +21,8 @@ if (-not $OutputDirectory.StartsWith($buildRoot,[StringComparison]::OrdinalIgnor
 $null=New-Item -ItemType Directory -Path $OutputDirectory -Force
 . (Join-Path $PSScriptRoot '..\src\GetSmaPhonemes.ps1')
 $data=$DataRoot
-$ctx=Initialize-Phonemizer -GoldPath $GoldPath -SilverPath $SilverPath
+# Freeze the original whitespace observation/presentation policy as well as inputs.
+$ctx=Initialize-Phonemizer -GoldPath $GoldPath -SilverPath $SilverPath -TokenizationPolicy ProjectedWhitespace
 # Preserve the original conservative label-to-lexicon reference policy.
 # A homograph family is scorable only when every sense maps to a distinct phone string.
 $references=@{}
@@ -89,7 +90,7 @@ $firstCurve | ForEach-Object {
         [pscustomobject]@{Iteration=$_.Iteration;Net=$_.Admission.NetFixes;Fixes=$_.Admission.Fixes;Regressions=$_.Admission.Regressions;Identities=$_.Admission.TransferredIdentities;Percept=($_.Percept -join ',')}
     }
 } | Export-Csv -LiteralPath (Join-Path $OutputDirectory 'admission-receipts.csv')
-$fresh=Initialize-Phonemizer -GoldPath $GoldPath -SilverPath $SilverPath
+$fresh=Initialize-Phonemizer -GoldPath $GoldPath -SilverPath $SilverPath -TokenizationPolicy ProjectedWhitespace
 $runtimeCase=$null;$runtimeResult=$null
 foreach ($errorCase in $runtimeErrors) {
     $after=& $liveCaller $errorCase.Row.Sentence $ctx
@@ -141,3 +142,33 @@ if ($firstCurve[1].Admission.Fixes -ne 6 -or $firstCurve[1].Admission.Regression
 if ($firstEvaluations -ne 2 -or $ctx.RefinementResult.CandidateEvaluations -ne 0 -or $ctx.RefinementResult.ReusedRejections -ne 2 -or $ctx.LearningTermination -cne 'NoAdmissibleCandidateInCurrentPerceptLanguage') {throw 'Frozen terminal search changed.'}
 $firstCurve | ConvertTo-Json -Depth 6 | Set-Content -LiteralPath (Join-Path $OutputDirectory 'trajectory.json') -Encoding utf8
 'GATE_AUTOMATIC_PHONEMIZER=PASS; ExactTrajectory=PASS'
+
+# A real corpus compound previously disappeared as a whitespace/OOV token.
+# Exercise the default product policy, not a separate adapter or installed rule.
+$coverageContext=Initialize-Phonemizer -GoldPath $GoldPath -SilverPath $SilverPath
+$compound=@(Import-Csv -LiteralPath (Join-Path $data 'eval\attribute.tsv') -Delimiter "`t")[7]
+$sourceResult=Get-SmaPhonemes $compound.sentence -Context $coverageContext
+$bytes=[Text.Encoding]::UTF8.GetBytes($compound.sentence)
+$start=[Text.Encoding]::UTF8.GetString($bytes,0,[int]$compound.start).Length
+$end=$start+[Text.Encoding]::UTF8.GetString($bytes,[int]$compound.start,([int]$compound.end-[int]$compound.start)).Length
+$sourceTarget=@($sourceResult.Tokens | Where-Object {$_.SourceStart -eq $start -and $_.SourceEnd -eq $end})
+if ($sourceTarget.Count -ne 1 -or $sourceTarget[0].Word -cne $compound.homograph -or $sourceTarget[0].Status -cne 'Valid' -or $sourceTarget[0].Pron -cne $coverageContext.Gold[$compound.homograph][$references[$compound.wordid]]) {throw 'Compound source coverage failed.'}
+foreach ($token in $sourceResult.Tokens) {
+    if ($compound.sentence.Substring($token.SourceStart,$token.SourceEnd-$token.SourceStart) -cne $token.Word) {throw 'Source correspondence failed.'}
+    if ($null -ne $token.EmissionStart -and $sourceResult.KokoroPhones.Substring($token.EmissionStart,$token.EmissionEnd-$token.EmissionStart) -cne $token.Pron) {throw 'Emission correspondence failed.'}
+}
+'PRODUCT_SOURCE_COVERAGE=PASS; Specimen=attribute-8; ExactSourceAndEmissionSpans=PASS'
+
+# Token presentation must not block an already admitted standalone-word decision.
+$quoted=@(Import-Csv -LiteralPath (Join-Path $data 'eval\pervert.tsv') -Delimiter "`t")[1]
+$ctx.TokenizationPolicy='SourceBoundaries';$fresh.TokenizationPolicy='SourceBoundaries'
+try {
+    $learned=& $liveCaller $quoted.sentence $ctx
+    $target=@($learned.AmbiguousDecisions | Where-Object {$_.Word.ToLowerInvariant() -ceq $quoted.homograph})
+    if ($target.Count -ne 1 -or $target[0].Pronunciation -cne $ctx.Gold[$quoted.homograph][$references[$quoted.wordid]] -or $target[0].DeltaId -cne 'ExecutableRetainedPercept') {throw 'Source boundaries blocked learned execution.'}
+    $ctx.RefinementStore.Current=$rootNode
+    if ((& $liveCaller $quoted.sentence $ctx).KokoroPhones -cne (& $liveCaller $quoted.sentence $fresh).KokoroPhones) {throw 'Default-policy caller retained withdrawn behavior.'}
+    $ctx.RefinementStore.Current=$saved
+    if ((& $liveCaller $quoted.sentence $ctx).KokoroPhones -cne $learned.KokoroPhones) {throw 'Default-policy behavior failed to return.'}
+} finally {$ctx.RefinementStore.Current=$saved;$ctx.TokenizationPolicy='ProjectedWhitespace';$fresh.TokenizationPolicy='ProjectedWhitespace'}
+'PRODUCT_LEARNED_EXECUTION=PASS; DefaultPolicy=PASS; CompiledCallerWithdrawal=PASS; Specimen=pervert-2'

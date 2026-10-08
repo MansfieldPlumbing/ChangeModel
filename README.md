@@ -52,7 +52,18 @@ CoreLib-only lowering of this learned path remain unproved.
 
 The [frozen receipt and reproduction instructions](docs/AUTOMATIC-PHONEMIZER-REFINEMENT.md)
 specify pinned inputs, exact counts, runtime, and limitations. The measured host
-was PowerShell 7.7.0-preview.3 on .NET 11 preview 6, not RC1.
+was PowerShell 7.7.0-preview.3 on .NET 11 preview 6. The same frozen trajectory
+has also passed on PowerShell 7.7.0-preview.5 / .NET 11 RC1, with live scoped
+ETS execution, withdrawal observed by the same compiled caller, and exact
+restoration across all 1,187 mapped cases (Gate 11).
+
+The application implementation lives in `phonemizer/`; the existing
+`src/GetSmaPhonemes.ps1` entrypoint remains a compatibility loader. The default
+source-boundary policy preserves exact source and emission spans, emits supported
+punctuation, and reports unresolved words or symbols explicitly. Gate 11 retains
+the original whitespace policy for its frozen score and additionally exercises
+real compound coverage and learned execution under the default policy.
+Unresolved text does not count as resolved pronunciation coverage.
 
 **Completion rule:** No capability may be marked complete until it is integrated
 into the canonical execution path and demonstrated there by a behavioral gate.
@@ -125,6 +136,8 @@ PSPerception/
 ├── probes/
 │   ├── Observe-SmaLowering.ps1                # Deep inspection of internal Compiler.Compile and LINQ trees
 │   └── Measure-SmaDeltas.ps1                  # Quantitative divergence probe across AST lowering stages
+├── phonemizer/
+│   └── GetSmaPhonemes.ps1                     # Phonemizer application and automatic refinement cycle
 ├── src/
 │   ├── LinearState.ps1                        # Canonical state transition engines (linear motion model)
 │   ├── Representation.ps1                     # Feature extraction coordinate mapping and projection
@@ -136,7 +149,7 @@ PSPerception/
 │   ├── Refine.ps1                             # Counterexample-guided percept refinement loop
 │   ├── Expectations.ps1                       # Expectations, justification, and surprise
 │   ├── Analogy.ps1                            # Structural experience retrieval for proposals
-│   ├── GetSmaPhonemes.ps1                     # Phonemizer adapter and automatic refinement cycle
+│   ├── GetSmaPhonemes.ps1                     # Compatibility loader for the phonemizer application
 │   ├── SmaDataset.ps1                         # Authentic SMA AST/Token/LINQ lowering specimen generator
 │   ├── SmaContentfulDataset.ps1               # Multi-quadrant adversarial corpus preserving AST signatures
 │   ├── ExpressionFeatures.ps1                 # Deep reflection extractors for DLR binders, constants, node types
