@@ -1,338 +1,203 @@
-# Zira pronunciation capture and Windows Kokoro speech
+# Zira observations, contextual selection and Kokoro speech
 
-PSPerception captures local Microsoft Zira pronunciation decisions and retains
-admitted corrections in a small lookup table. The normal execution path now
-uses a PowerShell-authored, lowered CoreLib driver for scanning, role selection,
-lookup, admitted corrections, source spans and Kokoro token IDs. The original
-SMA context path remains available for authoring and explicit graph evidence.
-Stock Kokoro synthesizes the resulting phoneme string on Windows.
+The executable entrypoint is
+`phonemizer/Dev.MansfieldPlumbing.English.Phonemizer.ps1`.
+It streams a UTF-8 text corpus into one compact PSD1 intermediary, projects
+validated records into typed observations, and lowers pronunciation knowledge
+and selection logic into a managed assembly. Stock Kokoro is the Windows audio
+reference. The standalone pronunciation driver references only
+`System.Private.CoreLib`; it does not load SMA, Zira or the PSD1 at runtime.
 
-All executable entrypoints remain in
-`phonemizer/Dev.MansfieldPlumbing.English.Phonemizer.ps1`. Captures, correction
-tables, reference source, generated reference adapters, WAVs and receipts stay
-under `%LOCALAPPDATA%\Build\PSPerception`.
+## One entrypoint and one intermediary
 
-## Standalone pronunciation driver
+Run from `C:\Dev\PSPerception`:
 
 ```powershell
-$driver = & .\phonemizer\Dev.MansfieldPlumbing.English.Phonemizer.ps1 -BuildDriver
-dotnet $driver.Output 'The actor records the record.' C:\path\to\pronunciation.json
+# Six contextual examples; replace this input with a larger sentence corpus.
+pwsh -NoProfile -File phonemizer/Dev.MansfieldPlumbing.English.Phonemizer.ps1 -Zira -CorpusPath phonemizer/corpora/record-context-smoke.txt
 
-pwsh -NoProfile -File .\phonemizer\Dev.MansfieldPlumbing.English.Phonemizer.ps1 -VerifyDriver
+# Embed observations with their timing and reference graph, without admitting rules.
+pwsh -NoProfile -File phonemizer/Dev.MansfieldPlumbing.English.Phonemizer.ps1 -LowerCorpus
+
+# Admit contextual choices using separate construction and held-out examples.
+pwsh -NoProfile -File phonemizer/Dev.MansfieldPlumbing.English.Phonemizer.ps1 -Distill
+
+# Check target token parity and canonical standalone behavior.
+pwsh -NoProfile -File phonemizer/Dev.MansfieldPlumbing.English.Phonemizer.ps1 -Parity
+pwsh -NoProfile -File phonemizer/Dev.MansfieldPlumbing.English.Phonemizer.ps1 -VerifyDriver
+
+# Synthesize and play through the compiled pronunciation driver.
+pwsh -NoProfile -File phonemizer/Dev.MansfieldPlumbing.English.Phonemizer.ps1 -Speak -Text 'Play the record.'
+pwsh -NoProfile -File phonemizer/Dev.MansfieldPlumbing.English.Phonemizer.ps1 -Speak -Text 'Please record it.'
 ```
 
-The authored typed classes are lowered by PSLowering at commit
-`1afabe056235a570da29e268824784557d4f6cdd`. The persisted driver references only
-`System.Private.CoreLib`. It embeds the existing compiled lexical data and
-admitted correction table; it does not load SMA, PowerShell or Zira to
-phonemize. It requires an installed matching .NET runtime. The build receipt
-records the generated source digest, assembly digest and dependency list;
-the runtime configuration pins the installed runtime selected at build time.
-Input is bounded to 8,192 characters, 256 occurrences and 16 candidates.
+The default intermediary is
+`%LOCALAPPDATA%\Build\PSPerception\english\zira-corpus.psd1`.
+`-ObservationPath` selects another output in the project build directory.
+Corpus capture reads one nonblank line at a time and flushes each observation
+to a temporary file. A completed run replaces the destination, retaining a
+backup of any previous file. A failed run leaves a `.partial` file and preserves
+the previous completed destination. This is a streaming writer; it does not
+retain the whole corpus in memory or create one capture file per sentence.
 
-The command writes JSON with original text, phones, token IDs, source spans,
-roles, pronunciation provenance and whether SMA is loaded. Exit zero means
-every source token has a pronunciation; exit one means unsupported or
-unresolved tokens. Exit two means incorrect argument count. Grammar and
-pronunciation status remain distinct. A compiled driver does not establish
-general grammar coverage.
+Use sentences to retain context. Isolated words cannot identify the intended
+noun/verb reading. The existing
+`phonemizer/corpora/english-pronunciation-challenges.txt` contains 73 short
+challenges, including heteronyms, numbers, dates and units. These are test inputs,
+not a claim of supported pronunciation coverage.
 
-`CORELIB_STANDALONE_PHONEMIZER=PASS` demonstrated equivalence with the existing
-path on 23 specimens, four separate dotnet processes with SMA absent, input
-and OOV rejection, an independently fixed record fixture, and five checks
-against captured teacher corrections. One warm managed batch of 2,000 runs
-averaged 353.21775 microseconds per sentence for
-`The record records the record.` It includes scanning, roles, graph creation,
-lookup, corrections, source spans and token IDs; it excludes build, process
-startup and audio. The separate PowerShell-facing verification measured
-1.4305 ms median and 2.1205 ms p95. These are Windows observations, not Android
-latency estimates. Audio still uses the temporary Windows stock backend.
+Custom admission partitions use `-Distill -CorpusPath <construction.txt>
+-ValidationCorpusPath <held-out.txt>`. Both partitions must already be present
+in the single captured PSD1 and must not overlap. The default construction
+sentences are the first three smoke examples; the last three are held out.
+Admission does not capture new teacher observations or silently use the stock
+Kokoro phonemizer.
 
-## Speak
+## Compact schema and preserved meaning
+
+PSD1 is literal PowerShell data source, read with `Import-PowerShellDataFile`.
+It is never evaluated as executable corpus code. No JSON conversion is used
+for pronunciation observations, admission, token handoff or driver receipts.
+Stock Kokoro's pinned model configuration and the .NET host's required
+runtime configuration retain their upstream formats.
+
+The corpus header stores the schema version, teacher profile, input corpus
+SHA-256, and speech-assembly/engine SHA-256 once. Profile opcode `q=1` identifies
+Microsoft Zira Desktop, en-US, rate zero and null audio output. Each utterance
+retains its identity, full source text, UTC capture ticks, partition, alignment
+status, raw phone events and word records.
+
+Each raw phone event has six positional fields:
 
 ```powershell
-pwsh -NoProfile -File .\phonemizer\Dev.MansfieldPlumbing.English.Phonemizer.ps1 `
-    -Speak -Text 'The record records the record.'
+@('phone','nextPhone',audioTicksL,durationTicksL,emphasisFlags,eventIndex)
 ```
 
-The command runs the canonical English phonemizer, checks that every source
-token is supported, validates Kokoro's vocabulary and token IDs, synthesizes a
-24 kHz mono WAV, and plays it synchronously. An unresolved word or pronunciation
-stops synthesis; no other phonemizer supplies replacement phones.
-
-The successful Windows playback produced 57,000 samples, or 2.375 seconds,
-using `af_heart`. The listener confirmed the audio sounded good. The waveform
-gate is `SMA_TO_STOCK_KOKORO_WAV=PASS`; the receipt identifies SMA as the
-phonemizer and records phones, token provenance, source/model revisions,
-waveform digest and correction-table digest.
-
-`-NoPlayback` writes and verifies the WAV without playing it. `-PythonPath`
-selects the existing Windows reference environment; the tested environment was
-`C:\bin\micromamba\envs\mono\python.exe`, with PyTorch `2.14.0+cpu`.
-
-## Direct Zira-to-Kokoro parity
-
-The parity target is captured Zira phones encoded for stock Kokoro. Moby
-pronunciations are not consulted in this path.
+Each word has twelve positional fields:
 
 ```powershell
-pwsh -NoProfile -File .\phonemizer\Dev.MansfieldPlumbing.English.Phonemizer.ps1 -GenerateCorpus
-
-pwsh -NoProfile -File .\phonemizer\Dev.MansfieldPlumbing.English.Phonemizer.ps1 `
-    -Parity -CorpusPath .\phonemizer\corpora\english-pronunciation-challenges.txt
-
-pwsh -NoProfile -File .\phonemizer\Dev.MansfieldPlumbing.English.Phonemizer.ps1 -Parity
-
-pwsh -NoProfile -File .\phonemizer\Dev.MansfieldPlumbing.English.Phonemizer.ps1 `
-    -Speak -UseZira -Text 'A useful idea.'
+@('word',role,'rawPhones','kokoroPhones',@(tokenIds),sourceStart,sourceLength,audioTicksL,wordEventIndex,@(phoneEventIndices),stressFlags,@(roleAlternatives))
 ```
 
-The PowerShell corpus generator saves 107 construction sentences, 59 separate
-held-out sentences and a hash receipt under the build directory. The checked-in
-challenge collection contains short heteronyms, ambiguity, article onsets,
-contractions, punctuation, dates, numbers, currency, units and acronyms. Cases
-such as `03/04/2026`, `SQL`, `I saw her duck` and `The door was closed` need a
-declared reading or retained ambiguity; they do not have one universal answer.
+Roles are `0` noun, `1` verb, `2` adjective, `3` participle, `4` function,
+and `-1` unresolved. The role is inferred by our execution rules; Zira's
+phoneme events do not supply a grammatical role. Before contextual admission,
+the emitted words retain `-1`. Admission updates the role and alternatives
+without replacing the raw teacher evidence. Partitions are `C` construction,
+`H` held out and `U` unassigned.
 
-`-Parity -CorpusPath` captures every line without playback. `-Parity` alone
-replays saved observations. The test verifies the complete pinned Kokoro
-vocabulary independently against the config, fixed conversion specimens,
-unsupported-symbol rejection, model context bounds, all captured token IDs,
-and a separate dotnet process with SMA absent. Stock `KModel.forward` at
-`dfb907a02bba8152ca444717ca5d78747ccb4bec`, `kokoro/model.py:128-131`, maps
-phonemes through `config.vocab` and surrounds the IDs with zero BOS/EOS.
-This test rejects unknown symbols instead of relying on stock's filtering.
-It saves cases, aligned word observations and receipts in `english/token-parity`.
-Unproved word alignment remains a sentence-level phone observation, never a
-fabricated word lookup.
+Word records reference the shared phone-event table by index. Aligned word
+indices reference the original word table. Lowering restores shared object
+references, including each word's parent utterance. Raw phones, next phones,
+pauses/control events, durations, audio positions, emphasis, source spans,
+context, token identities and role alternatives remain available. Control
+events are excluded from spoken token strings, not erased from observations.
 
-The test exposed Zira's tied notation, including `e͡i`, `a͡i`, `t͡ʃ` and
-`i͡ə`. Explicit mappings now convert supported diphthongs and affricates to
-Kokoro symbols and retain the two components of `i͡ə`. It does not generically
-delete tie marks or unknown phones. The mappings exist in the authored script
-and the lowered driver. Stress marks are preserved if present, not invented.
+Pronunciation mapping explicitly handles Zira's rhotics, affricates and tied
+diphthongs. Unknown target symbols fail validation. There is no rule that
+silently deletes arbitrary unknown symbols or combining marks.
 
-`ZIRA_TO_KOKORO_TOKEN_PARITY=PASS` covered 129 saved captures and 2,627 mapped
-symbols with zero dropped symbols. It excluded 266 reported pause/control
-events. Nine warm compiled batches measured a median batch mean of 2.13685
-microseconds for phone normalization plus tokenization, with a maximum batch
-mean of 6.30215 microseconds. The full existing sentence driver measured
-96.2494 microseconds median batch mean and 128.0008 microseconds maximum batch
-mean. These are batch means, not per-call p95 values. Measurements reflect the
-current Windows load and exclude capture, compilation, startup and synthesis.
+## Contextual admission
 
-The generated 107-sentence construction corpus was subsequently captured and
-passed direct parity for 1,610 mapped symbols, with zero drops. Its corpus
-SHA-256 is `17092E1FA3A3F5997A229830F131974DC4988F0741928B866A76383468F20676`.
-This run saved aligned word observations with contexts and token IDs. It
-measured 2.593 microseconds median batch mean for Zira token mapping and
-161.7324 microseconds for the existing full driver. The latter still uses the
-existing lexicon and is not a benchmark of a Zira-only lookup. The 59 generated
-held-out sentences were not admitted into the construction observations.
+The existing grammar now supports the explicit leading commands `play`, `push`,
+`press` and `record`, optionally introduced by `please`, with an implicit
+subject. It resolves the tested contrasts:
 
-A combined replay then passed 237 saved captures (including repeated
-observations) and 4,250 mapped symbols with no drops, checking all 114
-vocabulary IDs against the lowered driver's own `Phonology.SymbolId`.
-Median batch means were 3.6235 microseconds for the Zira mapper and
-160.8124 microseconds for the full existing driver. Maximum batch means were
-9.03425 and 166.9298 microseconds respectively. These variations are observed
-timings under current load, not a guaranteed latency bound.
+| Source | Selected record role | Retained Kokoro pronunciation |
+|---|---:|---|
+| Play the record. | 0 | `ɹˈɛkəɹd` |
+| Please record it. | 1 | `ɹɪkˈɔɹd` |
+| Push record. | 0 | `ɹˈɛkəɹd` |
 
-Direct teacher speech generated and played a 45,600-sample, 1.9-second stock
-Kokoro WAV for `A useful idea.` using `ə jusfəl Idiə .`. Every word's receipt
-identifies `ZiraEvents`; it uses no dictionary pronunciation. The gate is
-`PHONEMIZER_TO_STOCK_KOKORO_WAV=PASS`. This Windows reference path requires Zira
-at capture time; it is not the Android product frontend. A Zira-extracted
-replacement lexicon still needs admission, contextual selection and a stress
-gate before replacing the normal lexicon. Token parity does not prove that
-Zira pronounced the intended meaning correctly or that it outperforms Moby.
+These are explicit supported constructions, not a general English parser.
+Selection uses word identity, admitted role and following vowel-onset context.
+The corpus keeps complete utterance context even though the dispatch key is
+compact. A contradictory teacher pronunciation, unknown target phone or
+missing held-out support prevents admission. Accepted and rejected choices
+retain their supporting observation graph in the typed corpus assembly.
 
-## Capture event evidence
+Zira's segmental observations are the pronunciation reference. Existing lexical
+stress is retained only when removing that stress produces exactly the observed
+teacher phones. A changed pronunciation requiring unavailable lexical stress
+is rejected. Zero emphasis flags do not establish missing lexical stress.
+Agreement with Zira establishes teacher fidelity, not independent English
+accuracy or universal Kokoro audio quality.
 
-```powershell
-pwsh -NoProfile -File .\phonemizer\Dev.MansfieldPlumbing.English.Phonemizer.ps1 `
-    -Zira -Text 'The record records the record.'
+The existing Moby-derived lexicon remains the fallback for words without
+admitted teacher knowledge and supplies earned stress where independently
+matching. This change does not replace its entire vocabulary with six teacher
+examples. `-Speak -UseZira` instead captures the full utterance live and feeds
+only those observations to the compiled target-token mapper.
 
-pwsh -NoProfile -File .\phonemizer\Dev.MansfieldPlumbing.English.Phonemizer.ps1 `
-    -Zira -CorpusPath C:\path\to\sentences.txt
-```
+No neural trainer or new parser was introduced. The existing hillclimber was
+not needed for the smoke examples. It remains a possible fallback for residual
+distinctions that explicit admitted rules cannot resolve.
 
-The corpus is UTF-8 text, one sentence per line. Capture explicitly selects
-`Microsoft Zira Desktop`, loads the installed PowerShell `System.Speech.dll`
-from its filesystem path, registers `SpeakProgress`, `PhonemeReached` and
-`SpeakCompleted`, and uses `SetOutputToNull`. It unregisters its own events and
-disposes the synthesizer when finished.
+## Microsoft source investigation
 
-Each capture retains the original sentence, word character spans and audio
-positions, raw phones, next phones, durations, emphasis flags, voice identity,
-and local assembly/engine digests. Capture creates a new JSON file each time;
-previous observations remain available.
+Microsoft's [SAPI TTS engine porting specification](https://learn.microsoft.com/en-us/previous-versions/windows/desktop/ee431802(v=vs.85))
+documents pronunciation alternatives, explicit part-of-speech hints, context
+fields, phoneme event durations and feature flags. It specifies that the
+part-of-speech field is unknown unless the caller supplies a hint. The
+[GetPronunciations API](https://learn.microsoft.com/en-us/previous-versions/windows/desktop/ee125564(v=vs.85))
+exposes user/application lexicon alternatives. Neither establishes access to
+Zira's internal contextual selector or its entire engine lexicon. The source
+search did not find a reusable published implementation of that selector.
+No unrelated SDK or neural model was imported.
 
-Word alignment requires exact source-span agreement, strictly ordered
-nonoverlapping word spans, a first phone timestamp equal to each word onset,
-and complete assignment of audible phones. Control phones remain in the raw
-capture but do not become pronunciation symbols. Number expansion or another
-ambiguous alignment remains raw evidence and cannot supply word corrections.
+## Demonstrated gates, October 8, 2026
 
-This alignment gate was demonstrated on the recorded specimens. It does not
-establish alignment correctness for every possible engine input.
+The six smoke utterances emitted 19 words and 83 raw phone events in 4.33 seconds
+on the observed Windows machine. This includes capture setup and output; it is
+not a prediction of throughput on a large corpus.
 
-## Distill and admit corrections
+The 73-utterance challenge corpus separately emitted 332 word events and 1,272
+raw phone events into one PSD1 in 16.92 seconds. Its token-parity gate passed
+with 1,292 mapped symbols, zero dropped symbols and 153 retained pause/control
+events excluded from spoken token strings. Contextual alignment remains
+explicitly unproved where source spans cannot be established.
+All 73 utterances also passed typed lowering with original word fields and
+phone references checked, including partially aligned observations. Unproved
+alignment does not enter pronunciation rule admission.
 
-```powershell
-pwsh -NoProfile -File .\phonemizer\Dev.MansfieldPlumbing.English.Phonemizer.ps1 -Distill
+- `TYPED_ZIRA_CORPUS_LOWERED`: six utterances restored from the compiled
+  observation assembly, with field equality and shared phone/word references
+  checked. Assembly references: `System.Private.CoreLib` only.
+- `ZIRA_CONTEXTUAL_ADMISSION=PASS`: four admitted choices, three retained
+  rejections, six held-out comparisons and six canonical teacher checks.
+  This includes corroborated existing pronunciations; four admissions do not
+  mean four previously incorrect pronunciations were fixed.
+- `CORELIB_STANDALONE_PHONEMIZER=PASS`: 26 fixtures, the three independent
+  imperative record assertions, four separate .NET processes without SMA,
+  11 teacher-backed token checks, and OOV/input-bound rejection.
+- `ZIRA_TO_KOKORO_TOKEN_PARITY=PASS`: all 114 target vocabulary IDs checked
+  against the pinned model configuration; 84 mapped symbols across six captured
+  utterances; zero dropped symbols; 12 pause/control events excluded from spoken
+  tokens but preserved as observations. Separate-process mapping loaded no SMA.
+- `PHONEMIZER_TO_STOCK_KOKORO_WAV=PASS`: `Play the record.` produced 39,600
+  mono PCM samples at 24 kHz, 1.65 seconds, using the lowered driver phones.
+  `Please record it.` separately produced and played 39,000 samples,
+  1.625 seconds, through the same canonical driver.
 
-pwsh -NoProfile -File .\phonemizer\Dev.MansfieldPlumbing.English.Phonemizer.ps1 `
-    -Distill -CorpusPath C:\path\to\construction.txt `
-    -ValidationCorpusPath C:\path\to\held-out.txt
-```
+Warm compiled timing, excluding capture, compilation, process startup and audio:
+the parity run measured a 1.482 microsecond median batch mean for raw-phone
+mapping and 127.084 microseconds for the full sentence driver. Each is the
+median of nine batch means, not an individual-call latency percentile.
+The subsequent 73-utterance parity run measured 1.938 microseconds for mapping
+and 107.831 microseconds for the same full-driver fixture. A separate 2,000-run
+driver verification measured 335.523 microseconds under another observed load;
+these measurements are not an idle-machine latency guarantee.
 
-This is behavioral distillation into lookup entries, not neural retraining.
-The key combines word identity, the role selected by the existing SMA bindings,
-and whether the following word has a vowel onset in the compiled lexicon.
-It uses pronunciation rather than spelling: `university` and `one` have
-consonant onsets; `hour` has a vowel onset. Unknown onsets do not match a rule.
+Pins: PSLowering `1afabe056235a570da29e268824784557d4f6cdd`, stock Kokoro source
+`dfb907a02bba8152ca444717ca5d78747ccb4bec`, model revision
+`f3ff3571791e39611d31c381e3a41a3af07b4987`. Cached source and assets are
+hash-verified before execution. Generated adapters and compiled artifacts stay
+under the project build directory. The Windows stock audio backend is not an
+Android runtime dependency.
 
-Construction requires consistent pronunciation in at least two distinct
-sentences. Admission sentences must be separate from construction sentences.
-An entry must fix at least one held-out pronunciation without regressing a
-previously matching pronunciation. The complete table is then evaluated through
-`Invoke-EnglishPhonemizer` on those held-out sentences. Successful tables are
-loaded automatically by the normal execution path. Existing entries are
-retained; replaced tables are backed up.
-
-The initial demonstrated result used six construction sentences and seven
-admission sentences. All 13 aligned. One admitted entry changed `the` before a
-compiled vowel onset from `ðə` to Zira's observed `ðɪ`. It fixed three held-out
-occurrences, with zero measured regressions. The gate is
-`ZIRA_CORRECTION_ADMISSION=PASS`.
-
-The construction vowel contexts were `apple` and `orange`. The corrected
-held-out contexts were `elephant`, `actor` and `hour`. The consonant controls
-included `clock`, `university` and `one`. This demonstrates that one local
-context condition transfers across those following-word identities. It does
-not establish broad pronunciation accuracy or general English understanding.
-
-The student's compiled pronunciations retain lexical stress. Zira's raw
-phones are converted to supported Kokoro symbols, including `ɻ` to `ɹ` and
-Kokoro's diphthong/affricate symbols. When the observed phone sequence matches a
-compiled variant, the variant supplies stress. A changed stressed lexical
-pronunciation without a supported stress source is rejected. The admitted
-article correction has no manufactured lexical stress.
-
-## Evidence and limits
-
-### Pronunciation accuracy gate
-
-The current compiled lexicon is Moby-derived (115,491 identities), with
-authored entries and admitted Zira corrections. It is not a Zira-extracted
-lexicon. The 13 demonstrated captures establish a small correction gate,
-not broad accuracy or a measured ordinary-text coverage percentage.
-
-To evaluate a Zira-derived replacement, freeze separate construction,
-development and final evaluation sentence sets before extraction. Preserve
-the set digests in the evaluation receipt. Group paraphrases and repeated
-templates together so closely related sentences do not cross partitions.
-Held-out contexts for known words test contextual selection; held-out words
-test vocabulary coverage. Report these separately. Once a final evaluation
-failure is used to improve the lookup, that specimen becomes a regression
-test and the next final evaluation needs fresh specimens.
-
-Use two distinct comparisons: recorded Zira observations for teacher fidelity,
-and stock Misaki for Kokoro-facing phoneme and stress comparison. Neither is
-an independent ground truth. Review disagreements against intended meaning
-and listen to matched Kokoro renders. Misaki's English symbol specification
-includes both primary and secondary stress:
-<https://github.com/hexgrad/misaki/blob/main/EN_PHONES.md>.
-
-For each category, report input word coverage, unsupported source spans,
-phoneme edit rate, exact word-pronunciation agreement, lexical stress errors,
-and contextual heteronym errors. Do not combine missing words with correctly
-pronounced words or omit unresolved tokens from the denominator. Report the
-sample size with every percentage. Zira event captures demonstrated so far
-do not establish lexical stress extraction; this is an explicit evidence gap
-for a Zira-only lookup.
-
-The frozen set must include ordinary prose, questions, noun/verb heteronyms
-such as record/present/read, names, contractions, punctuation, numbers,
-decimals, dates, currencies, units, and acronyms such as MB and KB. Number and
-acronym readings need explicit intended expansions where multiple readings
-are valid. Source-span alignment failure is a capture failure, not permission
-to guess an expanded word's pronunciation.
-
-For listening, hold checkpoint, voice, speed, sentence and rendering backend
-constant. Randomize which render is A and B, and record pronunciation errors
-separately from naturalness preferences. Waveform equality is not an accuracy
-criterion when phonemes differ. A speech-recognition transcript is diagnostic
-only; it does not prove stress, vowel choice or pronunciation correctness.
-
-An initial engineering target is zero dropped source spans, zero unsupported
-Kokoro symbols, zero known regression failures and at least 99% correctly
-pronounced words on the frozen evaluation corpus, with category-specific
-results. These are proposed acceptance thresholds, not achieved scores.
-Measure warm frontend median/p95 separately from cold startup and Kokoro
-time to first audio. A successful standalone driver gate does not establish
-pronunciation accuracy or Android execution.
-
-Run the diagnostic against a frozen UTF-8 file, one sentence per line:
-
-```powershell
-pwsh -NoProfile -File .\phonemizer\Dev.MansfieldPlumbing.English.Phonemizer.ps1 `
-    -Audit -ValidationCorpusPath C:\path\to\held-out.txt
-```
-
-This command runs the canonical driver, captures fresh Zira events, and writes
-per-word disagreements and a corpus-hashed receipt in the build directory.
-It never admits corrections or changes the lookup. Its result is an audit,
-not a pass assertion. Missing student pronunciations count as mismatches and
-deletions wherever the teacher aligns. Teacher alignment failures remain
-reported separately; they cannot establish agreement.
-
-The first broader diagnostic used 20 sentences, with corpus SHA-256
-`AA8734010CDB8E89CD9417F6E45CC562B4BAEF0BF9C5B806EE336F94FA0900CB`.
-It supported 85 of 108 input word spans (78.7%) and produced complete
-pronunciations for 6 of 20 sentences. It matched Zira's stress-stripped phone
-sequence for 47 of 79 strictly comparable word spans (59.5%). Its Kokoro
-symbol edit rate was 36.3%; four sentence captures failed strict alignment.
-The corpus exercised prose, heteronyms, names, contractions, numbers, dates,
-currency, MB and KB. It is a small diagnostic corpus, not a population-wide
-accuracy estimate. Stress and listening preference were not measured.
-These historical scores preceded the tied-notation mapping fixes. They include
-conversion failures and cannot establish comparative Zira-versus-Moby accuracy.
-
-`-Verify` passed the existing `CanonicalEnglishSmaExecution` behavioral gate
-after integration. A warm Windows run of the five-word fixture measured
-32.3545 ms median and 37.7231 ms p95 over 30 runs after ten warm-ups. These
-are CPU phonemizer measurements, not Hexagon or end-to-end latency.
-
-A subsequent run measured 71.1828 ms median and 124.4788 ms p95, so the
-32 ms result is not a stable latency guarantee. That run also measured
-172.56502 microseconds per compiled word lookup plus pronunciation fetch,
-averaged over 10,000 repetitions of `record`. The boundary includes a
-PowerShell loop and two managed delegate calls, and excludes grammatical
-candidate construction and provenance. It is not a native-only benchmark.
-
-The lexicon is already lowered into a CoreLib-only assembly. The correction
-selector and grammatical orchestration still execute in PowerShell. Lowering
-their typed hot path could reduce dispatch and allocation overhead; that
-additional lowering and its latency benefit have not been demonstrated.
-
-Stock source is pinned to Kokoro commit
-`dfb907a02bba8152ca444717ca5d78747ccb4bec`; extracted files are verified against
-that commit's Git blobs. Model/config/voice inputs are pinned to revision
-`f3ff3571791e39611d31c381e3a41a3af07b4987` and checked against SHA-256 digests.
-Matching local assets in `C:\models\Kokoro-82M` are reused read-only. Missing
-model inputs are downloaded into the project build folder. The shim checks
-loaded model parameters against the checkpoint and checks SMA token IDs against
-the model vocabulary before inference.
-
-This work proves Windows reference speech and the limited correction gate.
-It does not prove Kokoro-Hexagon whole-model synthesis or target-device latency.
-General grammar, currency/date verbalization and arbitrary acronym expansion
-remain unsupported by this execution path; successful SMA parsing elsewhere
-does not establish their English pronunciations here.
-
-Microsoft's API contracts describe the captured events:
-[PhonemeReached](https://learn.microsoft.com/en-us/dotnet/api/system.speech.synthesis.speechsynthesizer.phonemereached),
-[SpeakProgress](https://learn.microsoft.com/en-us/dotnet/api/system.speech.synthesis.speechsynthesizer.speakprogress),
-and [SetOutputToNull](https://learn.microsoft.com/en-us/dotnet/api/system.speech.synthesis.speechsynthesizer.setoutputtonull).
+Current lowering/admission guards allow at most 4,096 utterances and 128 MiB of
+PSD1 input. Capture itself streams larger corpora. Large-corpus lowering,
+resume/append after failure, comprehensive unseen-word coverage, general
+number/date verbalization and broad contextual accuracy are unproved. The
+emitted corpus retains unsupported evidence for subsequent refinement rather
+than presenting it as a completed phonemizer.
