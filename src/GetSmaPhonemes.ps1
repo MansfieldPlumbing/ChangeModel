@@ -30,6 +30,9 @@ class PhonemizerContext {
     [hashtable]$DecisionModels  # Homograph decision models
     [object]$RefinementStore
     [object]$CandidateRepresentation
+    [object]$RuntimeNode
+    [string]$RuntimeTypeName
+    [scriptblock]$RuntimeProgram
     [object]$RefinementResult
     [object[]]$LearningValidation = @()
     [object]$AdmissionBaseline
@@ -46,6 +49,7 @@ class PhonemizerContext {
     [System.Collections.Generic.HashSet[string]]$MultiWords
 
     PhonemizerContext() {
+        $this.RuntimeTypeName = 'Dev.MansfieldPlumbing.PowerShell.Perception.Pronunciation.'+[guid]::NewGuid().ToString('N')
         $this.KokoroVocab = [System.Collections.Generic.HashSet[char]]::new()
         # Pinned Kokoro US vocabulary: US_VOCAB + special punctuation
         foreach ($c in 'AIOWYbdfhijklmnpstuvwzæðŋɑɔəɛɜɡɪɹɾʃʊʌʒʤʧˈˌθᵊᵻʔɐ'.ToCharArray()) {
@@ -77,6 +81,51 @@ class PhonemizerContext {
 }
 
 $script:GlobalContext = $null
+
+# Materialize admitted selections once per retained node. Closures bind data to
+# file-authored code; no source strings, parser changes, or binder patches.
+function Sync-PhonemizerRuntime([PhonemizerContext]$Context) {
+    $node=if ($null -ne $Context.RefinementStore) {$Context.RefinementStore.Current} else {$null}
+    if ([object]::ReferenceEquals($node,$Context.RuntimeNode)) {return}
+    if ($null -ne (Get-TypeData -TypeName $Context.RuntimeTypeName)) {
+        Remove-TypeData -TypeName $Context.RuntimeTypeName -ErrorAction Stop
+    }
+    $Context.RuntimeNode=$null
+    $Context.RuntimeProgram=$null
+    if ($null -eq $node -or $node.Representation.Features.Count -eq 0) {
+        $Context.RuntimeNode=$node
+        return
+    }
+    $program={param($canonical,$entry) $null}
+    for ($i=$node.Representation.Features.Count-1;$i -ge 0;$i--) {
+        $feature=$node.Representation.Features[$i]
+        $parts=$feature.Split('|')
+        if ($parts.Count -gt 2 -or $parts[0] -cnotin @('AstArrayMembership','DeterminerContext','InfinitivalVerbContext')) {throw 'Unsupported runtime selection percept.'}
+        $observable=$parts[0]
+        $outcome=if ($parts.Count -eq 2) {$parts[1]} else {'VERB'}
+        if ([string]::IsNullOrEmpty($outcome)) {throw 'Empty runtime selection outcome.'}
+        $next=$program
+        $program={
+            param($canonical,$entry)
+            if ($canonical.$observable -eq 1 -and $entry.ContainsKey($outcome)) {
+                return [pscustomobject]@{Key=$outcome;Feature=$feature}
+            }
+            & $next $canonical $entry
+        }.GetNewClosure()
+    }
+    $method={
+        param($canonical,$entry)
+        # Retained identity is the guard; stale observations cannot execute a
+        # withdrawn percept even before the next product call synchronizes ETS.
+        if ($null -eq $this.CandidateRepresentation -and $null -ne $this.RefinementStore -and [object]::ReferenceEquals($this.RefinementStore.Current,$this.RuntimeNode)) {
+            & $this.RuntimeProgram $canonical $entry
+        }
+    }
+    if (-not $Context.PSObject.TypeNames.Contains($Context.RuntimeTypeName)) {$Context.PSObject.TypeNames.Insert(0,$Context.RuntimeTypeName)}
+    Update-TypeData -TypeName $Context.RuntimeTypeName -MemberType ScriptMethod -MemberName 'ChoosePercept' -Value $method -ErrorAction Stop
+    $Context.RuntimeProgram=$program
+    $Context.RuntimeNode=$node
+}
 
 function Initialize-Phonemizer {
     param(
@@ -176,6 +225,7 @@ function Initialize-Phonemizer {
         }
         if (-not $ctx.LearningTermination) { $ctx.LearningTermination='IterationBudgetExhausted' }
         $ctx.AdmissionBaseline=$null
+        Sync-PhonemizerRuntime $ctx
         return $ctx
     }
     if ($Experience.Count -gt 0) {
@@ -190,6 +240,7 @@ function Initialize-Phonemizer {
         $ctx.RefinementResult=Invoke-PerceptRefine -Experience $observations -Store $ctx.RefinementStore -NeutralBudget 0 -MaxIterations 3 -MeasureRepresentation $judge
         $ctx.RefinementStore=$ctx.RefinementResult.Store
     }
+    Sync-PhonemizerRuntime $ctx
     $ctx
 }
 
@@ -240,6 +291,16 @@ function Get-PhonemizerObservations($Rows,$Context) {
     @(foreach ($row in $Rows) {
         if (-not $Context.Gold[$row.Word].ContainsKey($row.ExpectedKey)) { throw 'Reference key is unavailable.' }
         $decision=Get-PhonemizerTarget (Get-SmaPhonemes $row.Sentence -Context $Context) $row
+        # Derived representation coordinates belong to learning observations;
+        # normal runtime selection executes the installed program instead.
+        if ($null -ne $Context.RefinementStore) {
+            foreach ($field in $Context.RefinementStore.Current.Representation.Features) {
+                $parts=$field.Split('|')
+                if ($parts.Count -eq 2 -and $null -eq $decision.CanonicalContext.PSObject.Properties[$field]) {
+                    $decision.CanonicalContext | Add-Member -NotePropertyName $field -NotePropertyValue ([int]($decision.CanonicalContext.($parts[0]) -eq 1 -and $Context.Gold[$row.Word].ContainsKey($parts[1])))
+                }
+            }
+        }
         $observation=[pscustomobject]@{SpecimenName=$row.SpecimenName;Sentence=$row.Sentence;Word=$row.Word;ExpectedKey=$row.ExpectedKey;CanonicalBefore=$decision.CanonicalContext;Action='ChoosePronunciation';ActualDelta=[array]::IndexOf($Context.OutcomeKeys,$row.ExpectedKey);Justifications=$decision.Justifications;ActiveAssumptions=@('projection')}
         if ($null -ne $row.PSObject.Properties['TargetStart']) { $observation | Add-Member TargetStart $row.TargetStart }
         $observation
@@ -270,6 +331,7 @@ function Get-SmaPhonemes {
     if ($null -eq $Context) {
         $Context = Initialize-Phonemizer
     }
+    if ($null -eq $Context.CandidateRepresentation) {Sync-PhonemizerRuntime $Context}
 
     $swTotal = [System.Diagnostics.Stopwatch]::StartNew()
 
@@ -390,7 +452,6 @@ function Get-SmaPhonemes {
                 InfinitivalVerbContext=[int]($prevWord -ceq 'to' -and $entry.ContainsKey('VERB'))
             }
             $active=$Context.CandidateRepresentation
-            if ($null -eq $active -and $null -ne $Context.RefinementStore) { $active=$Context.RefinementStore.Current.Representation }
             $selectionFields=@($Context.SelectionCandidates)
             if ($null -ne $active) { $selectionFields+=@($active.Features) }
             foreach ($field in @($selectionFields | Sort-Object -Unique -CaseSensitive)) {
@@ -431,7 +492,6 @@ function Get-SmaPhonemes {
             }
 
             $active=$Context.CandidateRepresentation
-            if ($null -eq $active -and $null -ne $Context.RefinementStore) { $active=$Context.RefinementStore.Current.Representation }
             if ($null -ne $active) {
                 foreach ($feature in $active.Features) {
                     $property=$canonicalContext.PSObject.Properties[$feature]
@@ -440,6 +500,14 @@ function Get-SmaPhonemes {
                     if ($null -ne $property -and $property.Value -eq 1 -and $entry.ContainsKey($outcome)) {
                         $justifications[2].To=$feature
                         $chosenKey=$outcome;$ruleFired=$feature;$firedDelta='RetainedPercept';break
+                    }
+                }
+            } else {
+                if ($null -ne $Context.PSObject.Methods['ChoosePercept']) {
+                    $selection=$Context.ChoosePercept($canonicalContext,$entry)
+                    if ($null -ne $selection) {
+                        $justifications[2].To=$selection.Feature
+                        $chosenKey=$selection.Key;$ruleFired=$selection.Feature;$firedDelta='ExecutableRetainedPercept'
                     }
                 }
             }

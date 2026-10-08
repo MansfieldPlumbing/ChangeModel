@@ -60,7 +60,17 @@ $admission=@($rows | Where-Object Partition -eq 1 | Sort-Object Order | Select-O
 $construction | Export-Csv -LiteralPath (Join-Path $OutputDirectory 'construction.csv')
 $admission | Export-Csv -LiteralPath (Join-Path $OutputDirectory 'admission.csv')
 'Construction='+$construction.Count+'; Admission='+$admission.Count+'; Evaluation='+$rows.Count
-$ctx=Initialize-Phonemizer -GoldPath $GoldPath -SilverPath $SilverPath -Experience $construction -ValidationExperience $admission -EvaluationExperience $rows -MinimumNetFixes 2 -MinimumTransferIdentities 2 -MaximumRegressionRate 0.01 -MaxLearningIterations 16
+# Warm this exact caller before experience changes the live context.
+$liveCaller={param($sentence,$context) Get-SmaPhonemes -Text $sentence -Context $context}
+$runtimeErrors=@(foreach ($row in $construction) {
+    $before=& $liveCaller $row.Sentence $ctx
+    $target=Get-PhonemizerTarget $before $row
+    if ($target.Pronunciation -cne $ctx.Gold[$row.Word][$row.ExpectedKey] -and $target.SourceStart -eq $row.TargetStart) {
+        [pscustomobject]@{Row=$row;Before=$before.KokoroPhones}
+    }
+})
+if ($runtimeErrors.Count -eq 0) {throw 'No demonstrated error for live execution assertion.'}
+$ctx=Initialize-Phonemizer -Context $ctx -Experience $construction -ValidationExperience $admission -EvaluationExperience $rows -MinimumNetFixes 2 -MinimumTransferIdentities 2 -MaximumRegressionRate 0.01 -MaxLearningIterations 16
 $ctx.LearningCurve | Select-Object Iteration,Micro,Macro,Fixes,Regressions,NetFixes,TransferredIdentities,CandidateEvaluations,Complexity,@{Name='Percept';Expression={$_.Percept -join ','}} | Export-Csv -LiteralPath (Join-Path $OutputDirectory 'learning-curve.csv')
 Get-Content -LiteralPath (Join-Path $OutputDirectory 'learning-curve.csv')
 'Termination='+$ctx.LearningTermination
@@ -80,15 +90,28 @@ $firstCurve | ForEach-Object {
     }
 } | Export-Csv -LiteralPath (Join-Path $OutputDirectory 'admission-receipts.csv')
 $fresh=Initialize-Phonemizer -GoldPath $GoldPath -SilverPath $SilverPath
+$runtimeCase=$null;$runtimeResult=$null
+foreach ($errorCase in $runtimeErrors) {
+    $after=& $liveCaller $errorCase.Row.Sentence $ctx
+    $target=Get-PhonemizerTarget $after $errorCase.Row
+    if ($target.Pronunciation -ceq $ctx.Gold[$errorCase.Row.Word][$errorCase.Row.ExpectedKey] -and $target.DeltaId -ceq 'ExecutableRetainedPercept') {$runtimeCase=$errorCase;$runtimeResult=$after;break}
+}
+if ($null -eq $runtimeCase -or $null -eq (Get-TypeData -TypeName $ctx.RuntimeTypeName)) {throw 'Experience did not materialize normal-path ETS behavior.'}
+if ((& $liveCaller $runtimeCase.Row.Sentence $fresh).KokoroPhones -cne $runtimeCase.Before) {throw 'Context-scoped behavior leaked.'}
+$runtimeEvaluations=$ctx.RefinementResult.CandidateEvaluations
+if ((& $liveCaller $runtimeCase.Row.Sentence $ctx).KokoroPhones -cne $runtimeResult.KokoroPhones -or $ctx.RefinementResult.CandidateEvaluations -ne $runtimeEvaluations) {throw 'Runtime use repeated search or changed output.'}
 $baseline=@(foreach ($row in $rows) {(Get-SmaPhonemes $row.Sentence -Context $fresh).KokoroPhones})
 $saved=$ctx.RefinementStore.Current
 $rootNode=$saved
 while ($rootNode.Parents.Count -gt 0) {$rootNode=$rootNode.Parents[0]}
 try {
     $ctx.RefinementStore.Current=$rootNode
+    if ((& $liveCaller $runtimeCase.Row.Sentence $ctx).KokoroPhones -cne $runtimeCase.Before -or $null -ne (Get-TypeData -TypeName $ctx.RuntimeTypeName)) {throw 'Compiled caller retained withdrawn ETS behavior.'}
     $removed=@(foreach ($row in $rows) {(Get-SmaPhonemes $row.Sentence -Context $ctx).KokoroPhones})
     if (($removed -join '|') -cne ($baseline -join '|')) {throw 'Whole-corpus removal failed.'}
 } finally {$ctx.RefinementStore.Current=$saved}
+if ((& $liveCaller $runtimeCase.Row.Sentence $ctx).KokoroPhones -cne $runtimeResult.KokoroPhones) {throw 'Retained behavior did not rematerialize.'}
+'ExperienceToEtsExecution=PASS; CompiledCallerWithdrawal=PASS; ContextIsolation=PASS; AdditionalSearch=0; Word='+$runtimeCase.Row.Word
 'FullCorpusRemoval=PASS; Cases='+$rows.Count
 $ctx=Initialize-Phonemizer -Context $ctx -Experience $construction -ValidationExperience $admission -EvaluationExperience $rows -MinimumNetFixes 2 -MinimumTransferIdentities 2 -MaximumRegressionRate 0.01 -MaxLearningIterations 16
 if ($ctx.LearningCurve.Count -ne 1 -or (@($ctx.RefinementStore.Current.Representation.Features) -join '|') -cne ($firstFeatures -join '|')) {throw 'Terminal rerun changed learned representation.'}

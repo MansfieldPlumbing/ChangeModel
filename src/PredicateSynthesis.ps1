@@ -301,14 +301,16 @@ function Install-RuntimePredicate {
         [Parameter(Mandatory)][BooleanPredicate]$Predicate
     )
 
-    $predicateStr = $Predicate.ToPredicateString()
+    # TypeData clones script bodies; bind predicate data through ETS rather than
+    # relying on captured script scope or evaluating generated source strings.
+    Update-TypeData -TypeName $TypeName -MemberType NoteProperty -MemberName 'RuntimePredicate' -Value $Predicate -Force
     
     # 1. ScriptProperty: SemanticEffect ('Breaking' vs 'Preserving')
-    $effectScript = [scriptblock]::Create("if ($predicateStr) { 'Breaking' } else { 'Preserving' }")
+    $effectScript = { if ($this.RuntimePredicate.Evaluate($this) -eq 1) { 'Breaking' } else { 'Preserving' } }
     Update-TypeData -TypeName $TypeName -MemberType ScriptProperty -MemberName 'SemanticEffect' -Value $effectScript -Force
 
     # 2. ScriptMethod: PredictBehavior() (1 vs 0)
-    $methodScript = [scriptblock]::Create("if ($predicateStr) { 1 } else { 0 }")
+    $methodScript = { $this.RuntimePredicate.Evaluate($this) }
     Update-TypeData -TypeName $TypeName -MemberType ScriptMethod -MemberName 'PredictBehavior' -Value $methodScript -Force
 }
 
